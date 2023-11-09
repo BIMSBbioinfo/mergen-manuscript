@@ -1,0 +1,37 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+```
+# Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Calculate the variance of each gene
+variances <- apply(data[, -1], 1, var)
+
+# Sort the genes based on their variance in descending order
+sorted_genes <- data[order(variances, decreasing = TRUE), ]
+
+# Filter the top 1000 most variable genes
+filtered_genes <- sorted_genes[1:1000, ]
+
+# Transpose the filtered genes data frame
+transposed_genes <- t(filtered_genes[, -1])
+
+# Cluster the samples using hierarchical clustering
+clusters <- hclust(dist(transposed_genes))
+cluster_membership <- cutree(clusters, k = 5)  # Assuming 5 clusters, you can change this value
+
+# Extract cluster specific genes for each cluster
+cluster_specific_genes <- lapply(1:max(cluster_membership), function(cluster) {
+  specific_genes <- rownames(filtered_genes)[cluster_membership == cluster]
+  return(specific_genes)
+})
+
+# Print the cluster specific genes for each cluster
+for (i in 1:length(cluster_specific_genes)) {
+  cat("Cluster", i, "specific genes:\n")
+  cat(cluster_specific_genes[[i]], "\n\n")
+}
+```
+

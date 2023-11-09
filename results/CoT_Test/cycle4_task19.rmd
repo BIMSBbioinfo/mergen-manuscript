@@ -1,0 +1,61 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we will use the R programming language and several bioinformatics packages, including `tidyverse`, `readxl`, and `DESeq2`.
+
+First, we need to load the required packages:
+
+```
+# Install and load necessary packages
+install.packages(c("tidyverse", "readxl", "DESeq2"))
+library(tidyverse)
+library(readxl)
+library(DESeq2)
+```
+
+Next, we will read the count table and annotation data into R:
+
+```
+# Read count table
+count_table <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+```
+
+Now, we will normalize the counts using the DESeq2 package:
+
+```
+# Convert count table to DESeqDataSet format
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1], 
+                              colData = annotation_data,
+                              design = ~ 1)
+
+# Normalize counts
+dds <- DESeq(dds)
+
+# Extract normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+```
+
+We can now create the first PCA plot color coded by "group":
+
+```
+# Perform PCA on the normalized counts
+pca_group <- prcomp(t(normalized_counts))
+
+# Create PCA plot color coded by "group"
+plot(pca_group$x[, 1:2], col = annotation_data$group)
+```
+
+Lastly, we will create the second PCA plot color coded by "LibrarySelection":
+
+```
+# Create PCA plot color coded by "LibrarySelection"
+plot(pca_group$x[, 1:2], col = annotation_data$LibrarySelection)
+```
+
+And that's it! The code provided will normalize the counts, perform PCA, and create two PCA plots, one color coded by "group" and the other color coded by "LibrarySelection" based on the annotation data.
+
+Note: Make sure to replace `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual file paths to the count table and annotation data in your system.

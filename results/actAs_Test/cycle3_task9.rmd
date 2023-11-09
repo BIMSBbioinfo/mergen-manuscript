@@ -1,0 +1,52 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To filter genes based on their variability and retain the top 1000 genes, we can calculate the variance across all samples for each gene and then sort the genes based on their variance. We can then select the top 1000 genes with the highest variance.
+
+To plot a heatmap with clustering, we can use the heatmap.2 function from the "gplots" package. This function allows us to generate a heatmap and perform hierarchical clustering based on the gene expression values.
+
+To plot PCA for samples, we can use the prcomp function from the "stats" package to perform principal component analysis (PCA) on the gene expression data. We can then plot the PCA using the biplot function from the "stats" package.
+
+Here's the code to accomplish these tasks:
+
+```
+# Load required packages
+library(gplots)
+library(stats)
+
+# Read the gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Remove the first column (gene names)
+gene_data <- gene_data[,-1]
+
+# Calculate the variance across all samples for each gene
+gene_var <- apply(gene_data, 1, var)
+
+# Sort the genes based on their variance
+sorted_genes <- names(gene_var)[order(gene_var, decreasing = TRUE)]
+
+# Retain the top 1000 genes with the highest variance
+top_genes <- sorted_genes[1:1000]
+
+# Subset the gene expression data to include only the top genes
+top_gene_data <- gene_data[top_genes, ]
+
+# Calculate z-scores for each gene to standardize the data
+top_gene_data_zscore <- scale(top_gene_data)
+
+# Plot heatmap with clustering
+heatmap.2(top_gene_data_zscore, main = "Heatmap of Gene Expression",
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          trace = "none", dendrogram = "both")
+
+# Perform principal component analysis (PCA) on the gene expression data
+pca <- prcomp(top_gene_data_zscore)
+
+# Plot PCA biplot for samples
+biplot(pca, main = "PCA Biplot for Gene Expression")
+
+```
+
+Make sure to replace "leukemiaExp.txt" with the actual file name and path to your gene expression data.

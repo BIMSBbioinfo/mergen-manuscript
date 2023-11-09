@@ -1,0 +1,29 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To complete this task, I will first read the two datasets into R and match the individuals using the dbGap ID. Then, I will filter the CpGs associated with Age but not with sex or Race. Finally, I will display the top 20 CpGs.
+
+Here is the code to accomplish these steps:
+
+```
+# Read the CpG methylation dataset
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header=T, stringsAsFactors=F)
+
+# Read the individual information dataset
+subjects <- read.table("subjects.txt", header=T, stringsAsFactors=F)
+
+# Match individuals using dbGap ID
+matched_data <- merge(metRmOl, subjects, by.x="dbGap ID", by.y="dbGap ID")
+
+# Filter CpGs associated with Age but not with sex or Race
+filtered_data <- subset(matched_data, !is.na(Age) & is.na(sex) & is.na(Race))
+
+# Sort the CpGs by methylation values and select top 20
+top_20_CpGs <- head(arrange(filtered_data, desc(methylation_value)), 20)
+
+# Display the top 20 CpGs
+top_20_CpGs
+```
+
+Please note that you need to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file names and make sure they are in the correct working directory. Also, make sure the column names used in the code match the column names in your datasets.

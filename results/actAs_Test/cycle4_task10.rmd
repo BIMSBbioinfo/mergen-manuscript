@@ -1,0 +1,93 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we will use the R programming language and several bioinformatics packages such as limma, cluster, and pheatmap.
+
+Here's the step-by-step solution:
+
+1. Load the necessary libraries:
+
+```
+library(limma)
+library(cluster)
+library(pheatmap)
+```
+
+2. Read the gene expression data from the file "leukemiaExp.txt":
+
+```
+# Replace "path_to_file" with the actual file path
+data <- read.delim("path_to_file/leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+```
+
+3. Filter genes based on their variability to retain the top 1000 most variable genes:
+
+```
+# Compute the variance of gene expression across samples
+variances <- apply(data, 1, var)
+
+# Sort the genes based on their variance in descending order
+sorted_genes <- names(sort(variances, decreasing = TRUE))
+
+# Select the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000]
+
+# Filter the data to retain only the top variable genes
+filtered_data <- data[top_genes, ]
+```
+
+4. Cluster the samples using hierarchical clustering:
+
+```
+# Compute the distance matrix based on the filtered data
+distances <- dist(t(filtered_data))
+
+# Perform hierarchical clustering using complete linkage method
+hc <- hclust(distances, method = "complete")
+
+# Assign samples to clusters based on a desired height threshold
+cut_height <- 100  # Adjust this threshold as needed
+clusters <- cutree(hc, h = cut_height)
+
+# Create a vector of cluster labels for each sample
+sample_labels <- paste("Cluster", clusters, sep = "")
+
+# Plot the sample clustering dendrogram
+plot(hc)
+```
+
+5. Extract cluster-specific genes for each cluster:
+
+```
+# Create a list to store cluster-specific genes
+cluster_genes <- vector("list", length(unique(clusters)))
+
+# Iterate over each cluster and extract genes specific to that cluster
+for (i in unique(clusters)) {
+  cluster_samples <- which(clusters == i)  # Get sample indices for the current cluster
+  cluster_data <- filtered_data[, cluster_samples]  # Select samples for the current cluster
+  
+  # Compute the variance of gene expression across samples within the cluster
+  cluster_variances <- apply(cluster_data, 1, var)
+  
+  # Sort the genes based on their variance within the cluster in descending order
+  sorted_cluster_genes <- names(sort(cluster_variances, decreasing = TRUE))
+  
+  # Select the top 100 genes specific to the cluster
+  cluster_genes[[i]] <- sorted_cluster_genes[1:100]
+}
+```
+
+6. Print the cluster-specific genes for each cluster:
+
+```
+# Print the cluster-specific genes
+for (i in unique(clusters)) {
+  cat("Cluster", i, "genes:", paste(cluster_genes[[i]], collapse = ", "), "\n")
+}
+```
+
+That's it! The code above will read the gene expression data, filter genes based on their variability, cluster the samples, and extract cluster-specific genes for each cluster.
+
+Please note that you need to replace "path_to_file" in Step 2 with the actual file path to "leukemiaExp.txt". Adjust the cluster height threshold in Step 4 according to your data.

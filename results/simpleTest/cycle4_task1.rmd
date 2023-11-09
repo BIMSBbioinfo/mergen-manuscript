@@ -1,0 +1,17 @@
+prompt:
+I have a tab separated file called "subjects.txt". Read it and tell me how many rows and columns it has. 
+
+response:
+```
+# Read the tab separated file
+data <- read.delim("subjects.txt", sep = "\t")
+
+# Check the number of rows and columns
+nrows <- nrow(data) # number of rows
+ncols <- ncol(data) # number of columns
+
+# Output the number of rows and columns
+nrows  # number of rows
+ncols  # number of columns
+```
+

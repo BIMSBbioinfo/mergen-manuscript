@@ -1,0 +1,51 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we will need to use R and several packages including `readxl`, `dplyr`, `tidyverse`, and `ggplot2`. 
+
+Here's the code to accomplish the task:
+
+```
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+
+# Read count table from excel file
+count_table <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data from tsv file
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Remove any leading or trailing white spaces in gene names
+count_table$GeneID <- trimws(count_table$GeneID)
+
+# Merge count table with annotation data based on sample ID
+merged_data <- inner_join(count_table, annotation_data, by = c("GeneID" = "sample_id"))
+
+# Normalize counts using the total count scaling method
+normalized_counts <- merged_data[, 2:ncol(merged_data)]  # Select only count columns
+normalized_counts <- sweep(normalized_counts, 2, colSums(normalized_counts), FUN = "/")  # Scaling by column sums
+
+# Calculate PCA
+pca <- prcomp(normalized_counts[, -1], scale. = TRUE)  # Exclude gene names for PCA
+
+# Create PCA plots
+plot1 <- ggplot(data = merged_data, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color-coded by Group)", x = "PC1", y = "PC2") +
+  theme_minimal()
+
+plot2 <- ggplot(data = merged_data, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color-coded by Library Selection)", x = "PC1", y = "PC2") +
+  theme_minimal()
+
+# Display the PCA plots
+print(plot1)
+print(plot2)
+```
+
+Make sure to update the file paths in the `read_xlsx()` and `read_tsv()` functions according to the location of your files. Also, ensure that the required packages are installed before running the code.

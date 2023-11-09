@@ -1,0 +1,159 @@
+---
+title: "GPT prompts for mergen manuscript"
+author: "Altuna Akalin"
+date: "2023-03-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = FALSE)
+i<-1
+```
+
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have a tab separated file called "subjects.txt". Read it and tell me how many rows and columns it has. 
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. The file is tab separated. The table has gene names on the first column. How many genes and samples does the dataset have?
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have the following count table for an RNA-seq experiment, "SRP021193.raw_counts.tsv". The first column contains the gene names, the last column is gene length and the rest are samples.The file is tab separated. How many genes and samples does the dataset have?
+
+--- PROMPT END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 2
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt".The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  Filter genes based on their variability so we retain the most variable top 1000 genes. 
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 2
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 3
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data. Create a boxplot of the columns
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 3
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Create a scatterplot of the two most variable genes.
+
+--- PROMPT END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization | ML/Stats, numData: 1, seeData: no, openEnded: no, tags: PCA | Clustering,  complexity: 4
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: clustering,  complexity: 4
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+--- PROMPT END
+
+
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 2, seeData: no, openEnded: yes, complexity: 2
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the tables count number of rows and columns for each.
+
+--- PROMPT END
+
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 2, seeData: no, openEnded: yes, complexity: 2
+ 
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling, numData: 2, seeData: no, openEnded: yes, complexity: 3
+ 
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables and calculate number of columns.
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling, numData: 2, seeData: no, openEnded: yes, complexity: 3
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the data and merge them into a single table using dbGapId information, return the number of columns.
+
+--- PROMPT END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization, numData: 2, seeData: no, openEnded: yes, complexity: 4
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Read the data and merge them into a single table using dbGapId information. Plot a scatter plot of CpG methylation values for the two oldest subjects in the samples.
+
+--- PROMPT END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization, numData: 2, seeData: no, openEnded: yes, complexity: 4
+ 
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | ML/Stats | visualization, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | random forests, complexity: 5
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | ML/Stats | visualization, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | random forests, complexity: 5
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+--- PROMPT END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | ML/Stats | visualization, numData: 2, seeData: no, openEnded: yes, tags: PCA | dimension reduction, complexity: 5
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+--- PROMPT END
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | ML/Stats | visualization, numData: 2, seeData: no, openEnded: yes, tags: PCA | dimension reduction, complexity: 5
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+--- PROMPT END

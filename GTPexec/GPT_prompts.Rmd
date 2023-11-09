@@ -1,0 +1,2370 @@
+---
+title: "GPT prompts for mergen manuscript"
+author: "Altuna Akalin"
+date: "2023-03-30"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,eval = FALSE)
+i<-1
+```
+
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have a file called "subjects.txt". Read it and tell me how many rows and columns it has. 
+
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. The table has gene names on the first column. How many genes and samples does the dataset have?
+
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have the following gene expression data as an excel sheet, "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+### Task `r i`,`r i<-i+1` taskType: read, numData: 1, seeData: no, openEnded: no, complexity: 1
+
+prompt:
+I have the following count table for an RNA-seq experiment,"SRP021193.raw_counts.tsv". The first column contains the gene names, the last column is gene length and the rest are samples. How many genes and samples does the dataset have?
+
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 2
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  Filter genes based on their variability so we retain the most variable top 1000 genes. 
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 2
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 3
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data. Create a boxplot of the columns
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data wrangling | visualization, numData: 1, seeData: no, openEnded: no, tags: filter,  complexity: 3
+
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Create a scatterplot of the two most variable genes.
+
+
+
+
+
+completion:
+We can read this file to R, and summarize the columns. If the number of columns is too large we will summariaze only the first 10 and last 10 columns. Here is the R code to do this.
+
+```{r,eval=FALSE}
+library(data.table)
+library(skimr)
+df.f=data.table::fread("subjects.txt", ,data.table=FALSE)
+skim(df.f)
+
+```
+--- TASK END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 2, seeData: no, openEnded: no, tags: merge
+
+prompt:
+I have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file.Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important attribute here is the "age". The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. How can I merge these files?
+
+completion:
+The tables must be read in first. We can use `data.table::fread()` function for this purpose as it can read files faster. We will must transpose the 
+"metRmOlWithDbgapId.txt" dataset since its first row contains the ids
+for the samples. However, "subjects.txt" has the ids on its columns. Once transposed, we can merge the files.
+
+```{r,eval=FALSE}  
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundant CPG_id column
+CpG_data <- CpG_data[,-1]
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables 
+d <- merge(subjects,tCpG_data,
+           by.x="dbGaP ID",by.y="row.names")
+```
+--- TASK END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes,  tags: PCA | dimension reduction
+
+prompt:
+I have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file.Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important attribute here is the "age". The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Plot the samples in relation to eachother and color them based on age. 
+
+completion:
+The tables must be read in first. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to plot samples in relation to eachother, PCA might be used. Before we apply PCA, we can filter the data to retain features with highest variation, this will  also decrease
+the computation time. We can than plot the samples on first two principal components and color code each sample based on their age. This can be achieved as follows: 
+
+```{r,eval=FALSE}  
+# library needed for reading data  
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundant CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# pick the most variable CpGs, we pick top 1000
+rowvars <- apply(CpG_data,1,var) # calculate variance per CpG
+CpG_data2 <- CpG_data[ order(rowvars,decreasing = TRUE)[1:1000],]
+
+# calculate PCA for samples, we must first transpose the data for this
+# apply PCA on transposed matrix
+pr <- prcomp(t(CpG_data2),center=TRUE,scale=TRUE) 
+
+# plot new coordinates from PCA, projections on eigenvectors
+# since the matrix is transposed eigenvectors represent 
+
+# make a new data frame that contains the PC coordinates and Age
+PCAge <- merge(pr$x[,1:2],subjects[,c("dbGaP ID","Age")],
+               by.x="row.names",by.y="dbGaP ID")
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(nrow(PCAge)>500){
+  PCAge <- PCAge[sample(nrow(PCAge),500),]
+}
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+ggplot(PCAge, aes(x = PC1, y = PC2, colour = Age)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Age")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: semi, tags: clustering | heatmap
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file.Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important attribute here is the "age". The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Cluster the samples, display clusters as a heatmap and color code them based on age. 
+
+completion:
+The tables must be read in first. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to cluster the samples and display them as a heatmap "pheatmap" package can be used. Before we cluster, we can filter the data to retain features with highest variation, this will  also decrease the computation time. We can cluster and display the samples as heatmap with extra color coding based on Age. This can be achieved as follows:  
+  
+```{r,eval=FALSE}
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundant CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# pick the most variable CpGs, we pick top 1000
+rowvars <- apply(CpG_data,1,var) # calculate variance per CpG
+CpG_data2 <- CpG_data[ order(rowvars,decreasing = TRUE)[1:1000],]
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data2)>500){
+  CpG_data2 <- CpG_data2[,sample(ncol(CpG_data2),500)]
+}
+
+# now we can plot the heatmap
+# We first make the columns side annotation
+# data frame to color code based on age
+annCol=subjects[,"Age",drop=FALSE]
+rownames(annCol)=subjects[,"dbGaP ID"]
+library(pheatmap)
+
+# plot the heatmap, do not put row/column labels if there are too many rows/columns
+pheatmap(CpG_data2,annotation_col =annCol, 
+         show_rownames=ifelse(nrow(CpG_data2)<11,TRUE,FALSE),
+         show_colnames=ifelse(ncol(CpG_data2)<11,TRUE,FALSE))
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: semi, tags: clustering | heatmap
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file.Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important features here are the "Age" and "sex" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Cluster the samples in "metRmOlWithDbgapId.txt", display clusters as a heatmap and color code them based on age and sex. 
+
+completion:
+The tables must be read in first. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to cluster the samples and display them as a heatmap "pheatmap" package can be used. Before we cluster, we can filter the data to retain features with highest variation, this will  also decrease the computation time. We can cluster and display the samples as heatmap with extra color coding based on Age and sex. This can be achieved as follows:  
+
+```{r,eval=FALSE}
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# pick the most variable CpGs, we pick top 1000
+rowvars <- apply(CpG_data,1,var) # calculate variance per CpG
+CpG_data2 <- CpG_data[ order(rowvars,decreasing = TRUE)[1:1000],]
+
+# now we can plot the heatmap
+# We first make the columns side annotation
+# data frame to color code based on age and sex
+annCol=subjects[,c("Age","sex"),drop=FALSE]
+rownames(annCol)=subjects[,"dbGaP ID"]
+library(pheatmap)
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data2)>500){
+  CpG_data2 <- CpG_data2[,sample(ncol(CpG_data2),500)]
+}
+
+# plot the heatmap, hide rownames and colnames if there are more than 10
+# columns or rows
+pheatmap(CpG_data2,annotation_col =annCol, 
+         show_rownames=ifelse(nrow(CpG_data2)<11,TRUE,FALSE),
+         show_colnames=ifelse(ncol(CpG_data2)<11,TRUE,FALSE))
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no, tags: normalization
+
+prompt:
+We have the following dataset. It contains CpG methylation values per CpG and per individual as a table, this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Can you log-normalize the colums of this table?
+  
+completion:
+We first read the methylation file and arrange the row names and column names. Then we can log transform the columns with log() function easily. 
+
+```{r,eval=FALSE}
+library(data.table)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+# log transform the data, we add a pseudo count to avoid log(0)
+logCpG_data <- log(CpG_data+1)
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no, tags: normalization
+
+prompt:
+I have a “metRmOlWithDbgapId.txt” file. It contains CpG methylation values per CpG and per individual as a table. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Can you log-transform and the scale the colums of this table?
+  
+completion:
+We first read the methylation file and arrange the row names and column names. Then we can log transform the columns with log() function easily. We then use scale() function to center and scale the data. 
+
+```{r}
+library(data.table)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+# log transform the data, we add a pseudo count to avoid log(0)
+logCpG_data <- log(CpG_data+1)
+
+# scaling the columns
+slogCpG_data <- scale(logCpG_data)
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: yes, tags: subsetting 
+
+prompt:
+We have the following dataset. It contains CpG methylation values per CpG and per individual as a table, this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Can you subset the data based on most variable CpGs?
+
+completion:
+We first read the methylation file and arrange the row names and column names. We then calculate variance of each CpG, represented in the rows, and select the top 10% of most variable CpGs. 10% is an arbitrary cutoff.
+
+```{r}
+library(data.table)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+# pick the most variable CpGs, we pick top 1000
+library(matrixStats)
+rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+CpG_data2 <- CpG_data[ order(rSds,decreasing = TRUE)[1:(nrow(CpG_data)*0.1)],]
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: semi, tags: subsetting
+
+prompt:
+We have the following dataset. It contains CpG methylation values per CpG and per individual as a table, this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Can you subset the data based on top 25% most variable CpGs?
+
+completion:
+We first read the methylation file and arrange the row names and column names. We then calculate standard deviation of each CpG, represented in the rows, and select the top 25% of most variable CpGs.
+
+```{r}
+library(data.table)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundant CPG_id column
+CpG_data <- CpG_data[,-1]
+
+# pick the most variable CpGs, we pick top 1000
+library(matrixStats)
+rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+# order CpGs by decreasing SD and select top 25%
+CpG_data2 <- CpG_data[ order(rSds,decreasing = TRUE)[1:(nrow(CpG_data)*0.25)],]
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | random forests
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to build a predictive model we can use elastic net and random forests, these methods can deal with large number of predictive variables and also rank them based on their importance. Before we build the model we will filter predictor variables based on their variability so we retain the most variable predictors. In addition, if there are more samples than 500, we will randomly sample samples column. These will save us compute time if the dataset is large. We can build the models and extract most important variables as follows:
+
+```{r,eval=FALSE}
+# read in the data
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapIdHeader.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables 
+data <- merge(subjects[,c("dbGaP ID","Age")],tCpG_data,
+           by.x="dbGaP ID",by.y="row.names")
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+# build random forest model
+require(ranger)
+require(caret)
+
+
+# we will do no resampling based prediction error
+# although it is advised to do so even for random forests
+trctrl <- trainControl(method = "none")
+
+# we will now train random forest model using ranger package
+rfFit <- train(as.matrix(data[,-1]),data$Age, 
+                method = "ranger",
+                trControl=trctrl,
+                importance="permutation", # calculate importance
+               tuneGrid = data.frame(mtry=10,
+                                     min.node.size = 5,
+                                     splitrule="variance")) # needed for regression
+
+# extract importance and plot 
+plot(varImp(rfFit),top=10,main="random forest most important variables")
+
+# build elastic net model
+require(glmnet)
+
+# this method controls everything about training
+# we will just set up 5-fold cross validation
+trctrl <- trainControl(method = "cv",number=5)
+
+# we will now train elastic net model
+enetFit <- train(as.matrix(data[,-1]),data$Age, 
+                 method = "glmnet",
+                 trControl=trctrl,
+                 # alpha and lambda paramters to try
+                 tuneGrid = data.frame(alpha=0.5,
+                                       lambda=seq(0.1,0.7,0.05)))
+# extract importance and plot
+plot(varImp(enetFit),top=10,main="elastic net most important variables")
+```
+
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | random forests | glmnet
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive model. Do not filter any CpGs, use all CpGs as predictor variables in the model.
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to build a predictive model we can use elastic net and random forests, these methods can deal with large number of predictive variables and also rank them based on their importance. If there are more samples than 500, we will randomly sample samples column. These will save us compute time if the dataset is large. We can build the models and extract most important variables as follows:
+
+```{r}
+# read in the data, we use data.table for fast reading of files
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapIdHeader.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables 
+data <- merge(subjects[,c("dbGaP ID","Age")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+# build random forest model
+require(ranger)
+require(caret)
+
+
+# we will do no resampling based prediction error
+# although it is advised to do so even for random forests
+trctrl <- trainControl(method = "none")
+
+# we will now train random forest model using ranger package
+rfFit <- train(as.matrix(data[,-1]),data$Age, 
+               method = "ranger",
+               trControl=trctrl,
+               importance="permutation", # calculate importance
+               tuneGrid = data.frame(mtry=sqrt(ncol(data)),
+                                     min.node.size = 5,
+                                     # needed for regression
+                                     splitrule="variance"))
+               
+
+# extract importance and plot 
+plot(varImp(rfFit),top=10,main="random forest most important variables")
+
+# build elastic net model
+require(glmnet)
+
+# this method controls everything about training
+# we will just set up 5-fold cross validation
+trctrl <- trainControl(method = "cv",number=5)
+
+# we will now train elastic net model
+enetFit <- train(as.matrix(data[,-1]),data$Age, 
+                 method = "glmnet",
+                 trControl=trctrl,
+                 # alpha and lambda paramters to try
+                 tuneGrid = data.frame(alpha=0.5,
+                                       lambda=seq(0.1,0.7,0.05)))
+# extract importance and plot
+plot(varImp(enetFit),top=10,main="elastic net most important variables")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: semi, tags: predictive modelling | random forests
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive model. Use random forest for modeling. 
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. The predictive model will be built using random forests, this method can deal with large number of predictive variables and also rank them based on their importance. Before we build the model we will filter predictor variables based on their variability so we retain the most variable predictors. In addition, if there are more samples than 500, we will randomly sample samples column. These will save us compute time if the dataset is large. We can build the models and extract most important variables as follows:
+
+```{r}
+# read in the data
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapIdHeader.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables 
+data <- merge(subjects[,c("dbGaP ID","Age")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+# build random forest model
+require(ranger)
+require(caret)
+
+
+# we will do no resampling based prediction error
+# although it is advised to do so even for random forests
+trctrl <- trainControl(method = "none")
+
+# we will now train random forest model using ranger package
+rfFit <- train(as.matrix(data[,-1]),data$Age, 
+               method = "ranger",
+               trControl=trctrl,
+               importance="permutation", # calculate importance
+               tuneGrid = data.frame(mtry=sqrt(ncol(data)),
+                                     min.node.size = 5,
+                                     splitrule="variance")) # needed for regression
+
+# extract importance and plot 
+plot(varImp(rfFit),top=10,main="random forest most important variables")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | random forests
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","Race" and "sex" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, Race and sex. Then display most important variables for the predictive model. 
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to build a predictive model we can use elastic net and random forests, these methods can deal with large number of predictive variables and also rank them based on their importance. In addition to CpGs, we will also use "Race" and "sex" columns in "subjects.txt" as predictive variables. We can build the models and extract most important CpG variables as follows: 
+
+```{r}
+# read in the data
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables but keep Race and sex columns from subjects
+data <- merge(subjects[,c("dbGaP ID","Age","Race","sex")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+# build random forest model
+require(ranger)
+require(caret)
+
+
+# we will do no resampling based prediction error
+# although it is advised to do so even for random forests
+trctrl <- trainControl(method = "none")
+
+# we will now train random forest model using ranger package
+rfFit <- train(as.matrix(data[,-1]),data$Age, 
+               method = "ranger",
+               trControl=trctrl,
+               importance="permutation", # calculate importance
+               tuneGrid = data.frame(mtry=sqrt(ncol(data)),
+                                     min.node.size = 5,
+                                     splitrule="variance")) # needed for regression
+
+# extract importance and plot 
+plot(varImp(rfFit),top=10,main="random forest most important variables")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | linear models
+  
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Find all CpGs associated with Age, and display top 20 CpGs. 
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. To find all the associated CpGs linear modeling can be used to assess the statistical association between each CpG and the age of the individuals. We will scale the datasets prior to linear modeling so that the linear model coeffcients are comparable between different CpGs. We will use those coefficients to rank the CpGs based on their association. Here is how we can do this:
+
+```{r}
+# read in files
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables but keep Race and sex columns from subjects
+data <- merge(subjects[,c("dbGaP ID","Age")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+# build a set of linear models for each CpG
+# we remove the Age column from data for our linear model
+# we scale both X and Y variables so that coefficients are comperable across 
+# models
+res <- lm(scale(as.matrix(data[,-1])) ~ scale(data$Age))  
+coefs <- res$coefficients[2,]
+
+# since the input variables are scaled we can simply compare the coefficients 
+# from each model to decide on top associated CpGs
+coefsOrd <- coefs[order(abs(coefs),decreasing = TRUE )][1:20]
+
+# plot the coefficients of top CpGs
+library(ggplot2)
+# Basic barplot
+p <- ggplot() + geom_bar(aes(x=names(coefsOrd), y=coefsOrd), stat='identity') 
+# Horizontal bar plot
+p + xlab('correlation coef.') + ylab('CpG ids')+ coord_flip() + 
+  ggtitle("top 20 CpGs associated with Age")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | linear models | batch correction | unwanted variation  
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. To find all of age associated CpGs that are not associated with race or sex, two consecutive linear models can be used. First model will create the remove the effect of sex and race, we will use residuals from this models for the next set of models. The next set of models will assess the statistical association between each CpG and the age of the individuals without the effect of race and sex, since their effects are removed from the data with the initial linear models. Here is how we can do this:
+
+```{r}
+# read in files
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables but keep Race and sex columns from subjects
+data <- merge(subjects[,c("dbGaP ID","Age","sex","Race")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+
+# remove the effects of Race and sex covariates by extracting residuals
+res <- lm(as.matrix(data[,-c(1:3)]) ~ as.factor(data$Race)+as.factor(data$sex))  
+resid <- res$residuals
+
+# build a set of linear models for each CpG
+# we remove the Age column from data for our linear model
+# we scale both X and Y variables so that coefficients are comperable across 
+# models
+res <- lm( scale(resid) ~ scale(data$Age) )  
+coefs <- res$coefficients[2,]
+
+# since the input variables are scaled we can simply compare the coefficients
+# from each model to decide on top associated CpGs
+coefsOrd <- coefs[order(abs(coefs),decreasing = TRUE )][1:20]
+
+# plot the coefficients of top CpGs
+library(ggplot2)
+# Basic barplot
+p <- ggplot() + geom_bar(aes(x=names(coefsOrd), y=coefsOrd), stat='identity') 
+# Horizontal bar plot
+p + xlab('correlation coef.') + ylab('CpG ids')+ coord_flip() + 
+  ggtitle("top 20 CpGs associated with Age")
+
+
+pr <- prcomp(resid[,c(names(coefsOrd))])
+
+PCAdata <- cbind(pr$x[,1:3],data[,c("Age","Race","sex")])
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+p1 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Age)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Age")
+
+p2 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Race)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Race")
+
+p3 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = sex)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by sex")
+
+library("cowplot") # needed to combine plots
+plot_grid(p1, p2, p3,
+          ncol = 2, nrow = 2)
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: semi, tags: PCA | dimension reduction
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Plot samples in multiple PCA plots. Color code samples first by Age, then sex and then race. 
+
+completion:
+The tables must be read in first. We can use `data.table::fread()` function for this purpose as it can read files faster. In order to plot samples, we first need to perform PCA. Before we apply PCA, we can filter the data to retain features with highest variation, this will  also decrease the computation time. if there are too many samples, we will also subsample them to decrease computation time. We can than plot the samples on first two principal components and color code each sample based on their age, sex and race in three different plots. This can be achieved as follows: 
+
+```{r}
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+CpG_data <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundant CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+
+# if there are too many variables pick the most variable CpGs, we pick top 1000
+if( nrow(CpG_data) > 1000){
+  rowvars <- apply(CpG_data,1,var) # calculate variance per CpG
+  CpG_data <- CpG_data[ order(rowvars,decreasing = TRUE)[1:1000],]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables but keep Race and sex columns from subjects
+data <- merge(subjects[,c("dbGaP ID","Age","sex","Race")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+
+# remove the ID column as we don't need it for modeling
+data <- data[,-1]
+
+
+# calculate PCA for samples, do not need Age, sex and race in PCA
+pr <- prcomp(data[,-c(1:3)],center=TRUE,scale=TRUE) 
+
+# plot new coordinates from PCA, projections on eigenvectors
+# make a new data frame that contains the PC coordinates and Age, sex and race
+# the data is ordered the same way, we can use cbind()
+PCAdata <- cbind(pr$x[,1:2],data[,c("Age","Race","sex")])
+
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+p1 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Age)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Age")
+
+p2 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Race)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Race")
+
+p3 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = sex)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by sex")
+
+library("cowplot") # needed to combine plots
+plot_grid(p1, p2, p3,
+          ncol = 2, nrow = 2)
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: semi, tags: PCA | dimension reduction | batch correction | unwanted variation 
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual sample as a table this is contained in the “metRmOlWithDbgapId.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Remove the effect of Race and sex from the CpG methylation values and plot samples in multiple PCA plots. Color code samples first by Age, then sex and then race. 
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. Then we will need to merge files based on sample ids. Before we do any modeling, we can filter the data to retain features with highest variation, this will  also decrease the computation time. if there are too many samples, we will also subsample them to decrease computation time.To remove the effect of race and sex on CpG methylation linear models can be used. We can fit a linear model to the methylation values as a function of race and sex. we can replace the methylation values by the residual from the linear model fit fit. These "decorrelated" features will then be used in PCA. We can than plot the samples on first two principal components and color code each sample based on their age, sex and race in three different plots. This can be achieved as follows: 
+
+```{r}
+# read methylation age data
+library(data.table)
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapIdHeader.txt",header = TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 1000 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables 
+data <- merge(subjects[,c("dbGaP ID","Age","Race","sex")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+
+# remove the effects of Race and sex covariates by extracting residuals
+res <- lm(as.matrix(data[,-c(1:4)]) ~ as.factor(data$sex) + as.factor(data$Race))  
+resid <- res$residuals
+
+#  data without batch effects
+tr.data <- resid 
+
+# calculate PCA for samples, we must first transpose the data for this
+# apply PCA only on top most important variables
+pr <- prcomp(tr.data,center=F,scale=F) 
+
+# plot new coordinates from PCA, projections on eigenvectors
+# since the matrix is transposed eigenvectors represent 
+
+# make a new data frame that contains the PC coordinates and Age
+# using cbind, PCA doesn't change the order of rows, we can just cbind
+PCAdata <- cbind(pr$x[,1:2],data[,c("dbGaP ID","Age","Race","sex")])
+
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+p1 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Age)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Age")
+
+p2 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Race)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Race")
+
+p3 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = sex)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by sex")
+
+library(cowplot) # needed to combine plots
+plot_grid(p1, p2, p3,
+          ncol = 2, nrow = 2)
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no, tags: subsetting
+ 
+prompt:
+We have a table that contains CpG methylation values per CpG and per individual sample. This table is contained in the “metRmOlWithDbgapId.txt” file. Each column is an experimental sample from an individual represented by a DBGapId, the id information is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Subsample samples column if there are more than 500 samples.
+
+completion:
+First we need to read in the file. We can use `data.table::fread()` function for this purpose as it can read files faster. We can then
+check if there are more columns than 500 and subsample columns if needed.
+Here is how we can do this:
+```{r}
+library(data.table)
+
+# read methylation age data
+mydata <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, 
+                            data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(mydata) <- mydata[,1]
+
+#drop the now redundant CPG_id column
+mydata <- mydata[,-1]
+
+
+# if there are more than 500 samples we will sample randomly 500 samples
+# to decrease the compute time
+if(ncol(mydata)>500){
+  mydata <- mydata[,sample(ncol(mydata),500)]
+}
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no, tags: subsetting 
+prompt:
+We have a table that contains expression values per gene and per individual sample. This table is contained in the “metRmOlWithDbgapId.txt” file. Each column is an experimental sample from an individual represented by a DBGapId, which is included as the first row. Each row is a gene represented by "gene_id", values in the table are expression values. 
+if number of features or genes in this case is above 1000, then subset the features to retain most variable 1000 features/genes.
+
+completion:
+First we need to read in the file. We can use `data.table::fread()` function for this purpose as it can read files faster. We can then first scale the table columnwise and then check if there are more rows than 1000 and if there are we can rank them based on their variation and retain the top 1000 most variable rows. Here is how we can do this:
+
+```{r}
+library(data.table)
+library(matrixStats)
+
+# read gene expression data
+mydata <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the gene_id we put that as row names
+rownames(mydata) <- mydata[,1]
+
+#drop the now redundant gene_id column
+mydata <- mydata[,-1]
+
+# scale data to normalize the values
+mydata <- scale(mydata)
+
+
+# if there are too many variables pick the most variable genes, we pick top 1000
+if( nrow(mydata) > 1000){
+  rowvars <- matrixStats::rowVars(mydata) # calculate variance per gene
+  mydata <- mydata[ order(rowvars,decreasing = TRUE)[1:1000],]
+}
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no, tags: subsetting 
+prompt:
+We have a table that contains expression values per gene and per individual sample. This table is contained in the “metRmOlWithDbgapId.txt” file. Each column is an experimental sample from an individual represented by a DBGapId, which is included as the first row. Each row is a gene represented by "gene_id", values in the table are expression values. Please do the following.
+if number of features or genes in this case is above 1000, then subset the features to retain most variable 1000 features/genes.
+Also, random sample the sample columns if there are more than 500 columns. 
+
+completion:
+First we need to read in the file. We can use `data.table::fread()` function for this purpose as it can read files faster. We can then
+check if there are more columns than 500 and subsample columns if needed. Then we can scale the features/columns so that we can calculate variation accross rows
+and rank rows based on variation. If there are more than 1000 rows, we will
+take the most variable 1000 rows. Here is how we can do this:
+```{r}
+library(data.table)
+
+# read data
+mydata <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the gene_id we put that as row names
+rownames(mydata) <- mydata[,1]
+
+#drop the now redundant gene_id column
+mydata <- mydata[,-1]
+
+
+# if there are more than 500 samples we will sample randomly 500 samples
+# to decrease the compute time
+if(ncol(mydata)>500){
+  mydata <- mydata[,sample(ncol(mydata),500)]
+}
+
+
+# scale the features so they have similar values
+mydata <- scale(mydata)
+
+# if there are too many rows, pick the most variable rows, we pick top 1000
+if( nrow(mydata) > 1000){
+  rowvars <- apply(mydata,1,var) # calculate variance per gene
+  mydata <- mydata[ order(rowvars,decreasing = TRUE)[1:1000],]
+}
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no, tags: data transformation
+prompt:
+We have a table that contains CpG methylation values per CpG and per individual sample. This table is contained in the “metRmOlWithDbgapId.txt” file. Each column is an experimental sample from an individual represented by a DBGapId, the id information is included as the first row. Transform the columns of this table
+so that the bimodal methylation distributions looks more gaussian.
+
+
+completion:
+First we need to read in the file. We can use `data.table::fread()` function for this purpose as it can read files faster. We can then transform the bimodal data  data using logit function. Here is how we can do all this:
+```{r}
+# read data
+library(data.table)  
+mydata <- data.table::fread("metRmOlWithDbgapId.txt",header = TRUE, data.table=FALSE)
+
+# first row is the gene_id we put that as row names
+rownames(mydata) <- mydata[,1]
+
+#drop the now redundant gene_id column
+mydata <- mydata[,-1]
+
+# use logit-like function but add pseudo-count to deal with 0s
+mydata  <- log2((mydata +0.01)/(1-mydata +0.01))
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: predictive modelling | random forests | PCA | dimension reduction | batch correction | unwanted variation
+
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. "sex" and "Race" columns are potential batch effects. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Remove the effects of "sex" from methylation data. Then, do predictive modeling to select most important features for "Age" prediction and then do PCA using most important features. Color code the resulting PCA plot by Age.
+
+completion:
+First we need to read in the files. We can use `data.table::fread()` function for this purpose as it can read files faster. The predictive model will be built using random forests, this method can deal with large number of predictive variables and also rank them based on their importance. Before we build the model we will filter predictor variables based on their variability so we retain the most variable predictors. In addition, if there are more samples than 500, we will randomly sample samples column. These will save us compute time if the dataset is large.
+We remove the effects of sex using linear regression and we operate on
+the residuals of  those models. Next, we build a predictive model with random forests and extract top 20 most important predictor variables. We use these variables in PCA and plot the samples on PC1 and PC2 and color code by age. We can do these as follows:
+
+```{r} 
+# read in the data
+library(data.table)
+
+# read methylation age data
+subjects <- data.table::fread("subjects.txt", header = TRUE, 
+                              data.table=FALSE)
+# read methylation data
+CpG_data <- data.table::fread("metRmOlWithDbgapIdHeader.txt",header=TRUE, data.table=FALSE)
+
+# first row is the CpG_id we put that as row names
+rownames(CpG_data) <- CpG_data[,1]
+
+#drop the now redundat CPG_id column
+CpG_data <- CpG_data[,-1]
+
+
+# scale samples so that they have similar scales
+CpG_data <- scale(CpG_data)
+
+# in order to save compute time we pick the most variable CpGs, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(CpG_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(CpG_data)) # calculate variance per CpG
+  # order CpGs by decreasing SD and select top 1000 CpGs
+  CpG_data <- CpG_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# we may need to filter the number of samples for efficient visualization
+# if there are more than 500 samples we will sample randomly 500 samples
+# to decrease the compute time
+if(ncol(CpG_data)>500){
+  CpG_data <- CpG_data[,sample(ncol(CpG_data),500)]
+}
+
+# transpose data for merging by columns
+# CpG_data must be transposed as its header should match the column of "subjects"
+tCpG_data <- t(CpG_data)
+
+# merge tables 
+data <- merge(subjects[,c("dbGaP ID","Age","Race","sex")],tCpG_data,
+              by.x="dbGaP ID",by.y="row.names")
+
+# remove the effects of Race and sex covariates by extracting residuals
+res <- lm(as.matrix(data[,-c(1:4)]) ~ as.factor(data$sex))  
+resid <- res$residuals
+
+# training data without batch effects
+tr.data <- resid 
+
+# build random forest model
+require(ranger)
+require(caret)
+
+
+# we will do no resampling based prediction error
+# although it is advised to do so even for random forests
+trctrl <- trainControl(method = "none")
+
+# we will now train random forest model using ranger package
+rfFit <- train(as.matrix(tr.data),data$Age, 
+               method = "ranger",
+               trControl=trctrl,
+               importance="permutation", # calculate importance
+               tuneGrid = data.frame(mtry=sqrt(ncol(tr.data)),
+                                     min.node.size = 5,
+                                     splitrule="variance")) # needed for regression
+
+# extract importance and plot 
+importance <- varImp(rfFit)$importance
+mostImp <- rownames(importance[order(importance[,1],decreasing=TRUE),,drop=F] )
+
+# calculate PCA for samples, we must first transpose the data for this
+# apply PCA only on top most important variables
+pr <- prcomp(tr.data[,mostImp[1:20]],center=F,scale=F) 
+
+# plot new coordinates from PCA, projections on eigenvectors
+# since the matrix is transposed eigenvectors represent 
+
+# make a new data frame that contains the PC coordinates and Age
+# using cbind, PCA doesn't change the order of rows, we can just cbind
+PCAdata <- cbind(pr$x[,1:2],data[,c("dbGaP ID","Age","Race","sex")])
+
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+p1 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Age)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Age")
+
+p2 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = Race)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by Race")
+
+p3 <- ggplot(PCAdata, aes(x = PC1, y = PC2, colour = sex)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by sex")
+
+library(cowplot) # needed to combine plots
+plot_grid(p1, p2, p3,
+          ncol = 2, nrow = 2)
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: clustering | heatmap
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. First column is gene names and the rest are gene expression values. First row contains the sample ids. How many clusters of samples do I have in my gene expression data? Visualize clusters via heatmap and PCA.
+
+completion:
+To determine the number of clusters in your gene expression data, you can use clustering algorithms such as hierarchical clustering or k-means clustering. The number of clusters depend on the clustering algorithm as well as the data. 
+Here is a way to perform hierarchical clustering, decide on optimum number of clusters and visualize the clusters as heatmap and PCA plots. We will first read in the data then we will do some normalization and filter data to retain most variable genes. We will than use Nbclust to determine the optimum number of clusters using
+silhouette algorithm and hierarchical clustering with Ward method. Finally we plot the clusters as a heatmap and also a color coded PCA plot. 
+```{r}
+# read in the data
+library(data.table)
+
+# read gene expression data
+exp_data <- data.table::fread("leukemiaExp.txt",header = TRUE, data.table=FALSE)
+
+# first row is the gene id we put that as row names
+rownames(exp_data) <- exp_data[,1]
+
+#drop the now redundant gene id column
+exp_data <- exp_data[,-1]
+
+# scale samples so that they have similar scales
+exp_data <- scale(exp_data )
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 rows
+if(nrow(exp_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(exp_data)) # calculate variance per gene
+  # order genes by decreasing SD and select top 1000 
+  exp_data <- exp_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+
+
+# find optimum number of clusters using silhouette method , 
+# try between 2 and 7 clusters
+library(NbClust)
+nb = NbClust(data=t(exp_data), 
+             distance = "euclidean", min.nc = 2,
+        max.nc = 7, method = "ward.D2",
+        index="silhouette")
+
+# make the heatmap with predefined number of clusters
+library(pheatmap)
+pheatmap(exp_data,clustering_method = "ward.D2",
+         cutree_cols = nb$Best.nc[1] )
+
+# make the PCA, transpose the expression matrix, as we are interested in samples
+pr <- prcomp(t(exp_data))
+# make a new data frame that contains the PC coordinates and Age
+# using data.frame, PCA doesn't change the order of rows.
+PCAdata <- data.frame(pr$x[,1:2],clusters=as.character(nb$Best.partition))
+
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+ggplot(PCAdata, aes(x = PC1, y = PC2, colour = clusters)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by clusters")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: clustering | heatmap | PCA | dimension reduction 
+prompt:
+I have the following proteomics data, "leukemiaExp.txt". Each row is a protein and each column is a distinct sample. First column is protein names and the rest are protein abundance values. First row contains the sample ids. How many clusters of samples do I have in my proteomics data? Visualize clusters via heatmap and PCA.
+
+completion:
+To determine the number of clusters in your proteomics data, you can use clustering algorithms such as hierarchical clustering or k-means clustering. The number of clusters depend on the clustering algorithm as well as the data. 
+Here is a way to perform hierarchical clustering, decide on optimum number of clusters and visualize the clusters as heatmap and PCA plots. We will first read in the data then we will do some normalization and filter data to retain most variable genes. We will than use 'Nbclust' to determine the optimum number of clusters using
+silhouette algorithm and hierarchical clustering with Ward method. Finally we plot the clusters as a heatmap and also a color coded PCA plot. 
+```{r}
+# read in the data
+library(data.table)
+
+# read proteomics data
+p_data <- data.table::fread("leukemiaExp.txt",header = TRUE, data.table=FALSE)
+
+# first row is the protein id we put that as row names
+rownames(p_data) <- p_data[,1]
+
+#drop the now redundant protein id column
+p_data <- p_data[,-1]
+
+# take the log if the distributions are long tailed
+library(moments)
+if(mean(skewness(p_data)) > 0.3){
+  p_data <- log2(p_data)
+}
+
+# scale columns so that each sample have similar scales of scores
+p_data <- scale(p_data )
+
+# in order to save compute time we pick the most variable proteins, we pick top 1000 if there are more than 1000 rows
+if(nrow(p_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(p_data)) # calculate variance per protein
+  # order genes by decreasing SD and select top 1000 protein
+  p_data <- p_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# find optimum number of clusters using silhouette method , 
+# try between 2 and 7 clusters
+library(NbClust)
+nb = NbClust(data=t(p_data), 
+             distance = "euclidean", min.nc = 2,
+             max.nc = 7, method = "ward.D2",
+             index="silhouette")
+
+# make the heatmap with predefined number of clusters
+library(pheatmap)
+pheatmap(p_data,clustering_method = "ward.D2",
+         cutree_cols = nb$Best.nc[1] )
+
+# make the PCA, transpose the protein matrix, as we are interested in samples
+pr <- prcomp(t(p_data))
+# make a new data frame that contains the PC coordinates and Age
+# using data.frame, PCA doesn't change the order of rows.
+PCAdata <- data.frame(pr$x[,1:2],clusters=as.character(nb$Best.partition))
+
+# plot scatterplot of samples over PC1 and PC2, color-coded by Age
+library(ggplot2)
+ggplot(PCAdata, aes(x = PC1, y = PC2, colour = clusters)) +
+  geom_point() + 
+  ggtitle("scatterplot of samples over PC1 and PC2, color-coded by clusters")
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: clustering | differential expression
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. First column is gene names and the rest are gene expression values. First row contains the sample ids. Find clusters of samples in my data and find genes associated with each cluster.
+
+completion:
+To determine genes associated with each cluster, you first need to use clustering algorithms such as hierarchical clustering or k-means clustering. We then decide on optimum number of clusters and get associated genes. We will first read in the data then we will do normalization and filter data to retain most variable genes. We will than use Nbclust to determine the optimum number of clusters using
+silhouette algorithm and hierarchical clustering with Ward method. Finally, we obtain, cluster specific genes using Kruskal-Wallis Rank Sum Test. We use genes significantly associated with clusters displayed on a heatmap clustered using the larger dataset. For illustration purposes, only top 20 most significant genes are displayed on the heatmap.
+```{r}
+# read in the data
+library(data.table)
+
+# read gene expression data
+exp_data <- data.table::fread("leukemiaExp.txt",header = TRUE, data.table=FALSE)
+
+# first row is the gene id we put that as row names
+rownames(exp_data) <- exp_data[,1]
+
+#drop the now redundant gene id column
+exp_data <- exp_data[,-1]
+
+# take the log if the distributions are long tailed
+library(moments)
+if(mean(skewness(exp_data)) > 0.3){
+  exp_data <- log2(exp_data)
+}
+
+# scale samples so that they have similar scales
+exp_data <- scale(exp_data )
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(exp_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(exp_data)) # calculate variance per gene
+  # order genes by decreasing SD and select top 1000 CpGs
+  exp_data <- exp_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+
+
+# find optimum number of clusters using silhouette method , 
+# try between 2 and 7 clusters
+library(NbClust)
+nb <- NbClust(data=t(exp_data), 
+             distance = "euclidean", min.nc = 2,
+             max.nc = 7, method = "ward.D2",
+             index="silhouette")
+
+
+# calculate p-values for genes associated with groups
+pvals <- apply(exp_data,1, function(x) kruskal.test(x,nb$Best.partition)$p.value)
+pvals <- p.adjust(pvals,"fdr" )
+
+
+# make the heatmap with predefined number of clusters
+library(pheatmap)
+# get the top 20 genes with lowest p-value of association with clusters
+top20 <- exp_data[rownames(exp_data) %in% names(pvals[order(pvals)])[1:20],]
+
+# cluster using all the data
+hclu=hclust(dist(t(exp_data)),"ward.D2")
+
+# display only top20 genes, with  the clustering of the whole data
+pheatmap(top20,
+         clustering_method = "ward.D2",
+         cluster_cols=hclu,
+         cutree_cols = nb$Best.nc[1] )
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes: differential expression | heatmap 
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. First column is gene names and the rest are gene expression values. First row contains the sample ids. I have an annotation
+file called "leukemiaAnnot.txt" which contains sample annotfirst row of "leukemiaExp.txt". The 'leukemiaType' column is the most important column and
+defines sample groups. Find genes associated with 'leukemiaType' sample groups and display them in a heatmap.
+
+completion:
+To determine genes associated with each sample group, we need to apply a statistical test to test the association genes with sample groups. But, We will first read in the data then we will do normalization and filter data to retain most variable genes. Finally, we obtain, sample group specific genes using Kruskal-Wallis Rank Sum Test. We use genes significantly associated with leukemia type groups displayed on a heatmap. For illustration purposes, only top 20 most significant genes are displayed on the heatmap.
+
+```{r}
+# read in the data
+library(data.table)
+
+# read gene expression data with fread for fast reading
+exp_data <- data.table::fread("leukemiaExp.txt",header = TRUE, data.table=FALSE)
+# first column is the gene id we put that as row names
+rownames(exp_data) <- exp_data[,1]
+#drop the now redundant gene id column
+exp_data <- exp_data[,-1]
+
+annot <- data.table::fread("leukemiaAnnot.txt", data.table=FALSE)
+# first column is the sample id we put that as row names
+rownames(annot ) <-annot [,1]
+#drop the now redundant sample id column
+annot  <- annot[,-1]
+
+
+
+library(moments)
+
+# take the log if the distributions are long tailed
+if(mean(skewness(exp_data)) > 0.3){
+  exp_data <- log2(exp_data)
+}
+
+# scale samples so that they have similar scales
+exp_data <- scale(exp_data )
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 genes
+if(nrow(exp_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(exp_data)) # calculate variance per gene
+  # order genes by decreasing SD and select top 1000 gene
+  exp_data <- exp_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+
+
+# mamtch the annotation with expression table to figure which expression column
+# matches the LeukemiaType annotation
+idx <- match(colnames(exp_data),rownames(annot))
+
+
+# calculate p-values for genes associated with groups per gene
+pvals <- apply(exp_data,1, function(x) kruskal.test(x,annot[idx,"LeukemiaType"])$p.value)
+# multiple-testing correction applied
+pvals <- p.adjust(pvals,"fdr" ) 
+
+
+# make the heatmap with predefined number of clusters
+library(pheatmap)
+# get the top 20 genes with lowest p-value of association with clusters
+top20 <- exp_data[rownames(exp_data) %in% names(pvals[order(pvals)])[1:20],]
+
+
+# display only top20 genes, with  the clustering of the whole data
+pheatmap(top20,
+         clustering_method = "ward.D2",cluster_cols=FALSE,
+         annotation_col=annot[,"LeukemiaType",drop=FALSE])
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats | external data, numData: 2, seeData: no, openEnded: yes, tags: clustering | differential expression | gene set analysis  
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. First column is gene names and the rest are gene expression values. First row contains the sample ids. Find clusters of samples in my data, then find genes associated with each cluster. Finally, find genes associated with my clusters and do geneset analysis on them
+
+completion:
+To determine genes associated with each cluster, you first need to use clustering algorithms such as hierarchical clustering or k-means clustering. We then decide on optimum number of clusters and get associated genes. We will first read in the data then we will do normalization and filter data to retain most variable genes. We will than use Nbclust to determine the optimum number of clusters using
+silhouette algorithm and hierarchical clustering with Ward method. Finally, we obtain, cluster specific genes using Kruskal-Wallis Rank Sum Test. We calculate the direction of expression change (up-regulation or down-regulation) by comparing each clusters expression profile with the rest of the samples per gene. We compile a list of up-regulated and down-regulated genes per cluster. Each such gene set is fed into 'gprofiler2' package for gene set analysis. Results are displayed as a table.
+
+```{r}
+# read in the data
+library(data.table)
+
+# read gene expression data
+exp_data <- data.table::fread("leukemiaExp.txt",header = TRUE, data.table=FALSE)
+
+# first row is the gene id we put that as row names
+rownames(exp_data) <- exp_data[,1]
+
+#drop the now redundant gene id column
+exp_data <- exp_data[,-1]
+
+library(moments)
+# take the log if the distributions are long tailed
+if(mean(skewness(exp_data)) > 0.3){
+  exp_data <- log2(exp_data)
+}
+
+# scale samples so that they have similar scales
+exp_data <- scale(exp_data )
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 CpGs
+if(nrow(exp_data) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(exp_data)) # calculate variance per gene
+  # order genes by decreasing SD and select top 1000 CpGs
+  exp_data <- exp_data[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+
+
+# find optimum number of clusters using silhouette method , 
+# try between 2 and 7 clusters
+library(NbClust)
+nb <- NbClust(data=t(exp_data), 
+              distance = "euclidean", min.nc = 2,
+              max.nc = 7, method = "ward.D2",
+              index="silhouette")
+
+
+# mean differences between clusters
+mat.diff=cbind()
+for( i in 1:length(unique(nb$Best.partition))){
+  clus <- nb$Best.partition
+  clus[clus != i] <- -1 
+  
+  # calculate p-values associated with each group versus other samples
+  pvals <- apply(exp_data,1, function(x) kruskal.test(x,clus)$p.value)
+  pvals <- p.adjust(pvals,"fdr" )
+  # calculate differences in expression means
+  mdiff<- rowMeans(exp_data[,clus == i])-rowMeans(exp_data[,clus != i])
+  
+  mdiff[pvals > 0.01] <- 0
+  
+  # output differences in mean, NA if test is not significant
+  mat.diff <- cbind(mat.diff, mdiff)
+  
+}
+
+# get cluster associated up and down regulated genes
+gset <- list()
+for(i in 1:ncol(mat.diff)){
+  
+  gset[[paste0("clu",i,"_up")]] <- rownames(mat.diff[mat.diff[,i] > 1,])
+  gset[[paste0("clu",i,"_down")]] <- rownames(mat.diff[mat.diff[,i] < -1,])
+  
+}
+
+# create a data frame from genesets to write out
+gset.df <- stack(gset)
+colnames(gset.df) <- c("genes","annotation")
+write.tsv("geneSet.table.txt")
+
+# do enrichment analysis
+library(gprofiler2)
+
+# return a link to the analysis
+multi_gostres2 <- gost(query = gset , 
+                       multi_query = TRUE,
+                       as_short_link = TRUE)
+
+multi_gostres2  
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | normalization | dimension reduction
+
+prompt:
+I have the following count table for an RNA-seq experiment,"SRP021193.raw_counts.tsv". First, column is gene names, last column is gene length and the rest are samples. Normalize counts and make a PCA plot for samples.
+
+completion:
+Certainly! We will first read the count table from the "SRP021193.raw_counts.tsv". Then, we will normalize the counts using DESeq2 and log scale normalized values. DESeq2 uses a method called "size factor normalization" to adjust the read counts. The basic idea is to divide the raw read counts for each sample by a scaling factor that represents the overall sequencing depth of the sample. This scaling factor, or "size factor," is calculated as the median of ratios of the observed read counts to the geometric means of the counts for each gene across all samples.
+
+Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plot to visualize the samples.
+```{r}
+library(DESeq2)
+library(ggplot2)
+
+
+# read expression data
+count_table <- read.table("SRP021193.raw_counts.tsv", 
+                          header = TRUE, row.names = 1, sep = "\t")
+# ignore the the width column, the last column
+count_table <- count_table[,-ncol(count_table)]
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+
+# Perform PCA on the normalized and transposed counts
+pca <- prcomp(t(assay(nrm_counts)))
+
+# Create PCA plot
+pca_plot <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  xlab(paste0("PC1: ", round(pca$sdev[1] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ylab(paste0("PC2: ", round(pca$sdev[2] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+# Display the PCA plot
+pca_plot
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | normalization | dimension reduction 
+prompt:
+I have the following count table for an RNA-seq experiment,"SRP021193.raw_counts.tsv". First column of the file is my gene names, and the last is region width, the rest of the columns are samples. I want to see how samples relate to each other in a plot. 
+
+completion:
+Certainly Master! We can do this via PCA analysis and by plotting samples over
+principal components. PCA on a gene expression dataset is a dimensionality reduction technique that identifies the principal components (major axes of variation) in the data, allowing visualization and analysis of the relationships among samples based on their gene expression patterns. We will first read the count table from the "SRP021193.raw_counts.tsv" file. Then, we will normalize the counts using DESeq2. Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plot to visualize the samples.
+```{r}
+library(DESeq2)
+library(ggplot2)
+
+# read count data with fread and convert to data.frame designating first column 
+# as row names
+count_table <- data.frame(data.table::fread("SRP021193.raw_counts.tsv"),
+                          row.names = 1)
+
+# ignore the the width column, the last column
+count_table <- count_table[,-ncol(count_table)]
+
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable feature, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance per feature/gene
+  # order genes by decreasing SD and select top 1000 gene
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+
+# Perform PCA on the normalized and transposed counts
+pca <- prcomp(t(nrm_counts))
+
+# Create PCA plot
+pca_plot <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  xlab(paste0("PC1: ", round(pca$sdev[1] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ylab(paste0("PC2: ", round(pca$sdev[2] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+# Display the PCA plot
+pca_plot
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | normalization | dimension reduction 
+prompt:
+I have the following count table for sequencing experiment, rows are regions of interest and columns are samples,"SRP021193.raw_counts.tsv".First column of the file is my region names, and the last is region width, the rest of the columns are samples. I want to see how my samples relate to each other based on read count profiles of my regions of interest.
+
+completion:
+To see how your samples relate to each other based on the read count profiles of your regions of interest, you can use principal component analysis (PCA). This method can help you identify potential sample groupings and visualize the relationships among samples based on their read count patterns. PCA is a dimensionality reduction technique that identifies the principal components (major axes of variation) in the data. It allows visualization and analysis of the relationships among samples based on their count patterns in a lower-dimensional space (e.g., 2D plot). We will first read the count table from the "SRP021193.raw_counts.tsv" file using data.table::fread() function, since the file might be large and might take a long time to read, this is a faster option. Then, we will normalize the counts using DESeq2. Since these are read counts, DESeq2 can handle the statistical assumptions that goes along with read count data.DESeq2 uses a method called "size factor normalization" to adjust the read counts. The basic idea is to divide the raw read counts for each sample by a scaling factor that represents the overall sequencing depth of the sample. This scaling factor, or "size factor," is calculated as the median of ratios of the observed read counts to the geometric means of the counts for each gene across all samples.
+
+Finally, we will perform a principal component analysis (PCA) on the normalized and then transposed counts and create a PCA plot to visualize the samples.
+```{r}
+library(DESeq2)
+library(ggplot2)
+library(data.table)
+
+# read count data with fread and convert to data.frame designating first column 
+# as row names
+count_table <- data.frame(data.table::fread("SRP021193.raw_counts.tsv"),
+                          row.names = 1)
+
+# ignore the the width column, the last column
+count_table <- count_table[,-ncol(count_table)]
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable proteins, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance per protein
+  # order genes by decreasing SD and select top 1000 protein
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+# Perform PCA on the normalized counts
+pca <- prcomp(t(nrm_counts))
+
+# Create PCA plot
+pca_plot <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  xlab(paste0("PC1: ", round(pca$sdev[1] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ylab(paste0("PC2: ", round(pca$sdev[2] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ggtitle("PCA plot for normalized read counts")
+
+# Display the PCA plot
+pca_plot
+```
+---TASK END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | normalization | dimension reduction 
+prompt:
+I have the following count table for sequencing experiment, rows are regions of interest and columns are samples,"SRP021193.raw_counts.tsv". The first column of the file is my region names, and the last is region width, the rest of the columns are samples. I want to see how my regions of interest relate to each other based on read count profiles across samples. 
+
+completion:
+To see how your regions of interest relate to each other based on the read count profiles, you can use principal component analysis (PCA). This method can help you identify potential sample groupings and visualize the relationships among regions based on their read count patterns. PCA is a dimensionality reduction technique that identifies the principal components (major axes of variation) in the data. It allows visualization and analysis of the relationships among samples based on their count patterns in a lower-dimensional space (e.g., 2D plot). We will first read the count table from the "SRP021193.raw_counts.tsv" file. Then, we will normalize the counts using DESeq2. Since these are read counts, DESeq2 can handle the statistical assumptions that goes along with read count data. Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plot to visualize the regions of interest.
+```{r}
+# libraries needed
+library(DESeq2)
+library(ggplot2)
+library(data.table)
+
+# read count data with fread and convert to data.frame designating first column 
+# as row names
+count_table <- data.frame(data.table::fread("SRP021193.raw_counts.tsv"),
+                          row.names = 1)
+# ignore the the width column, the last column
+count_table <- count_table[,-ncol(count_table)]
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable proteins, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance per protein
+  # order genes by decreasing SD and select top 1000 protein
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# Perform PCA on the normalized counts
+pca <- prcomp(nrm_counts)
+
+# Create PCA plot
+pca_plot <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  xlab(paste0("PC1: ", round(pca$sdev[1] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ylab(paste0("PC2: ", round(pca$sdev[2] / sum(pca$sdev) * 100, 1), "% variance")) +
+  ggtitle("PCA plot for normalized read counts over regions of interest")
+
+# Display the PCA plot
+pca_plot
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: UMAP | normalization | dimension reduction 
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.txt". The first column of the file is my gene names and the rest of the columns are samples. Normalize counts and make a UMAP plot for samples.
+
+completion:
+We will first read the count table from the "Supplementary_Table_1_exp.txt". Then, we will normalize the counts using DESeq2 and transform them to log scale. Finally,  we will use UMAP for displaying the samples. UMAP is a dimensionality reduction technique that preserves both local and global structure in the data, enabling a more interpretable visualization of complex data relationships. Here is the code:
+
+```{r}
+# needed libraries
+library(DESeq2)
+library(ggplot2)
+library(umap)
+library(data.table)
+
+# read expression data
+count_table <- data.frame(data.table::fread("Supplementary_Table_1_exp.txt"), 
+                          row.names = 1)
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance per gene
+  # order genes by decreasing SD and select top 1000 gene
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# Perform PCA on the normalized and transposed counts
+pca_res <- prcomp(t(nrm_counts))
+
+# Run UMAP on the normalized count data
+umap_result <- umap(pca_res$x[,1:3], n_neighbors = 0.2*nrow(pca_res$x), min_dist = 0.3, metric = "euclidean")
+
+# Convert UMAP result to a data frame
+umap_df <- as.data.frame(umap_result$layout)
+colnames(umap_df) <- c("UMAP1", "UMAP2")
+
+# Create UMAP plot using ggplot2
+umap_plot <- ggplot(umap_df, aes(x = UMAP1, y = UMAP2)) +
+  geom_point(size = 3) +
+  theme_bw() +
+  xlab("UMAP1") +
+  ylab("UMAP2") +
+  ggtitle("UMAP plot for normalized RNA-seq counts")
+
+# Display the UMAP plot
+umap_plot
+```
+---TASK END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | normalization | dimension reduction | clustering 
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.txt". The first column of the file is my gene names and the rest of the columns are samples. Normalize counts and make a PCA plot for samples, color code samples by cluster membership.
+
+completion:
+Certainly! We will first read the count table from the "Supplementary_Table_1_exp.txt". Then, we will normalize the counts using DESeq2 and transform them to the log scale. We cluster the samples using "hdbscan" algorithm. This is usually a fast and few-parameter clustering algorithm. Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plot to visualize the samples and the cluster membership.
+```{r}
+library(DESeq2)
+library(ggplot2)
+library(dbscan)
+library(data.table)
+
+# read expression data, assign first column to row names
+count_table <- data.frame(
+                data.table::fread("Supplementary_Table_1_exp.txt"), 
+                          row.names = 1)
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance/sd per gene
+  # order genes by decreasing SD and select top 1000 genes
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+
+# Perform PCA on the normalized and transposed counts
+pca_res <- prcomp(t(nrm_counts))
+
+
+# Cluster samples using HDBSCAN
+hdbscan_res <- hdbscan(pca_res$x[, 1:2], minPts = nrow(pca_res$x)*0.2)
+
+# Create a PCA plot of samples, color-coded by cluster membership
+pca_plot <- ggplot(data.frame(pca_res$x), aes(x = PC1, y = PC2, color = factor(hdbscan_res$cluster))) +
+  geom_point(size = 3) +
+  scale_color_discrete(name = "Cluster") +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()+
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+# Display the PCA plot
+pca_plot
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes, tags: PCA | dimension reduction  
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.txt". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make a PCA plots for samples, color code samples by "group" and then color code by "LibrarySelection" in my annotation data.
+
+completion:
+Certainly! We will first read the count table from the "Supplementary_Table_1_exp.txt" and the annotation data from "SRP021193.colData.tsv".  Then, we will normalize the read counts using DESeq2 and transform them to the log scale. Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plots to visualize the samples and the annotation data "group" and "LibrarySelection".
+```{r}
+library(DESeq2)
+library(ggplot2)
+library(data.table)
+
+# read expression data, assign first column to row names
+count_table <- data.frame(
+                    data.table::fread("Supplementary_Table_1_exp.txt"), 
+                          row.names = 1)
+
+# read annotation data, this is ready for DESeq2
+sample_info <- data.frame(data.table::fread("SRP021193.colData.tsv"), 
+                      row.names = 1,stringsAsFactors = TRUE)
+
+# order the sample_info rows in the same order of count_table columns
+sample_info <-sample_info[match( colnames(count_table),rownames(sample_info)),]
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance/sd per gene
+  # order genes by decreasing SD and select top 1000 genes
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# Perform PCA on the normalized and transposed counts
+pca_res <- prcomp(t(nrm_counts))
+
+# Create a PCA plot of samples, color-coded by diagnosis group
+pca_plot1 <- ggplot(data.frame(pca_res$x), aes(x = PC1, y = PC2, color = factor(sample_info$group))) +
+  geom_point(size = 3) +
+  scale_color_discrete(name = "Cluster") +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()+
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+
+
+# Create a PCA plot of samples, color-coded by Library Selection
+pca_plot2 <- ggplot(data.frame(pca_res$x), aes(x = PC1, y = PC2, color = factor(sample_info$LibrarySelection))) +
+  geom_point(size = 3) +
+  scale_color_discrete(name = "Cluster") +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()+
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+# Display the PCA plot
+library("cowplot") # needed to combine plots
+plot_grid(pca_plot1, pca_plot2,
+          ncol = 2, nrow = 1)
+
+
+
+```
+---TASK END
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | dimension reduction | clustering  
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.txt". The first column of the file is my gene names and the rest of the columns are samples. Normalize counts and make a PCA plot for samples, color code samples by cluster membership. Use k-means for clustering.
+
+completion:
+Certainly! We will first read the count table from the "Supplementary_Table_1_exp.txt". Then, we will normalize the counts using DESeq2 and transform them to the log scale. We cluster the samples using "k-means" algorithm. To select optimum k, we will use silhouette index from 'NbClust' package. Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plot to visualize the samples and the cluster membership.
+```{r}
+library(DESeq2)
+library(ggplot2)
+library(dbscan)
+library(data.table)
+
+# read expression data, assign first column to row names
+count_table <- data.frame(
+                data.table::fread("Supplementary_Table_1_exp.txt"), 
+                          row.names = 1)
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance/sd per gene
+  # order genes by decreasing SD and select top 1000 genes
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# find optimum number of clusters using silhouette method and kmeans clustering , 
+# try between 2 and 7 clusters
+library(NbClust)
+nb <- NbClust(data=t(nrm_counts), 
+              distance = "euclidean", min.nc = 2,
+              max.nc = 7, method = "kmeans",
+              index="silhouette")
+
+
+
+
+# Perform PCA on the normalized and transposed counts
+pca_res <- prcomp(t(nrm_counts))
+
+
+# Create a PCA plot of samples, color-coded by cluster membership
+pca_plot <- ggplot(data.frame(pca_res$x), aes(x = PC1, y = PC2, color = factor(as.character(nb$Best.partition))) ) +
+  geom_point(size = 3) +
+  scale_color_discrete(name = "Cluster") +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()+
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+# Display the PCA plot
+pca_plot
+```
+
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: PCA | dimension reduction | clustering   
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.txt". The first column of the file is my gene names and the rest of the columns are samples. Normalize counts and make a PCA plot for samples, color code samples by cluster membership. Use hierarchical clustering.
+
+completion:
+Certainly! We will first read the count table from the "Supplementary_Table_1_exp.txt". Then, we will normalize the counts using DESeq2 and transform them to the log scale. We will use the most variable genes to reduce the compute time and complexity. We cluster the samples using hierarchical clustering algorithm using Ward method. The Ward method in hierarchical clustering minimizes the total within-cluster variance, leading to compact and well-separated clusters. To select optimum k, or number of clusters, we will use silhouette index from 'NbClust' package. Finally, we will perform a principal component analysis (PCA) on the normalized counts and create a PCA plot to visualize the samples and the cluster membership.
+```{r}
+library(DESeq2)
+library(ggplot2)
+library(dbscan)
+library(data.table)
+
+# read expression data, assign first column to row names
+count_table <- data.frame(
+                data.table::fread("Supplementary_Table_1_exp.txt"), 
+                          row.names = 1)
+
+# Prepare the sample information (assuming the column names in the count table represent sample names)
+sample_info <- data.frame(Sample = colnames(count_table), row.names = colnames(count_table))
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = sample_info, design = ~1)
+
+# Normalize counts, transform to logscale and get values
+dds <- estimateSizeFactors(dds)
+nrm_counts<- log2(DESeq2::counts(dds, normalized = TRUE)+1)
+
+# in order to save compute time we pick the most variable genes, we pick top 1000 if there are more than 1000 rows
+if(nrow(nrm_counts) > 1000){
+  library(matrixStats)
+  rSds <- rowSds(as.matrix(nrm_counts)) # calculate variance/sd per gene
+  # order genes by decreasing SD and select top 1000 genes
+  nrm_counts<- nrm_counts[ order(rSds,decreasing = TRUE)[1:1000],]
+}
+
+# find optimum number of clusters using silhouette method and kmeans clustering , 
+# try between 2 and 7 clusters
+library(NbClust)
+nb <- NbClust(data=t(nrm_counts), 
+              distance = "euclidean", min.nc = 2,
+              max.nc = 7, method = "ward.D2",
+              index="silhouette")
+
+# Perform PCA on the normalized and transposed counts
+pca_res <- prcomp(t(nrm_counts))
+
+
+# Create a PCA plot of samples, color-coded by cluster membership
+pca_plot <- ggplot(data.frame(pca_res$x), aes(x = PC1, y = PC2, color = factor(as.character(nb$Best.partition))) ) +
+  geom_point(size = 3) +
+  scale_color_discrete(name = "Cluster") +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()+
+  ggtitle("PCA plot for normalized RNA-seq counts")
+
+# Display the PCA plot
+pca_plot
+```
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 1, seeData: no, openEnded: yes, tags: heatmap | clustering | differential expression 
+prompt:
+I have the following count table for an RNA-seq experiment, "Supplementary_Table_1_exp.txt". The rows are genes and columns are samples. The first column of the file are the gene names and the rest of the columns are samples. The first 6 columns represent test samples and the rest represent control samples. Find differentially expressed genes and use those genes in a heatmap for samples.
+
+completion:
+We will first read the count table from the "Supplementary_Table_1_exp.txt". Using DESeq2, we will then  find differentially expressed genes, filter the significant genes, extract the normalized counts for significant genes. We will then perform a regularized-log transformation. Finally, we will generate a heatmap of the differentially expressed genes.
+
+You can adjust the alpha parameter in the results() function to control the false discovery rate threshold for calling differentially expressed genes.
+```{r}
+# Load required libraries
+library(DESeq2)
+library(pheatmap)
+
+# read expression data, assign first column to row names
+count_data <- data.frame(
+                data.table::fread("Supplementary_Table_1_exp.txt"), 
+                          row.names = 1)
+
+
+# Create a sample information data frame
+sample_info <- data.frame(condition = factor(c(rep("test", 6), rep("control", 6))),
+                          row.names = colnames(count_data))
+
+# Create a DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_data,
+                              colData = sample_info,
+                              design = ~ condition)
+
+# Normalize the counts using DESeq2
+dds <- DESeq(dds)
+
+# Find differentially expressed genes
+res <- results(dds, alpha = 0.05)
+
+# Filter the significant genes
+sig_genes <- rownames(res)[which(res$padj < 0.05)]
+
+# Extract the normalized counts for significant genes
+normalized_counts <- counts(dds, normalized = TRUE)[sig_genes,]
+
+# Perform regularized-log transformation for heatmap
+rld <- rlog(dds)
+rld_mat <- assay(rld)[sig_genes,]
+
+# Create a heatmap of differentially expressed genes
+pheatmap(rld_mat,
+         cluster_rows = TRUE,
+         cluster_cols = TRUE,
+         show_rownames = FALSE,
+         show_colnames = TRUE)
+
+```
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes 
+prompt:
+I have the following count table for an RNA-seq experiment. My annotation data is here "annot.txt". Find differentially expressed genes and use those genes in a heatmap for samples.
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes 
+prompt:
+I have the following gene expression table obtained from a microarray experiment. My annotation data is here "annot.txt". Check if my data is normalized, if not apply normalization before differential expression analysis.
+
+```
+library(limma)
+
+if (any(apply(expr_data, 2, mean) != 0) || any(apply(expr_data, 2, sd) != 1)) {
+  norm_data <- normalizeQuantiles(expr_data)
+} else {
+  norm_data <- expr_data
+}
+```
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 2, seeData: no, openEnded: yes 
+prompt:
+I have the following gene expression table obtained from a microarray experiment. My annotation data is here "annot.txt". Check if my data is normalized, if not apply normalization before differential expression analysis. Find differentially expressed genes and use those genes in a heatmap for samples. 
+
+
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 2, seeData: no, openEnded: semi 
+prompt:
+read xls files and merge them
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 2, seeData: no, openEnded: semi 
+prompt: 
+read xls files and merge column to row ids  
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 2, seeData: no, openEnded: semi 
+prompt: 
+read xls tabs and merge them
+
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: semi 
+prompt:
+Correlation analysis
+http://www.sthda.com/english/wiki/correlation-analyses-in-r
+check if the values are numeric, drop those columns if not numeric
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: semi 
+prompt:
+Correlation analysis when you first have to transpose data
+http://www.sthda.com/english/wiki/correlation-analyses-in-r
+check if the values are numeric, drop those columns if not numeric
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: semi 
+prompt:
+remove rows with missing value
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: semi 
+prompt:
+remove columns with missing value
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: semi 
+prompt: 
+check if there are missing values and impute them if there are 
+
+---TASK END
+
+
+--- STOP TRAINING HERE 
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 3, seeData: no, openEnded: yes 
+prompt:
+Multi-omics PCA
+
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 3, seeData: no, openEnded: yes 
+prompt:
+Multi-omics PCA supervised
+
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 3, seeData: no, openEnded: yes 
+prompt:
+multi-omics batch effect corrected, supervised PCA/MFA 
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats, numData: 4, seeData: no, openEnded: yes 
+prompt:
+Multi-omics PCA supervised 3 datasets + 1 annotation dataset
+
+---TASK END
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging, numData: 1, seeData: no, openEnded: no 
+prompt:
+read xls files and do some computation on them
+
+---TASK END
+
+
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats | external data, numData: 2, seeData: no, openEnded: semi 
+prompt: 
+get string db network image of genes that are specific to clusters in AML
+
+
+### Task `r i`,`r i<-i+1` taskType: data munging | external data, numData: 1, seeData: no, openEnded: semi 
+prompt: 
+get string db network image of genes that are typed in as a part of the prompt.
+https://rbioapi.moosa-r.com/articles/rbioapi_string.html
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats | external data, numData: 2, seeData: no, openEnded: semi 
+prompt: 
+get string db network image of genes that are specific to clusters in AML, color
+code them via AML subtype ?? would this work
+
+
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats | external data, numData: 2, seeData: no, openEnded: yes
+prompt: 
+i have a bed file from X organism, Y assembly. Associate these regions with genes and do gene set analysis for those genes. 
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats | external data, numData: 2, seeData: no, openEnded: yes
+prompt: 
+i have the following genome locations pasted below from X organism, Y assembly. Associate these regions with genes and do gene set analysis for those genes. 
+
+
+### Task `r i`,`r i<-i+1` taskType: read | data munging | ML/Stats | external data, numData: 2, seeData: no, openEnded: yes
+prompt: 
+i have the following genome locations pasted below from X organism, Y assembly. Associate these regions with genes give me a table of those associations. 
+
+
+### TO DO
+- add tags to tasks [done]
+- add functions to summarize files, what type of columns they have, column names [done]
+
+- genome locations with rGREAT if certain assemblies, if not, do it with R biomart way
+- variations on gene expression with microarray, maybe normalization of raw files might be needed or draw data from GEO with R packages and analyze them
+- annotate SNPs
+- add simple motif analysis
+- add more network analysis
+- give
+
+
+
+  
+

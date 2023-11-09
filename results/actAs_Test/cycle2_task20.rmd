@@ -1,0 +1,140 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To solve this task, we will use R and the following packages: `readxl` for reading Excel files, `limma` for differential expression analysis, `dplyr` for data manipulation, `ggplot2` for plotting, and `ggfortify` for PCA visualization.
+
+First, let's install and load the required packages:
+
+```
+install.packages("readxl")
+install.packages("limma")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("ggfortify")
+
+library(readxl)
+library(limma)
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+```
+
+Next, we will read the count table and annotation data:
+
+```
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.table("SRP021193.colData.tsv", header=TRUE, sep="\t")
+```
+
+Now, we will perform differential expression analysis using the `limma` package. We will compare each group against the rest of the samples using the `contrasts.fit()` function. We will store the results for each group in a list called `de_results`.
+
+```
+de_results <- list()
+groups <- unique(annotation_data$group)
+
+for (group in groups) {
+  group_samples <- annotation_data$sample_id[annotation_data$group == group]
+  other_samples <- annotation_data$sample_id[annotation_data$group != group]
+  
+  group_counts <- count_table[, group_samples]
+  other_counts <- count_table[, other_samples]
+  
+  design <- model.matrix(~ group, data=annotation_data)
+  contrasts <- makeContrasts(group - other, levels=design)
+  fit <- lmFit(group_counts, design)
+  fit <- contrasts.fit(fit, contrasts)
+  fit <- eBayes(fit)
+  
+  de_results[[group]] <- topTable(fit, adjust.method="BH", sort.by="P", n=nrow(count_table))
+}
+```
+
+Next, we will extract genes specific for each group based on significant differential expression (adjusted p-value < 0.05) and a fold change threshold (e.g., log-fold change > 1).
+
+```
+group_specific_genes <- list()
+
+for (group in groups) {
+  de_genes <- de_results[[group]]
+  specific_genes <- subset(de_genes, padj < 0.05 & abs(logFC) > 1)
+  group_specific_genes[[group]] <- specific_genes$gene
+}
+```
+
+Now, we will create a PCA plot using the group-specific genes. We will select the corresponding columns from the count table and perform PCA on the log-transformed counts.
+
+```
+group_specific_counts <- count_table[c("gene", unlist(group_specific_genes))]
+rownames(group_specific_counts) <- group_specific_counts$gene
+group_specific_counts <- group_specific_counts[, -1]
+
+log_counts <- log2(group_specific_counts + 1)
+pca <- prcomp(t(log_counts))
+
+pca_data <- data.frame(PC1=pca$x[,1], PC2=pca$x[,2], group=annotation_data$group)
+
+ggplot(pca_data, aes(x=PC1, y=PC2, color=group)) +
+  geom_point() +
+  labs(x="PC1", y="PC2", color="Group")
+```
+
+Finally, we can run the full code:
+
+```
+install.packages("readxl")
+install.packages("limma")
+install.packages("dplyr")
+install.packages("ggplot2")
+install.packages("ggfortify")
+
+library(readxl)
+library(limma)
+library(dplyr)
+library(ggplot2)
+library(ggfortify)
+
+
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.table("SRP021193.colData.tsv", header=TRUE, sep="\t")
+
+de_results <- list()
+groups <- unique(annotation_data$group)
+
+for (group in groups) {
+  group_samples <- annotation_data$sample_id[annotation_data$group == group]
+  other_samples <- annotation_data$sample_id[annotation_data$group != group]
+  
+  group_counts <- count_table[, group_samples]
+  other_counts <- count_table[, other_samples]
+  
+  design <- model.matrix(~ group, data=annotation_data)
+  contrasts <- makeContrasts(group - other, levels=design)
+  fit <- lmFit(group_counts, design)
+  fit <- contrasts.fit(fit, contrasts)
+  fit <- eBayes(fit)
+  
+  de_results[[group]] <- topTable(fit, adjust.method="BH", sort.by="P", n=nrow(count_table))
+}
+
+group_specific_genes <- list()
+
+for (group in groups) {
+  de_genes <- de_results[[group]]
+  specific_genes <- subset(de_genes, padj < 0.05 & abs(logFC) > 1)
+  group_specific_genes[[group]] <- specific_genes$gene
+}
+
+group_specific_counts <- count_table[c("gene", unlist(group_specific_genes))]
+rownames(group_specific_counts) <- group_specific_counts$gene
+group_specific_counts <- group_specific_counts[, -1]
+
+log_counts <- log2(group_specific_counts + 1)
+pca <- prcomp(t(log_counts))
+
+pca_data <- data.frame(PC1=pca$x[,1], PC2=pca$x[,2], group=annotation_data$group)
+
+ggplot(pca_data, aes(x=PC1, y=PC2, color=group)) +
+  geom_point() +
+  labs(x="PC1", y="PC2", color="Group")
+```

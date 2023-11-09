@@ -1,0 +1,37 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+```
+# Load required libraries
+library(gplots)
+library(pheatmap)
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer)
+library(factoextra)
+
+# Read the gene expression data file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Remove the first column (gene names)
+data <- data[, -1]
+
+# Filter genes based on their variability
+var_genes <- apply(data, 1, var)
+top_var_genes <- names(sort(var_genes, decreasing = TRUE))[1:1000]
+
+# Subset data using the top variable genes
+filtered_data <- data[top_var_genes, ]
+
+# Perform hierarchical clustering and plot the heatmap
+heatmap_data <- as.matrix(filtered_data)
+heatmap_colors <- colorRampPalette(brewer.pal(9,"Blues"))(100)
+heatmap(heatmap_data, col = heatmap_colors, scale = "none", main = "Heatmap of Top 1000 Variable Genes", xlab = "Sample")
+
+# Perform PCA analysis and plot the PCA biplot
+pca_data <- prcomp(filtered_data, scale = TRUE)
+pca_biplot <- fviz_pca_biplot(pca_data, col.ind = "contrib", label = "var", geom.ind = "point", repel = TRUE)
+print(pca_biplot)
+```
+Note: Make sure to replace "leukemiaExp.txt" with the correct file path to your gene expression data.

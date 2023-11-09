@@ -1,0 +1,63 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To complete this task, you will need to perform the following steps:
+
+1. Read the count table and annotation data into R.
+2. Process the count table to filter out low-expression genes and normalize the remaining counts.
+3. Identify genes specific to each group using statistical tests such as differential gene expression analysis or testing for significant differences in mean expression between groups.
+4. Filter the count table to keep only the genes specific to each group.
+5. Perform Principal Component Analysis (PCA) using the filtered count table.
+6. Plot the PCA results and color code the points by the "group" variable in the annotation data.
+
+Here's the code to accomplish these steps:
+
+```
+library(DESeq2)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+
+# Step 1: Read count table and annotation data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
+
+# Step 2: Process count table
+# Filter out low-expression genes
+count_table_filtered <- count_table[rowSums(count_table[,2:ncol(count_table)]) > 10, ]
+
+# Normalize counts
+dds <- DESeqDataSetFromMatrix(countData = count_table_filtered[,2:ncol(count_table_filtered)], colData = annotation_data, design=~group)
+dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Step 3: Identify group-specific genes
+# Perform differential gene expression analysis
+deseq_result <- results(dds)
+
+# Step 4: Filter count table to keep only group-specific genes
+group_specific_genes <- rownames(deseq_result)[which(deseq_result$padj < 0.05)]
+count_table_group_specific <- count_table_filtered[group_specific_genes, ]
+
+# Step 5: Perform PCA using the filtered count table
+pca_data <- prcomp(t(count_table_group_specific[,2:ncol(count_table_group_specific)]))
+
+# Step 6: Plot PCA results with color-coded groups
+pca_plot <- ggplot() +
+  geom_point(data = as.data.frame(pca_data$x),
+             aes(x = PC1, y = PC2, color = annotation_data$group),
+             size = 3) +
+  labs(color = "Group")
+
+print(pca_plot)
+```
+
+Please note that the code assumes that you have installed the necessary packages `DESeq2`, `readxl`, `ggplot2`, and `dplyr`. If you haven't installed them yet, you can use the following commands:
+
+```
+install.packages("DESeq2")
+install.packages("readxl")
+install.packages("ggplot2")
+install.packages("dplyr")
+```

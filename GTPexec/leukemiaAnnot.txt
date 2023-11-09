@@ -1,0 +1,61 @@
+Project	Tissue	LeukemiaType	LeukemiaTypeFullName	Subtype
+GSM330151.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330153.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330154.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330157.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330171.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330174.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330178.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330182.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330185.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330186.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330195.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330201.CEL	Mile1	BoneMarrow	ALL	Acute Lymphoblastic Leukemia	c_ALL/Pre_B_ALL without t(9 22)
+GSM330532.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330546.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330559.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330566.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330571.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330574.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330580.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330584.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330593.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330603.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330611.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330612.CEL	Mile1	BoneMarrow	AML	Acute Myelogenous Leukemia	AML with normal karyotype and other abnormalities
+GSM330933.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330934.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330969.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330979.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330980.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330982.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330987.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM330999.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM331004.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM331009.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM331037.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM331048.CEL	Mile1	BoneMarrow	CLL	Chronic Lymphocytic Leukemia	
+GSM331377.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331378.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331381.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331382.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331383.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331386.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331387.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331388.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331389.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331390.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331392.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331393.CEL	Mile1	BoneMarrow	CML	Chronic Myelogenous Leukemia	
+GSM331660.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331661.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331663.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331666.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331668.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331670.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331671.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331672.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331673.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331674.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331675.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	
+GSM331677.CEL	Mile1	BoneMarrow	NoL	Non-leukemia and healthy bone marrow	

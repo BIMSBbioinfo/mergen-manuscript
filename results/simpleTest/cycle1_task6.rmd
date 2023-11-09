@@ -1,0 +1,26 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data
+
+response:
+```
+# Load gene expression data from file
+data <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE)
+
+# Check the number of samples
+num_samples <- ncol(data)
+
+# If there are more than 500 samples
+if(num_samples > 500) {
+  # Generate a random sample of 500 sample indices
+  sample_indices <- sample(1:num_samples, 500)
+  
+  # Create a subset of the data using the sampled indices
+  subset_data <- data[, sample_indices]
+} else {
+  # Otherwise, keep the original data
+  subset_data <- data
+}
+
+# Print the subset of the data
+subset_data
+```

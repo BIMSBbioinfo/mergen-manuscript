@@ -1,0 +1,51 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To filter genes based on their variability and retain the most variable top 1000 genes, we need to calculate the variance for each gene across all samples in the dataset. We can then sort the genes based on their variance and select the top 1000 genes.
+
+Here's the code to filter the genes and create a heatmap with clustering:
+
+```
+# Load required libraries
+library(gplots)
+library(heatmap3)
+
+# Read the gene expression data from file
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Compute variance for each gene
+gene_var <- apply(gene_exp[, -1], 1, var)
+
+# Sort genes based on variance in descending order
+sorted_genes <- names(sort(gene_var, decreasing = TRUE))
+
+# Select top 1000 genes
+top_genes <- sorted_genes[1:1000]
+
+# Subset the gene expression data to retain only the top genes
+top_gene_exp <- gene_exp[c(1, which(rownames(gene_exp) %in% top_genes)), ]
+
+# Remove the first column (gene names) for clustering
+top_gene_exp <- top_gene_exp[, -1]
+
+# Create heatmap with clustering
+heatmap.3(top_gene_exp, Rowv = TRUE, Colv = TRUE, scale = "row", main = "Gene Expression Heatmap")
+```
+
+To plot the PCA for samples, we first need to transpose the gene expression data so that the rows represent samples and the columns represent genes. We can then perform PCA on the transposed data and plot the results.
+
+Here's the code to plot the PCA for samples:
+
+```
+# Transpose the gene expression data
+transposed_gene_exp <- t(gene_exp[, -1])
+
+# Perform PCA on the transposed data
+pca <- prcomp(transposed_gene_exp, scale = TRUE)
+
+# Plot PCA results
+plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2", main = "PCA for Samples")
+```
+
+Please make sure to replace "leukemiaExp.txt" with the actual filename/path of your gene expression data file when running the code.

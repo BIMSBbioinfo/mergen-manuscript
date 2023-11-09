@@ -1,0 +1,62 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To solve this task, we need to perform the following steps:
+
+1. Read in the count table and annotation data.
+2. Normalize the counts.
+3. Create two PCA plots: one color-coded by "group" and the other color-coded by "LibrarySelection".
+
+Let's start by reading in the count table and annotation data in R.
+
+```
+# Step 1: Read in the count table and annotation data
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+```
+
+Next, we will normalize the counts using a method like the "counts per million" (CPM) method.
+
+```
+# Step 2: Normalize the counts
+normalized_counts <- cpm(count_table, log=TRUE)
+```
+
+Now, we can create the two PCA plots using the normalized counts and the annotation data.
+
+```
+# Step 3: Create PCA plots
+library(ggplot2)
+library(ggrepel)
+library(RColorBrewer)
+library(ggfortify)
+
+# Color-coded by "group"
+pca_group <- prcomp(t(normalized_counts))
+pca_group_df <- as.data.frame(pca_group$x[,1:2])
+pca_group_df$group <- annotation_data$group
+
+ggplot(pca_group_df, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  scale_color_manual(values = brewer.pal(length(unique(annotation_data$group)), "Set1")) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot - Color-coded by Group")
+
+# Color-coded by "LibrarySelection"
+pca_library <- prcomp(t(normalized_counts))
+pca_library_df <- as.data.frame(pca_library$x[,1:2])
+pca_library_df$LibrarySelection <- annotation_data$LibrarySelection
+
+ggplot(pca_library_df, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point() +
+  scale_color_manual(values = brewer.pal(length(unique(annotation_data$LibrarySelection)), "Set1")) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot - Color-coded by LibrarySelection")
+```
+
+This code will read in the count table and annotation data, normalize the counts, and create two PCA plots: one color-coded by "group" and the other color-coded by "LibrarySelection" in the annotation data.
+
+Please note that the code assumes you have the required R packages installed. If any of the packages are missing, you can install them using the `install.packages()` function before running the code.

@@ -1,0 +1,60 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load required libraries
+library(readxl)
+library(reshape2)
+library(dplyr)
+library(ggplot2)
+library(pcaMethods)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- melt(count_table, id.vars = "Genes", variable.name = "sample", value.name = "count")
+
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Merge count table and annotation data based on sample ids
+merged_data <- merge(count_table, annotation_data, by.x = "sample", by.y = "diagnosis")
+
+# Normalize counts
+normalized_counts <- log2(merged_data$count + 1)
+
+# Create a matrix for PCA analysis
+counts_matrix <- as.matrix(dcast(normalized_counts, Genes ~ sample, value.var = "count"))
+
+# Perform PCA analysis for color coding by "group"
+pca_group <- pca(counts_matrix, design = annotation_data$group)
+
+# Perform PCA analysis for color coding by "LibrarySelection"
+pca_library <- pca(counts_matrix, design = annotation_data$LibrarySelection)
+
+# Plot PCA for color coding by "group"
+ggplot(data = pca_group@scores, aes(x = PC1, y = PC2, color = annotation_data$group)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2")
+
+# Plot PCA for color coding by "LibrarySelection"
+ggplot(data = pca_library@scores, aes(x = PC1, y = PC2, color = annotation_data$LibrarySelection)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2")
+```
+```

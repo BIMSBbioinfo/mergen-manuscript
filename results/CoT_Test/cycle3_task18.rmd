@@ -1,0 +1,52 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To find all the CpGs associated with Age but not with sex or Race, we will first need to load the data from the provided datasets and perform some data manipulation. Here are the steps to accomplish this task:
+
+Step 1: Load the data from the "metRmOlWithDbgapIdHeader.txt" file, which contains the CpG methylation values per CpG and per individual.
+```
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+```
+
+Step 2: Load the data from the "subjects.txt" file, which contains information on the individuals.
+```
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+```
+
+Step 3: Match the "dbGap ID" column (second column) in the subjects_data with the first row of the met_data to ensure they represent the same individuals.
+```
+matched_subjects <- subjects_data[match(colnames(met_data), subjects_data$dbGap.ID), ]
+```
+
+Step 4: Filter the CpGs associated with Age but not with sex or Race.
+```
+age_cpgs <- colnames(met_data)[!colnames(met_data) %in% intersect(colnames(met_data), intersect(matched_subjects$sex, matched_subjects$Race))]
+```
+
+Step 5: Display the top 20 CpGs associated with Age.
+```
+top_20_age_cpgs <- age_cpgs[1:20]
+top_20_age_cpgs
+```
+
+Here is the complete code block for your reference:
+```
+# Step 1
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Step 2
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Step 3
+matched_subjects <- subjects_data[match(colnames(met_data), subjects_data$dbGap.ID), ]
+
+# Step 4
+age_cpgs <- colnames(met_data)[!colnames(met_data) %in% intersect(colnames(met_data), intersect(matched_subjects$sex, matched_subjects$Race))]
+
+# Step 5
+top_20_age_cpgs <- age_cpgs[1:20]
+top_20_age_cpgs
+```
+
+Note: Make sure to adjust the file paths in the `read.table()` function calls according to the location of the dataset files on your system.

@@ -1,0 +1,76 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To complete this task, we will use the `readxl` package to read the count table from the Excel file and the `tidyverse` package to manipulate and plot the data.
+
+First, let's install and load the required packages:
+```
+install.packages("readxl")
+install.packages("tidyverse")
+
+library(readxl)
+library(tidyverse)
+```
+
+Now, let's read the count table and the annotation data:
+```
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+```
+
+Next, we need to rearrange and merge the data. We will transpose the count table to have samples as rows and genes as columns, and then add the annotation data as additional columns:
+```
+count_table <- count_table %>%
+  t() %>%
+  as_tibble() %>%
+  rename_all(~as.character(.))
+
+merged_data <- annotation_data %>%
+  left_join(count_table, by = c("sample_id" = "X1")) %>%
+  select(-sample_id)
+```
+
+Now we can plot boxplots for gene expression values per sample and color code the boxplots based on the "group" variable in the annotation data:
+```
+merged_data %>%
+  gather(key = "gene", value = "expression", -group) %>%
+  ggplot(aes(x = group, y = expression, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Group", y = "Gene Expression") +
+  ggtitle("Gene Expression Boxplots by Group") +
+  theme_minimal()
+```
+
+This code will produce a boxplot for each sample, grouped by the "group" variable from the annotation data, with gene expression values on the y-axis and the group variable on the x-axis.
+
+Please make sure to replace the file paths "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths in your system where the corresponding files are located.
+
+Full code:
+```
+install.packages("readxl")
+install.packages("tidyverse")
+
+library(readxl)
+library(tidyverse)
+
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+count_table <- count_table %>%
+  t() %>%
+  as_tibble() %>%
+  rename_all(~as.character(.))
+
+merged_data <- annotation_data %>%
+  left_join(count_table, by = c("sample_id" = "X1")) %>%
+  select(-sample_id)
+
+merged_data %>%
+  gather(key = "gene", value = "expression", -group) %>%
+  ggplot(aes(x = group, y = expression, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Group", y = "Gene Expression") +
+  ggtitle("Gene Expression Boxplots by Group") +
+  theme_minimal()
+```

@@ -1,0 +1,56 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(edgeR)
+library(DESeq2)
+library(ggplot2)
+library(ggrepel)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation <- read.delim("SRP021193.colData.tsv", sep="\t")
+
+# Extract sample IDs from annotation data
+sample_ids <- annotation$diagnosis
+
+# Set column names for count table
+colnames(count_table) <- sample_ids
+
+# Normalize counts
+normalized_counts <- cpm(count_table)
+
+# Perform PCA analysis
+pca <- prcomp(t(normalized_counts))
+
+# Create PCA plot color coded by "group"
+plot(pca$x[,1], pca$x[,2], col = as.numeric(factor(annotation$group)), pch = 19, xlab = "PC1", ylab = "PC2", main = "PCA Plot (Group)", cex = 0.7)
+
+# Add text labels to plot
+text(pca$x[,1], pca$x[,2], labels = annotation$diagnosis, cex = 0.6)
+
+# Create PCA plot color coded by "LibrarySelection"
+plot(pca$x[,1], pca$x[,2], col = as.numeric(factor(annotation$LibrarySelection)), pch = 19, xlab = "PC1", ylab = "PC2", main = "PCA Plot (LibrarySelection)", cex = 0.7)
+
+# Add text labels to plot
+text(pca$x[,1], pca$x[,2], labels = annotation$diagnosis, cex = 0.6)
+```
+Note: The error was caused by using non-numeric values for the color argument in the plot functions. Converting them to numeric factors using `as.numeric(factor())` should resolve the issue.

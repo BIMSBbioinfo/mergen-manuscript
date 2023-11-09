@@ -1,0 +1,66 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(tidyverse)
+library(edgeR)
+library(pcaMethods)
+library(RColorBrewer)
+
+# Read the count table and annotation data
+count_table <- as.matrix(read_excel("Supplementary_Table_1_exp.xlsx"))
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+
+# Set the row names of count_table as the gene names
+row.names(count_table) <- count_table[,1]
+count_table <- count_table[,-1]
+
+# Set the row names of annotation_data as the sample ids
+row.names(annotation_data) <- annotation_data[,1]
+annotation_data <- annotation_data[,-1]
+
+# Find genes specific for each group using statistical tests
+group_specific_genes <- rownames(annotation_data)
+for (group in unique(annotation_data$group)) {
+  # Get the samples for the current group
+  group_samples <- rownames(annotation_data[annotation_data$group == group,])
+  
+  # Create a DGEList object
+  dge <- DGEList(counts = count_table[,group_samples],
+                 group = annotation_data[group_samples, "group"])
+  
+  # Estimate common dispersion
+  dge <- estimateCommonDisp(dge)
+  
+  # Estimate tagwise dispersions
+  dge <- estimateTagwiseDisp(dge)
+  
+  # Calculate the exact test for differential expression
+  exact_test <- exactTest(dge)
+  
+  # Select genes significant in the current group
+  group_specific_genes <- intersect(group_specific_genes, 
+                                    rownames(exact_test$table[exact_test$table$group == group,]))
+}
+
+# Subset the count table to only include the group specific genes
+count_table_specific <- count_table[group_specific_genes,]
+
+# Perform PCA on the count table
+pca <- pca(count_table_specific)
+
+# Create a color palette for the group variable
+color_palette <- brewer.pal(length(unique(annotation_data$group)), "Set1")
+
+# Plot PCA with color-coded groups
+plot(pca$rotation[,1], pca$rotation[,2], 
+     col = color_palette[as.numeric(factor(annotation_data$group))], 
+     pch = 20, main = "PCA of Group Specific Genes",
+     xlab = "PC1", ylab = "PC2")
+legend("topright", legend = unique(annotation_data$group), 
+       col = color_palette, pch = 20, cex = 0.8)
+```
+

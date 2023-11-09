@@ -1,0 +1,95 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To accomplish this task, we'll need to follow a step-by-step approach. Here's a detailed outline of the steps we'll take:
+
+1. Load the count table and annotation data.
+2. Prepare the data by removing any unnecessary columns and rows.
+3. Perform statistical tests to identify group-specific genes.
+4. Plot PCA using the group-specific genes and color code by the group variable.
+
+Let's start by loading the necessary libraries and files and proceed with each step:
+
+Step 1: Load the count table and annotation data.
+
+```
+# Load necessary libraries
+library(openxlsx)
+library(tidyverse)
+
+# Load count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 2)
+# Assuming the count table has the gene names in the first column and sample data in the rest, you may need to adjust argument 'cols' accordingly
+
+# Load annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+```
+
+Step 2: Prepare the data by removing any unnecessary columns and rows.
+
+```
+# Remove any unnecessary columns from count_table
+count_table <- count_table[, -1]  # Assuming you want to remove the first column (gene names)
+
+# Remove any rows from the count table that do not have corresponding annotation data
+common_samples <- intersect(colnames(count_table), annotation_data$sample_ids)
+count_table <- count_table[, common_samples]
+
+# Subset the annotation data to include only common samples
+annotation_data <- annotation_data[annotation_data$sample_ids %in% common_samples, ]
+```
+
+Step 3: Perform statistical tests to identify group-specific genes.
+
+To perform statistical tests and identify group-specific genes, there are different methods to choose from, such as t-test, ANOVA, or DESeq2. Let's use the t-test as an example:
+
+```
+# Define the groups based on annotation data
+groups <- unique(annotation_data$group)
+
+# Perform t-test for each group separately
+ttest_results <- lapply(groups, function(group) {
+  group_samples <- annotation_data[annotation_data$group == group, "sample_ids"]
+  group_counts <- count_table[, group_samples]
+  
+  # Perform t-test for each gene
+  ttest_pvalues <- apply(group_counts, 1, function(gene_counts) {
+    t.test(gene_counts ~ group)$p.value
+  })
+  
+  # Store the resulting p-values for the group
+  names(ttest_pvalues) <- rownames(count_table)
+  ttest_pvalues
+})
+```
+
+Step 4: Plot PCA using the group-specific genes and color code by the group variable.
+
+```
+# Filter genes specific to each group based on a given p-value threshold
+pvalue_threshold <- 0.05
+group_specific_genes <- lapply(ttest_results, function(ttest_pvalues) {
+  names(ttest_pvalues)[ttest_pvalues < pvalue_threshold]
+})
+
+# Subset count_table to include only the group-specific genes
+group_specific_counts <- count_table[group_specific_genes[[1]], ]
+
+# Perform PCA using prcomp function
+pca <- prcomp(group_specific_counts, scale. = TRUE)
+
+# Extract PCA scores
+pca_scores <- pca$x
+
+# Create a data frame combining PCA scores and annotation data
+pca_data <- cbind.data.frame(pca_scores, group = annotation_data$group)
+
+# Plot PCA with color-coded groups
+ggplot(pca_data, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+
+Please note that this is just one possible approach, and you may need to adapt it according to the specific details of your data and analysis requirements.

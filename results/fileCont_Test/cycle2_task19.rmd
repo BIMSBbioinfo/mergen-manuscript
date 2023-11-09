@@ -1,0 +1,59 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary packages
+library(readxl)
+library(dplyr)
+library(DESeq2)
+library(ggplot2)
+library(RColorBrewer)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")[-1] # Exclude the first column (gene names)
+
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Get the sample names from the count table
+sample_names <- colnames(count_table)[-1]
+
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
+dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Perform PCA on normalized counts
+pca_data <- prcomp(t(normalized_counts), scale = TRUE)
+
+# Create a data frame for PCA results
+pca_results <- data.frame(PCA1 = pca_data$x[, 1], PCA2 = pca_data$x[, 2], Group = annotation_data$group,
+                          LibrarySelection = annotation_data$LibrarySelection)
+
+# Plot PCA color coded by "group"
+ggplot(pca_results, aes(x = PCA1, y = PCA2, color = Group)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = brewer.pal(n = length(unique(pca_results$Group)), name = "Set1")) +
+  labs(title = "PCA Plot (Color Coded by Group)", x = "PC1", y = "PC2")
+
+# Plot PCA color coded by "LibrarySelection"
+ggplot(pca_results, aes(x = PCA1, y = PCA2, color = LibrarySelection)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = brewer.pal(n = length(unique(pca_results$LibrarySelection)), name = "Set1")) +
+  labs(title = "PCA Plot (Color Coded by Library Selection)", x = "PC1", y = "PC2")
+```
+```

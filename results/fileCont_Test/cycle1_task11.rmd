@@ -1,0 +1,32 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the tables count number of rows and columns for each.
+
+here are first few lines of the file(s).
+
+metRmOlWithDbgapIdHeader.txt:
+	34	35	37	39	40	41	44	46	52	53	56	58	64	66	69	71	72	75	79	83	84	85	89	90	92	93	94	95	98	101	107	116	120	121	122	123	127	128	129	131	133	134	135	137	138	139	140	144	147	155	157	158	160	270	169	175	176	179	180	182	183	185	186	187	188	189	190	191	193	194	195	196	197	198	199	200	204	205	206	207	208	209	210	211	213	214	217	220	221	222	232	234	236	238	247	248	257	4	14	18	19	269	24	25	26	27	28	31
+cg26211698	0.018851902	0.023740776	0.023376387	0.037223975	0.018711838	0.02511006	0.015483673	0.02116208	0.0204752	0.026372315	0.025520833	0.019869858	0.022689769	0.022518862	0.018260292	0.01655481	0.01963973	0.022636485	0.02426135	0.014073864	0.031146584	0.022918707	0.018778788	0.022326064	0.013303579	0.021790541	0.036815462	0.027048423	0.02975166	0.030042918	0.018511753	0.031294165	0.022286422	0.019583428	0.022447812	0.031205674	0.018864747	0.016775501	0.048829355	0.023525514	0.019138756	0.017736583	0.016541742	0.018830676	0.013454351	0.034517093	0.032782318	0.03522939	0.034972882	0.048829355	0.040903541	0.038999264	0.020579981	0.04238959	0.036589698	0.045238095	0.027435388	0.021438451	0.028442268	0.027726433	0.025240189	0.020265549	0.0227639	0.018604651	0.016886478	0.019147449	0.012935186	0.025085208	0.013835014	0.01432248	0.012229634	0.015779531	0.012431339	0.02269673	0.016514927	0.016608278	0.015731515	0.019877977	0.028083819	0.031071292	0.022972741	0.034223573	0.030179445	0.0372502	0.025641026	0.028595041	0.048829355	0.027445461	0.037728139	0.025675676	0.028318277	0.017244082	0.024789594	0.034662265	0.036334552	0.021427726	0.038185205	0.020558003	0.02268431	0.021979522	0.022295907	0.025085725	0.018492041	0.019186569	0.025315068	0.02331483	0.019223225	0.018229932
+
+
+subjects.txt:
+ID	dbGaP ID	Age	sex	Race
+1	34	63	M	CAUC
+
+
+response:
+```
+# Read the metRmOlWithDbgapIdHeader.txt file and count the number of rows and columns
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+met_rows <- nrow(met_data)
+met_cols <- ncol(met_data)
+
+# Read the subjects.txt file and count the number of rows and columns
+subject_data <- read.table("subjects.txt", header = TRUE)
+subject_rows <- nrow(subject_data)
+subject_cols <- ncol(subject_data)
+
+# Print the counts
+print(paste("metRmOlWithDbgapIdHeader.txt has", met_rows, "rows and", met_cols, "columns"))
+print(paste("subjects.txt has", subject_rows, "rows and", subject_cols, "columns"))
+```

@@ -1,0 +1,48 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(DESeq2)
+library(dplyr)
+library(readxl)
+library(ggplot2)
+library(ggrepel)
+library(reshape2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+
+# Rename columns in count table
+colnames(count_table) <- c("Gene", colnames(count_table)[2:length(count_table)])
+
+# Calculate size factors
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1], colData = annotation_data, design = ~1)
+dds <- estimateSizeFactors(dds)
+
+# Normalize counts
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Create the first PCA plot with color coded samples by "group"
+pca_data_1 <- prcomp(t(normalized_counts))
+plot_data_1 <- data.frame(PC1 = pca_data_1$x[, 1], PC2 = pca_data_1$x[, 2], Group = annotation_data$group)
+plot_1 <- ggplot(plot_data_1, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color coded by Group)")
+
+# Create the second PCA plot with color coded samples by "LibrarySelection"
+plot_data_2 <- data.frame(PC1 = pca_data_1$x[, 1], PC2 = pca_data_1$x[, 2], LibrarySelection = annotation_data$LibrarySelection)
+plot_2 <- ggplot(plot_data_2, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color coded by LibrarySelection)")
+
+# Display the PCA plots
+plot_1
+plot_2
+```
+
+Note: Please make sure to install the required libraries before running the code.

@@ -1,0 +1,52 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(tidyr)
+library(PCAtools)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
+
+# Transpose count table
+count_table <- count_table %>%
+  t() %>%
+  as.data.frame()
+
+# Set row names as gene names
+rownames(count_table) <- count_table$gene_names
+count_table$gene_names <- NULL
+
+# Remove any rows with missing values
+count_table <- count_table[complete.cases(count_table), ]
+
+# Join count table with annotation data
+joined_data <- count_table %>% 
+  left_join(annotation_data, by = c(colnames(count_table)))
+
+# Perform statistical test for each group
+group_specific_genes <- joined_data %>% 
+  group_by(group) %>% 
+  filter(n() > 1) %>% 
+  summarise_all(function(x) wilcox.test(x ~ group)$p.value) %>% 
+  filter(across(-group, ~. < 0.05)) %>% 
+  select(group, contains("ENSG"))
+
+# Filter count table based on group-specific genes
+filtered_count_table <- count_table[, intersect(group_specific_genes$gene_names, colnames(count_table))]
+
+# Perform PCA on filtered count table
+pca <- pca(filtered_count_table)
+
+# Plot PCA with color-coded groups
+autoplot(pca, color = joined_data$group)
+```
+

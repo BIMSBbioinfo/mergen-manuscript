@@ -1,0 +1,37 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To merge the annotation data and gene expression table, we can follow these steps:
+
+1. Read the count table and annotation data into R.
+2. Merge the two data frames based on the sample IDs.
+3. Plot boxplots for gene expression values per sample, color-coded based on the "group" variable in the annotation data.
+
+Here's the code to accomplish this:
+
+```
+# Step 1: Read the count table and annotation data
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1, sep = "\t")
+
+# Step 2: Merge the count table and annotation data
+merged_data <- merge(x = count_table, y = annotation_data, by = "row.names")
+
+# Step 3: Plot boxplots for gene expression values per sample, color-coded based on the "group" variable
+library(ggplot2)
+
+# Convert the merged data frame to long format for plotting
+merged_data_long <- tidyr::pivot_longer(merged_data, cols = -c("row.names", "group"))
+
+# Plot boxplots using ggplot2
+ggplot(data = merged_data_long, aes(x = group, y = value, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Group", y = "Gene Expression") +
+  ggtitle("Boxplot of Gene Expression per Sample") +
+  theme_minimal()
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file names and paths in your system.
+
+Note: In order to run the code, you will need to have the necessary packages installed. You can install packages using the `install.packages()` function in R.

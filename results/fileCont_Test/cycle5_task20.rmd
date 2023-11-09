@@ -1,0 +1,76 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load required libraries
+library(readxl)
+library(data.table)
+library(limma)
+library(ggplot2)
+library(RColorBrewer)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Remove the first column (gene names)
+count_table <- count_table[, -1]
+
+# Read annotation data
+annotation <- fread("SRP021193.colData.tsv", sep = "\t")
+
+# Match the rows of annotation with the columns of count table
+annotation <- annotation[match(colnames(count_table), annotation$diagnosis), ]
+
+# Define groups based on "group" column in annotation data
+groups <- unique(annotation$group)
+
+# Perform statistical tests for each group
+results <- list()
+for (group in groups) {
+  # Subset count table using samples from the specific group
+  group_samples <- annotation$diagnosis[which(annotation$group == group)]
+  group_counts <- count_table[, group_samples]
+
+  # Perform statistical test (e.g. t-test) for each gene
+  test_results <- rowttests(group_counts)
+
+  # Store significant genes for the group based on p-value threshold (e.g. 0.05)
+  significant_genes <- rownames(test_results)[test_results$adj.P.Val < 0.05]
+
+  # Store the significant genes for the group in the results list
+  results[[group]] <- significant_genes
+}
+
+# Get the group-specific genes
+group_specific_genes <- unique(unlist(results))
+
+# Subset count table to include only the group-specific genes
+group_specific_counts <- count_table[group_specific_genes, ]
+
+# Perform PCA using group-specific genes
+pca <- prcomp(t(group_specific_counts))
+
+# Get the group labels for color coding
+group_labels <- annotation$group[match(colnames(group_specific_counts), annotation$diagnosis)]
+
+# Plot PCA with color-coded groups
+pca_plot <- ggplot(data.frame(pca$x), aes(x = PC1, y = PC2, color = group_labels)) +
+  geom_point() +
+  labs(color = "Group")
+pca_plot
+```
+```

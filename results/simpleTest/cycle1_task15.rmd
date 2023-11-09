@@ -1,0 +1,31 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Read the data and merge them into a single table using dbGapId information. Plot a scatter plot of CpG methylation values for the two oldest subjects in the samples.
+
+response:
+```
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Read the "subjects.txt" file
+subj_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Set the column names of met_data to be the first row
+colnames(met_data) <- met_data[1, ]
+met_data <- met_data[-1, ]
+
+# Merge the met_data and subj_data based on dbGap ID
+merged_data <- merge(met_data, subj_data, by.x = "dbGap ID", by.y = "DBGapId")
+
+# Convert the "Age" column to numeric
+merged_data$Age <- as.numeric(merged_data$Age)
+
+# Get the dbGap ID of the two oldest subjects
+oldest_subjects <- tail(merged_data[order(merged_data$Age), ], 2)$dbGap ID
+
+# Filter the merged_data for the two oldest subjects
+scatterplot_data <- merged_data[merged_data$dbGap ID %in% oldest_subjects, ]
+
+# Plot a scatter plot of CpG methylation values for the two oldest subjects
+plot(scatterplot_data[, 4:ncol(scatterplot_data)], col = c("red", "blue"), pch = 16, xlab = "CpG", ylab = "Methylation Value")
+```
+

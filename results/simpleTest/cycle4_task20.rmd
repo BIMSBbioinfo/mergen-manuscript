@@ -1,0 +1,70 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(dplyr)
+library(DESeq2)
+library(ggplot2)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Transpose the count table and set row names as gene names
+count_table <- t(count_table[,-1])
+rownames(count_table) <- count_table[,1]
+
+# Remove the gene names column from count table
+count_table <- count_table[,-1]
+
+# Set the row names of annotation data as sample ids
+rownames(annotation_data) <- annotation_data[,1]
+
+# Remove the sample ids column from annotation data
+annotation_data <- annotation_data[,-1]
+
+# Create a DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ group)
+
+# Perform differential expression analysis
+dds <- DESeq(dds)
+
+# Get the results
+res <- results(dds)
+
+# Adjust p-values for multiple testing using the Benjamini-Hochberg method
+res <- data.frame(res, padj = p.adjust(res$pvalue, method = "BH"))
+
+# Filter the results based on adjusted p-values
+significant_genes <- res[res$padj < 0.05, ]
+
+# Get genes specific for each group
+group_genes <- list()
+for (group_name in unique(annotation_data$group)) {
+  group_ids <- annotation_data$group == group_name
+  group_genes[[group_name]] <- rownames(significant_genes)[group_ids]
+}
+
+# Create a new count table with only group-specific genes
+group_count_table <- count_table[group_genes$group1, ]
+
+# Perform PCA on the group-specific count table
+pca <- prcomp(t(group_count_table), scale = TRUE)
+
+# Get PC scores
+pc_scores <- data.frame(pca$x)
+pc_scores$group <- annotation_data$group
+
+# Plot PCA colored by group variable
+ggplot(pc_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "Group")
+```
+```

@@ -1,0 +1,41 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To complete this task, we will perform the following steps:
+
+1. Read the gene expression data from the "leukemiaExp.txt" file.
+2. Calculate the variability for each gene.
+3. Select the top 1000 most variable genes.
+4. Plot a heatmap of the selected genes with clustering.
+5. Plot the PCA for the samples.
+
+Here's the code to accomplish these steps:
+
+```
+# Step 1: Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
+
+# Step 2: Calculate the variability for each gene
+gene_variability <- apply(gene_exp, 1, var)
+
+# Step 3: Select the top 1000 most variable genes
+top_genes <- head(names(gene_variability)[order(gene_variability, decreasing = TRUE)], 1000)
+
+# Step 4: Plot a heatmap of the selected genes
+heatmap_data <- gene_exp[top_genes, ]
+
+# Perform hierarchical clustering
+dendrogram <- as.dendrogram(hclust(dist(heatmap_data)))
+
+# Plot the heatmap with clustering
+heatmap(heatmap_data, Colv = dendrogram)
+
+# Step 5: Plot the PCA for the samples
+pca_data <- prcomp(t(gene_exp))
+
+# Plot the PCA
+plot(pca_data$x[, 1], pca_data$x[, 2], xlab = "PC1", ylab = "PC2")
+```
+
+This code will read the gene expression data, calculate the gene variability, select the top 1000 most variable genes, and then plot a heatmap and PCA for the samples.

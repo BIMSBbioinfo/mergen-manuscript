@@ -1,0 +1,40 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapId.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+```
+# Read the CpG methylation values table
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Read the subjects information table
+subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Get the matching individuals between the two datasets
+matching_individuals <- intersect(metRmOl[1, ], subjects$dbGap_ID)
+
+# Get the index of the matching individuals in the CpG methylation values table
+matching_individuals_index <- match(matching_individuals, metRmOl[1, ])
+
+# Filter the CpG methylation values table to include only the matching individuals
+filtered_metRmOl <- metRmOl[, matching_individuals_index]
+
+# Get the index of the "Age" column in the subjects information table
+age_column_index <- which(names(subjects) == "Age")
+
+# Get the index of the "sex" column in the subjects information table
+sex_column_index <- which(names(subjects) == "sex")
+
+# Get the index of the "Race" column in the subjects information table
+race_column_index <- which(names(subjects) == "Race")
+
+# Get the index of the CpGs associated with Age but not with sex or Race
+age_cpgs_index <- which(subjects$Age != "" & subjects$sex == "" & subjects$Race == "")
+
+# Get the CpGs associated with Age but not with sex or Race
+age_cpgs <- rownames(filtered_metRmOl)[age_cpgs_index]
+
+# Display the top 20 CpGs associated with Age but not with sex or Race
+top_20_age_cpgs <- head(age_cpgs, 20)
+top_20_age_cpgs
+```
+

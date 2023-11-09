@@ -1,0 +1,52 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples,"Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To normalize the counts and create two PCA plots, one color coded by "group" and the other color coded by "LibrarySelection," follow these steps:
+
+Step 1: Import the necessary libraries
+```
+library(tidyverse)
+library(readxl)
+library(biomaRt)
+library(readr)
+library(pcaMethods)
+```
+
+Step 2: Read the count table and annotation data
+```
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+```
+
+Step 3: Prepare the count table and annotation data for normalization and analysis
+```
+# Remove the first column (gene names) from the count table
+count_table <- count_table[-1]
+
+# Transpose the count table to have samples as rows and genes as columns
+count_table <- t(count_table)
+
+# Extract the relevant columns from the annotation data for sample annotation
+sample_annotation <- annotation_data %>%
+  select(1, group, LibrarySelection) %>%
+  column_to_rownames(var = "X.SampleName")
+```
+
+Step 4: Normalize the counts using the trimmed mean of M values (TMM) method
+```
+normalized_counts <- calcNormFactors(count_table, method = "TMM")
+```
+
+Step 5: Perform PCA analysis separately for samples color coded by "group" and "LibrarySelection"
+```
+# PCA plot color coded by "group"
+pca_group <- prcomp(t(normalized_counts), scale.=TRUE)
+plot(pca_group$x[,1], pca_group$x[,2], col = sample_annotation$group)
+
+# PCA plot color coded by "LibrarySelection"
+pca_lib_selection <- prcomp(t(normalized_counts), scale.=TRUE)
+plot(pca_lib_selection$x[,1], pca_lib_selection$x[,2], col = sample_annotation$LibrarySelection)
+```
+
+This code will normalize the counts, generate two separate PCA plots, and color code the samples by "group" and "LibrarySelection" as specified in the annotation data.

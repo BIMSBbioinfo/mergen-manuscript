@@ -1,0 +1,39 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+```
+# Read the gene expression data from the file
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Calculate the variability of each gene
+gene_variability <- apply(gene_data, 1, var)
+
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(gene_variability)[order(gene_variability, decreasing = TRUE)]
+
+# Select the top 1000 most variable genes
+top_variable_genes <- sorted_genes[1:1000]
+
+# Filter the gene expression data to retain only the top variable genes
+filtered_gene_data <- gene_data[top_variable_genes, ]
+
+# Perform clustering on the filtered gene expression data
+clusters <- kmeans(filtered_gene_data, centers = 5)
+
+# Extract the cluster assignments for each sample
+sample_clusters <- clusters$cluster
+
+# Create a list to store the cluster specific genes
+cluster_specific_genes <- list()
+
+# Loop through each cluster and extract the genes specific to that cluster
+for (i in 1:max(sample_clusters)) {
+  genes_in_cluster <- top_variable_genes[sample_clusters == i]
+  cluster_specific_genes[[paste0("Cluster", i)]] <- genes_in_cluster
+}
+
+# Print the cluster specific genes
+cluster_specific_genes
+```
+Note: In the code above, the "leukemiaExp.txt" data file should be present in the current working directory.

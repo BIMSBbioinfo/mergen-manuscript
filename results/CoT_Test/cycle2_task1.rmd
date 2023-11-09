@@ -1,0 +1,20 @@
+prompt:
+I have a tab separated file called "subjects.txt". Read it and tell me how many rows and columns it has. 
+
+response:
+To determine the number of rows and columns in the "subjects.txt" file, you can use the `read.table()` function in R. Here's the code:
+
+```
+# Read the file
+data <- read.table("subjects.txt", sep = "\t")
+
+# Get the number of rows and columns in the file
+num_rows <- nrow(data)
+num_columns <- ncol(data)
+
+# Print the result
+num_rows
+num_columns
+```
+
+By using the above code, you will be able to obtain the number of rows and columns in the "subjects.txt" file.

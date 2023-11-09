@@ -1,0 +1,83 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we will need to perform the following steps:
+
+1. Read the gene expression data from the file "leukemiaExp.txt" into a dataframe.
+2. Calculate the variability for each gene in the dataset.
+3. Select the top 1000 genes with the highest variability.
+4. Perform clustering on the samples using the selected genes.
+5. Extract cluster-specific genes for each cluster.
+
+Let's start by reading the gene expression data from the file:
+
+```
+# Read the gene expression data
+gene_data <- read.delim("leukemiaExp.txt", header = TRUE, stringsAsFactors = FALSE)
+```
+
+Next, we'll calculate the variability for each gene using the standard deviation:
+
+```
+# Calculate variability for each gene
+gene_variability <- apply(gene_data[, -1], 1, sd)
+```
+
+Now, we select the top 1000 genes with the highest variability:
+
+```
+# Select top 1000 genes with highest variability
+top_genes <- gene_data[order(gene_variability, decreasing = TRUE), ][1:1000, ]
+```
+
+Once we have the selected genes, we can perform clustering on the samples. There are several clustering methods available in R, such as hierarchical clustering or k-means clustering. Here, we'll use hierarchical clustering as an example:
+
+```
+# Perform hierarchical clustering on the samples
+clustering <- hclust(dist(top_genes[, -1]))
+
+# Cut the dendrogram to obtain clusters
+num_clusters <- 3  # Specify the number of clusters
+clusters <- cutree(clustering, k = num_clusters)
+```
+
+Finally, we can extract cluster-specific genes for each cluster:
+
+```
+# Extract cluster-specific genes for each cluster
+cluster_genes <- vector("list", num_clusters)
+
+for (i in 1:num_clusters) {
+  cluster_genes[[i]] <- top_genes[clusters == i, ]
+}
+```
+
+The variable `cluster_genes` is a list where each element corresponds to a cluster. Each element contains the cluster-specific genes. You can access the genes for a specific cluster using the indexing, e.g., `cluster_genes[[1]]` gives the genes for cluster 1.
+
+Code Summary:
+
+```
+# Read the gene expression data
+gene_data <- read.delim("leukemiaExp.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Calculate variability for each gene
+gene_variability <- apply(gene_data[, -1], 1, sd)
+
+# Select top 1000 genes with highest variability
+top_genes <- gene_data[order(gene_variability, decreasing = TRUE), ][1:1000, ]
+
+# Perform hierarchical clustering on the samples
+clustering <- hclust(dist(top_genes[, -1]))
+
+# Cut the dendrogram to obtain clusters
+num_clusters <- 3  # Specify the number of clusters
+clusters <- cutree(clustering, k = num_clusters)
+
+# Extract cluster-specific genes for each cluster
+cluster_genes <- vector("list", num_clusters)
+
+for (i in 1:num_clusters) {
+  cluster_genes[[i]] <- top_genes[clusters == i, ]
+}
+```

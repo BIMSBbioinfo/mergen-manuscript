@@ -1,0 +1,20 @@
+prompt:
+I have the following gene expression data as an excel sheet, "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+response:
+```
+# Load the necessary library
+library(readxl)
+
+# Read the excel file
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Determine the number of rows (genes) and columns (samples)
+genes <- nrow(data) - 1 # Subtract 1 to exclude the header row
+samples <- ncol(data)
+
+# Print the number of genes and samples
+genes
+samples
+```
+This code assumes that the "Supplementary_Table_1_exp.xlsx" file is located in the current working directory. If the file is located in a different directory, you can specify the full file path in the `read_excel()` function.

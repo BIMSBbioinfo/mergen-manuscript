@@ -1,0 +1,69 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To accomplish this task, we will use R programming language and the following packages: `tidyverse` for data manipulation and visualization, `heatmaply` for plotting the heatmap, and `ggplot2` for plotting the PCA.
+
+Here are the steps to filter genes based on their variability and plot the heatmap and PCA:
+
+1. Install and load the required packages:
+```
+install.packages("tidyverse")
+install.packages("heatmaply")
+```
+
+```
+library(tidyverse)
+library(heatmaply)
+```
+
+2. Read the gene expression data from "leukemiaExp.txt" into a data frame:
+```
+leukemiaExp <- read.delim("leukemiaExp.txt", stringsAsFactors = FALSE)
+```
+
+3. Remove any missing values (NA) and transpose the data frame so that the samples are in rows and genes are in columns:
+```
+leukemiaExp_clean <- leukemiaExp %>%
+  na.omit() %>%
+  t()
+```
+
+4. Calculate the standard deviation for each gene:
+```
+gene_sd <- apply(leukemiaExp_clean, 2, sd)
+```
+
+5. Sort the genes based on their standard deviation in descending order and select the top 1000 most variable genes:
+```
+top_variable_genes <- names(sort(gene_sd, decreasing = TRUE))[1:1000]
+```
+
+6. Subset the gene expression data to include only the top variable genes:
+```
+leukemiaExp_filtered <- leukemiaExp_clean[top_variable_genes, ]
+```
+
+7. Plot the heatmap with clustering using the filtered gene expression data:
+```
+heatmaply(leukemiaExp_filtered)
+```
+
+8. Calculate the principal components for the samples using the filtered gene expression data:
+```
+pca <- prcomp(t(leukemiaExp_filtered))
+```
+
+9. Extract the scores for the first two principal components:
+```
+pca_scores <- data.frame(Sample = rownames(pca$x), PC1 = pca$x[, 1], PC2 = pca$x[, 2])
+```
+
+10. Plot the PCA using the scores:
+```
+ggplot(pca_scores, aes(x = PC1, y = PC2, color = Sample)) +
+  geom_point() +
+  theme_minimal()
+```
+
+This code will filter genes based on their variability, plot a heatmap with clustering using the top 1000 most variable genes, and plot the PCA for the samples.
