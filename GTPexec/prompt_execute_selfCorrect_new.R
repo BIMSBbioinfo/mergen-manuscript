@@ -18,9 +18,8 @@
 ## libs
 library(mergen)
 
-
 ##contexts:
-simpleContext <- "Instruction: Provide R code for the following tasks. Provide the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response.\ntask:\n"
+simpleContext <- "Instruction: Provide R code for the following tasks. Provide the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response. Do no provide code output.\ntask:\n"
 
 actAs<-"Instruction: Act as an expert bioformatician and R programmer. You also have a lot of knowledge about biology. Complete the following tasks, using your expertise and always provide relevant code. When providing the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response.\ntask:\n"
 
@@ -33,16 +32,16 @@ readRenviron(".Renviron")
 
 
 # what context is fed
-context=actAs  #simpleContext #CoT 
+context=simpleContext
 
 ## do you add file content example
-fileContents=FALSE
+fileContents=TRUE
 
 ## do you feed error back?
-errorFeedback=FALSE
+errorFeedback=TRUE
 
 ## output folder
-output_folder="../results/actAs_Test/"
+output_folder="../results/selfCorrect_Test/"
 
 
 
@@ -105,7 +104,7 @@ results <- matrix(nrow=cycles,ncol=length(pcpairs))
 for(j in 1:cycles){
   # create agent
   require(mergen)
-  myAgent<-mergen::setupAgent(name="openai",model="gpt-3.5-turbo",type="chat",ai_api_key=Sys.getenv("OPENAI_API_KEY"))
+  myAgent<-mergen::setupopenaiAgent(model="gpt-3.5-turbo",type="chat")
 
   message("cycle ",j, " starting...\n")
 
@@ -114,6 +113,7 @@ for(j in 1:cycles){
     
     message("responding to prompt ",i, "\n")
     
+    my.prompt<-pcpairs[[i]]$prompt
     # we can add file content samples to the prompt if this is true
     if(fileContents){
       filenames<-extractFilenames(pcpairs[[i]]$prompt) 
@@ -121,65 +121,79 @@ for(j in 1:cycles){
       # if there are files add their content to the thingy
       if(!is.na(filenames)){ 
         addon<-fileHeaderPrompt(filenames)
+         
+        # add to the prompt
+        my.prompt<-paste0(pcpairs[[i]]$prompt,addon)
+         
       }
       
-      # add to the prompt
-      pcpairs[[i]]$prompt<-paste0(pcpairs[[i]]$prompt,addon)
+    }
+    
+    
+   if(errorFeedback){
+      
+     # output html
+     full_path <- file.path(getwd(), paste0(output_folder,"cycle",j,"_task",i,".html"))
+     
+     fed.res<-selfcorrect(agent=myAgent,prompt=my.prompt,context=context,attempts=3,
+                            output.file = full_path,
+                             max_tokens = 1000)
         
-    }
-    
-    
-    # generate response
-    response <- sendPrompt(myAgent, pcpairs[[i]]$prompt,context=context,return.type="text",
-                           max_tokens = 1200)
-    
-    # sometimes error 200 is returned, if that's the case it should retry getting
-    # the response until success, check the chat app by the indian boy
-    
-    #clear response of weird characters, otherwise this will return as error
-    response<-clean_code_blocks(response)
-    
-    
+     htmlfile<-fed.res$exec.result
+      
+
     #write prompt and response to a file
-    writeLines(paste0("prompt:\n",pcpairs[[i]]$prompt,
-                      "\nresponse:\n",response),
+    writeLines(paste0("prompt:\n",my.prompt,
+                        "\nresponse:\n",fed.res$final.response),
                con=paste0(output_folder,"/cycle",j,"_task",i,".rmd") )
-
-   # save response to the thingy 
-    pcpairs[[i]]$response <- response
-    
-    # parse code 
-    presponse<-extractCode2(response, delimiter = "```")
-    
-    # check if any code is returned
-    if(presponse$code==""){
-      results[j,i]="no code returned"
-      message("completed cycle ", j, " and task ",i,"\n")
-      next
-    }     
-    
-    # Split the code into separate lines
-    code_lines <- strsplit( presponse$code, "\n")[[1]]
-    
-    # for each line look for library call and install things if not installed
-    mergen::extractInstallPkg(presponse$code)
-    
-
-    # output html
-    full_path <- file.path(getwd(), paste0(output_folder,"cycle",j,"_task",i,".html"))
-    
-    
-    if(errorFeedback){
       
-      # not implemented in this script
-      # selfcorrect()
+    # save response to the thingy 
+    pcpairs[[i]]$response <- fed.res$final.response
       
-    }
+    } else {
     
-    # execute response code
-    htmlfile<-executeCode2(presponse$code, output = "html",
-                          output.file =full_path)
     
+     # generate response
+     response <- sendPrompt(myAgent, my.prompt,context=context,return.type="text",
+                           max_tokens = 1000)
+    
+      # sometimes error 200 is returned, if that's the case it should retry getting
+      # the response until success, check the chat app by the chatapp boy
+      
+      #clear response of weird characters, otherwise this will return as error
+     repsonse<-clean_code_blocks(repsonse)
+       
+      #write prompt and response to a file
+      writeLines(paste0("prompt:\n",my.prompt,
+                        "\nresponse:\n",response),
+                 con=paste0(output_folder,"/cycle",j,"_task",i,".rmd") )
+  
+     # save response to the thingy 
+      pcpairs[[i]]$response <- response
+      
+      # parse code 
+      presponse<-extractCode(response, delimiter = "```")
+      
+      # check if any code is returned
+      if(presponse$code==""){
+        results[j,i]="no code returned"
+        message("completed cycle ", j, " and task ",i,"\n")
+        next
+      }     
+      
+        
+      # Split the code into separate lines
+      # extract and install libs needed
+      extractInstallPkg(presponses$code)
+
+      # output html
+      full_path <- file.path(getwd(), paste0(output_folder,"cycle",j,"_task",i,".html"))
+      
+      # execute response code
+      htmlfile<-executeCode(presponse$code, output = "html",
+                             output.file =full_path)
+    
+   }
     # if error do sth else, save error results as well
     if( "error" %in% names(htmlfile)){
        

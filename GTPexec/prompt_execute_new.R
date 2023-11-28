@@ -115,11 +115,11 @@ for(j in 1:cycles){
     
     # we can add file content samples to the prompt if this is true
     if(fileContents){
-      filenames<-extractFilenames(pcpairs[[i]]$prompt) 
+      filenames<-mergen::extractFilenames(pcpairs[[i]]$prompt) 
   
       # if there are files add their content to the thingy
       if(!is.na(filenames)){ 
-        addon<-fileHeaderPrompt(filenames)
+        addon<-mergen::fileHeaderPrompt(filenames)
       }
       
       # add to the prompt
@@ -161,7 +161,7 @@ for(j in 1:cycles){
     code_lines <- strsplit(presponse$code, "\n")[[1]]
     
     # for each line look for library call and install things if not installed
-    mergen::extractInstallPkg(code_lines)
+    extractInstallPkg(presponses$code)
 
     # output html
     full_path <- file.path(getwd(), paste0(output_folder,"/cycle",j,"_task",i,".html"))

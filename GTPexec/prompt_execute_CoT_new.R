@@ -31,9 +31,9 @@ CoT<-"Instruction: Act as an expert bioformatician and R programmer. You also ha
 setwd("~/Dropbox/PAPERS/R-devel/mergen-manuscript/GTPexec")
 readRenviron(".Renviron")
 
-
 # what context is fed
-context=actAs  #simpleContext #CoT 
+context=CoT 
+
 
 ## do you add file content example
 fileContents=FALSE
@@ -42,7 +42,7 @@ fileContents=FALSE
 errorFeedback=FALSE
 
 ## output folder
-output_folder="../results/actAs_Test/"
+output_folder="../results/CoT_Test/"
 
 
 
@@ -116,11 +116,11 @@ for(j in 1:cycles){
     
     # we can add file content samples to the prompt if this is true
     if(fileContents){
-      filenames<-extractFilenames(pcpairs[[i]]$prompt) 
+      filenames<-mergen::extractFilenames(pcpairs[[i]]$prompt) 
   
       # if there are files add their content to the thingy
       if(!is.na(filenames)){ 
-        addon<-fileHeaderPrompt(filenames)
+        addon<-mergen::fileHeaderPrompt(filenames)
       }
       
       # add to the prompt
@@ -130,7 +130,7 @@ for(j in 1:cycles){
     
     
     # generate response
-    response <- sendPrompt(myAgent, pcpairs[[i]]$prompt,context=context,return.type="text",
+    response <- mergen::sendPrompt(myAgent, pcpairs[[i]]$prompt,context=context,return.type="text",
                            max_tokens = 1200)
     
     # sometimes error 200 is returned, if that's the case it should retry getting
@@ -138,7 +138,6 @@ for(j in 1:cycles){
     
     #clear response of weird characters, otherwise this will return as error
     response<-clean_code_blocks(response)
-    
     
     #write prompt and response to a file
     writeLines(paste0("prompt:\n",pcpairs[[i]]$prompt,
@@ -149,7 +148,7 @@ for(j in 1:cycles){
     pcpairs[[i]]$response <- response
     
     # parse code 
-    presponse<-extractCode2(response, delimiter = "```")
+    presponse <- mergen::extractCode(response, delimiter = "```")
     
     # check if any code is returned
     if(presponse$code==""){
@@ -177,7 +176,7 @@ for(j in 1:cycles){
     }
     
     # execute response code
-    htmlfile<-executeCode2(presponse$code, output = "html",
+    htmlfile<-executeCode(presponse$code, output = "html",
                           output.file =full_path)
     
     # if error do sth else, save error results as well
