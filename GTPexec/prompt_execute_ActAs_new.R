@@ -22,9 +22,9 @@ library(mergen)
 ##contexts:
 simpleContext <- "Instruction: Provide R code for the following tasks. Provide the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response.\ntask:\n"
 
-actAs<-"Instruction: Act as an expert bioformatician, biologist and R programmer. Complete the following tasks using your expertise and always provide relevant code. When providing the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response.\ntask:\n"
+actAs<-"Instruction: Act as an expert bioformatician and R programmer. You also have a lot of knowledge about biology. Complete the following tasks, using your expertise and always provide relevant code. When providing the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response.\ntask:\n"
 
-CoT<-"Instruction: Act as an expert bioformatician, biologist and R programmer. Complete the following tasks using your expertise and always provide code. When providing code, provide the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response. Let's work this out in a step by step way to be sure we have the right answer.\ntask:\n"
+CoT<-"Instruction: Act as an expert bioformatician and R programmer. You also have a lot of knowledge about biology. Answer questions using your expertise and always provide code. When providing code, provide the code in triple backticks (``` and ```). Provide the code as a single block at the end of your response. Let's work this out in a step by step way to be sure we have the right answer.\ntask:\n"
 
 
 ## working directory
@@ -33,8 +33,7 @@ readRenviron(".Renviron")
 
 
 # what context is fed
-context=simpleContext #actAs #CoT 
-
+context=actAs  #simpleContext #CoT 
 
 ## do you add file content example
 fileContents=FALSE
@@ -43,7 +42,9 @@ fileContents=FALSE
 errorFeedback=FALSE
 
 ## output folder
-output_folder="../results/simpleTest/"
+output_folder="../results/actAs_Test/"
+
+
 
 ## input prompts 
 myPromptsFile="../scripts/mergen_prompts.Rmd"
@@ -130,13 +131,13 @@ for(j in 1:cycles){
     
     # generate response
     response <- sendPrompt(myAgent, pcpairs[[i]]$prompt,context=context,return.type="text",
-                           max_tokens = 1000)
+                           max_tokens = 1200)
     
     # sometimes error 200 is returned, if that's the case it should retry getting
     # the response until success, check the chat app by the indian boy
     
     #clear response of weird characters, otherwise this will return as error
-    response <- mergen::clean_code_blocks(response)
+    response<-clean_code_blocks(response)
     
     
     #write prompt and response to a file
@@ -148,23 +149,24 @@ for(j in 1:cycles){
     pcpairs[[i]]$response <- response
     
     # parse code 
-    presponse<-extractCode(response, delimiter = "```")
+    presponse<-extractCode2(response, delimiter = "```")
     
     # check if any code is returned
     if(presponse$code==""){
       results[j,i]="no code returned"
       message("completed cycle ", j, " and task ",i,"\n")
       next
-    }
+    }     
     
     # Split the code into separate lines
-    code_lines <- strsplit(presponse$code, "\n")[[1]]
+    code_lines <- strsplit( presponse$code, "\n")[[1]]
     
     # for each line look for library call and install things if not installed
     mergen::extractInstallPkg(code_lines)
+    
 
     # output html
-    full_path <- file.path(getwd(), paste0(output_folder,"/cycle",j,"_task",i,".html"))
+    full_path <- file.path(getwd(), paste0(output_folder,"cycle",j,"_task",i,".html"))
     
     
     if(errorFeedback){
@@ -175,7 +177,7 @@ for(j in 1:cycles){
     }
     
     # execute response code
-    htmlfile<-executeCode(presponse$code, output = "html",
+    htmlfile<-executeCode2(presponse$code, output = "html",
                           output.file =full_path)
     
     # if error do sth else, save error results as well
@@ -196,8 +198,6 @@ res.df=reshape2::melt(results,varnames=c("cycle","task"),value.name = "error")
 
 res.df2<-cbind(res.df,taskTypes[res.df[,2],])
 write.table(res.df2,file=paste0(output_folder,"/results.txt"),sep="\t",row.names = FALSE)
-
-
 
 # plot barplot for this experiment
 require(ggplot2)
@@ -229,4 +229,3 @@ p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
         axis.text.x = element_text(angle = 60,hjust=1,size=8))
 
 p2
-
