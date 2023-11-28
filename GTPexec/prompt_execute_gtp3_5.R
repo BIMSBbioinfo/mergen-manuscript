@@ -43,7 +43,7 @@ fileContents=FALSE
 errorFeedback=FALSE
 
 ## output folder
-output_folder="../results/simpleTest/"
+output_folder="../results/simpleTest_gtp3_5/"
 
 ## input prompts
 myPromptsFile="../scripts/mergen_prompts.Rmd"
