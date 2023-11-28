@@ -1,0 +1,49 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load required packages
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Create DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
+                              colData = annotation_data,
+                              design = ~ group)
+
+# Perform statistical tests
+dds <- DESeq(dds)
+
+# Get gene-specific results for each group
+results <- lapply(unique(annotation_data$group), function(group) {
+  res <- results(dds, contrast = c("group", group, "control"))
+  res <- res[which(res$padj < 0.05), ]
+  res$group <- group
+  res
+})
+
+# Combine the results into a single data frame
+results <- do.call(rbind, results)
+
+# Plot PCA using group-specific genes
+pca_data <- t(count_table[results$rownames, -1])
+pca <- prcomp(pca_data)
+pca_df <- as.data.frame(pca$x)
+pca_df$group <- annotation_data$group[results$rownames]
+
+pca_plot <- ggplot(pca_df, aes(PC1, PC2, color = group)) +
+  geom_point(size = 3) +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
+
+pca_plot
+```
+```

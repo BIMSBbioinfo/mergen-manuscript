@@ -1,0 +1,46 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(dplyr)
+library(DESeq2)
+library(ggplot2)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Set the row names of the count table as gene names
+rownames(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
+
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ 1)
+dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Perform PCA on the normalized counts
+pca_data <- prcomp(t(normalized_counts))
+
+# Plot PCA by "group" annotation
+group_pca <- data.frame(pca_data$x) %>%
+  cbind(group = annotation_data$group)
+ggplot(group_pca, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot by Group")
+
+# Plot PCA by "LibrarySelection" annotation
+library_pca <- data.frame(pca_data$x) %>%
+  cbind(LibrarySelection = annotation_data$LibrarySelection)
+ggplot(library_pca, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot by LibrarySelection")
+```
+```

@@ -1,0 +1,19 @@
+prompt:
+I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+response:
+```
+# Load the required package
+library(openxlsx)
+
+# Read the excel file
+data <- read.xlsx("Supplementary_Table_1_exp.xlsx")
+
+# Dimension of the dataset
+genes <- nrow(data) - 1  # -1 to exclude the header row
+samples <- ncol(data) - 1  # -1 to exclude the first column
+
+# Print the number of genes and samples
+print(paste("Number of genes:", genes))
+print(paste("Number of samples:", samples))
+```

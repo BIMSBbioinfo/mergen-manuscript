@@ -1,0 +1,33 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+```
+# Read the data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Calculate the variance for each gene
+variance <- apply(data[, -1], 1, var)
+
+# Sort the genes based on variance in descending order
+sorted_genes <- data[order(variance, decreasing = TRUE), ]
+
+# Select the top 1000 genes with highest variance
+top_genes <- sorted_genes[1:1000, ]
+
+# Remove the gene names column
+selected_genes <- top_genes[, -1]
+
+# Calculate the z-scores for the selected genes
+z_scores <- scale(selected_genes)
+
+# Plot the heatmap with clustering
+heatmap(z_scores, Colv = NA)
+
+# Perform PCA on the data
+pca <- prcomp(selected_genes)
+
+# Plot the PCA
+plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2")
+```
+Please note that you need to replace "leukemiaExp.txt" with the actual file path/name of your gene expression data file.

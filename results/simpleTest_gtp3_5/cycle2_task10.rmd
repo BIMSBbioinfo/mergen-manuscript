@@ -1,0 +1,44 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+```
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Calculate the variability of each gene by calculating the standard deviation
+variance <- apply(data[, -1], 1, sd)
+
+# Order the genes based on their variability in descending order
+ordered_genes <- order(variance, decreasing = TRUE)
+
+# Select the top 1000 most variable genes
+top_1000_genes <- ordered_genes[1:1000]
+
+# Filter the data to include only the most variable genes
+filtered_data <- data[top_1000_genes, ]
+
+# Calculate the distance matrix between samples using the Euclidean distance
+distance_matrix <- dist(filtered_data[, -1], method = "euclidean")
+
+# Cluster the samples using hierarchical clustering with complete linkage
+clusters <- hclust(distance_matrix, method = "complete")
+
+# Cut the dendrogram into clusters
+num_clusters <- 3  # Specify the number of clusters
+cluster_labels <- cutree(clusters, k = num_clusters)
+
+# Extract the cluster-specific genes
+cluster_specific_genes <- lapply(unique(cluster_labels), function(cluster){
+  genes_in_cluster <- which(cluster_labels == cluster)
+  cluster_genes <- filtered_data[genes_in_cluster, ]
+  cluster_genes
+})
+
+# Print the cluster-specific genes
+for (i in 1:num_clusters) {
+  cat("Cluster", i, "specific genes:\n")
+  print(cluster_specific_genes[[i]])
+}
+```
+
