@@ -1,4 +1,4 @@
-# this script converts clear text GPT fine-tuning prompts to JSON files 
+# this script converts clear text GPT fine-tuning prompts to JSON files
 # needed for GPT
 
 
@@ -6,7 +6,7 @@
 #- how do i save the results with the code not only the result [done]
 #   save the result as html and the prompt+response as rmd [done]
 #- how do i keep track of succesful and unsuccesful executions [done]
-#    have a dataframe to keep track of each cycle and task 
+#    have a dataframe to keep track of each cycle and task
 #- how do i capture library commands and install missing libraries before execution
 #   do this  before execution via regular expressions [done]
 # HOW to deal with errors when GPT doesn't respond? [ ]
@@ -33,7 +33,7 @@ readRenviron(".Renviron")
 
 
 # what context is fed
-context=simpleContext #actAs #CoT 
+context=simpleContext #actAs #CoT
 
 
 ## do you add file content example
@@ -45,13 +45,13 @@ errorFeedback=FALSE
 ## output folder
 output_folder="../results/simpleTest/"
 
-## input prompts 
+## input prompts
 myPromptsFile="../scripts/mergen_prompts.Rmd"
 
 ## number of cycles: how many times each prompt should be run
 cycles=5
 
-### --- Being tests 
+### --- Being tests
 
 # read the data
 tdat=readLines(myPromptsFile)
@@ -79,10 +79,10 @@ if (length(prompts) != length(ends)){
 pcpairs=list()
 
 for( i in 1:(length(prompts)-1)){
-  
+
   pcpairs[[i]]=list(prompt=paste(tdat[(prompts[i]+1):(ends[i]-1)],collapse="\n"))
- 
-  
+
+
 }
 
 # add the last bit
@@ -110,85 +110,85 @@ for(j in 1:cycles){
 
   # for each prompt
   for( i in 1:length(pcpairs)){
-    
+
     message("responding to prompt ",i, "\n")
-    
+
     # we can add file content samples to the prompt if this is true
     if(fileContents){
-      filenames<-mergen::extractFilenames(pcpairs[[i]]$prompt) 
-  
+      filenames<-mergen::extractFilenames(pcpairs[[i]]$prompt)
+
       # if there are files add their content to the thingy
-      if(!is.na(filenames)){ 
+      if(!is.na(filenames)){
         addon<-mergen::fileHeaderPrompt(filenames)
       }
-      
+
       # add to the prompt
       pcpairs[[i]]$prompt<-paste0(pcpairs[[i]]$prompt,addon)
-        
+
     }
-    
-    
+
+
     # generate response
     response <- sendPrompt(myAgent, pcpairs[[i]]$prompt,context=context,return.type="text",
                            max_tokens = 1000)
-    
+
     # sometimes error 200 is returned, if that's the case it should retry getting
     # the response until success, check the chat app by the indian boy
-    
+
     #clear response of weird characters, otherwise this will return as error
     response <- mergen::clean_code_blocks(response)
-    
-    
+
+
     #write prompt and response to a file
     writeLines(paste0("prompt:\n",pcpairs[[i]]$prompt,
                       "\nresponse:\n",response),
                con=paste0(output_folder,"/cycle",j,"_task",i,".rmd") )
 
-   # save response to the thingy 
+   # save response to the thingy
     pcpairs[[i]]$response <- response
-    
-    # parse code 
+
+    # parse code
     presponse<-extractCode(response, delimiter = "```")
-    
+
     # check if any code is returned
     if(presponse$code==""){
       results[j,i]="no code returned"
       message("completed cycle ", j, " and task ",i,"\n")
       next
     }
-    
+
     # Split the code into separate lines
     code_lines <- strsplit(presponse$code, "\n")[[1]]
-    
+
     # for each line look for library call and install things if not installed
-    extractInstallPkg(presponses$code)
+    extractInstallPkg(presponse$code)
 
     # output html
     full_path <- file.path(getwd(), paste0(output_folder,"/cycle",j,"_task",i,".html"))
-    
-    
+
+
     if(errorFeedback){
-      
+
       # not implemented in this script
       # selfcorrect()
-      
+
     }
-    
+
     # execute response code
     htmlfile<-executeCode(presponse$code, output = "html",
                           output.file =full_path)
-    
+
     # if error do sth else, save error results as well
     if( "error" %in% names(htmlfile)){
-       
+
       results[j,i]=htmlfile$error
     }else{
       results[j,i]=NA
     }
-    
+
    message("completed cycle ", j, " and task ",i,"\n")
   }
-  
+
 }
 
 # save results
@@ -208,12 +208,12 @@ resplot$error=ifelse(is.na(resplot$error),1,0)
 
 resplot<-tapply(resplot$error,as.factor(resplot$complexity),function(x) sum(x)/length(x),simplify = TRUE)
 resplot<- data.frame(error=resplot,complexity=as.numeric(names(resplot)))
-p2<-ggplot(resplot, aes(x = complexity, y = error)) + 
+p2<-ggplot(resplot, aes(x = complexity, y = error)) +
   geom_bar(position="dodge", stat="identity")+
   labs(title = '% executible code',
        subtitle = 'As task complexity increases LLM generated code becomes non-executible',
        y = 'Fraction of executable tasks',
-       x= 'Task complexity') 
+       x= 'Task complexity')
 
 # make more colors
 my.colors <-
