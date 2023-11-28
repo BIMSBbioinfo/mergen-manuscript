@@ -530,7 +530,7 @@ for(j in 1:cycles){
     }
     
     # execute response code
-    htmlfile<-executeCode2(presponse$code, output = "html",
+    htmlfile<-executeCode(presponse$code, output = "html",
                           output.file =full_path)
     
     # if error do sth else, save error results as well
