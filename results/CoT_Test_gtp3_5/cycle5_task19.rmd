@@ -1,0 +1,82 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To accomplish this task, we will use the following steps:
+
+1. Read the count table and annotation data.
+2. Normalize the counts.
+3. Perform PCA analysis.
+4. Generate the first PCA plot color coded by "group" column.
+5. Generate the second PCA plot color coded by "LibrarySelection" column.
+
+Step 1: Read the count table and annotation data
+```
+# Load necessary libraries
+library(readxl)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+```
+
+Step 2: Normalize the counts
+```
+# Assuming you want to normalize the counts using the TMM method from the edgeR package
+library(edgeR)
+
+# Convert count table to a matrix
+counts <- as.matrix(count_table[, -1]) # Exclude the first column with gene names
+
+# Create a DGEList object
+dge <- DGEList(counts = counts)
+
+# Normalize the counts
+dge <- calcNormFactors(dge, method = "TMM")
+normalized_counts <- cpm(dge, log = TRUE)
+```
+
+Step 3: Perform PCA analysis
+```
+# Perform PCA analysis using the normalized counts
+pca <- prcomp(t(normalized_counts))
+
+# Extract the PC scores
+pc_scores <- data.frame(sample_names = colnames(normalized_counts), pca$x)
+
+# Rename the PC columns
+colnames(pc_scores) <- c("sample_names", paste0("PC", 1:ncol(pca$x)))
+```
+
+Step 4: Generate the first PCA plot color coded by "group" column
+```
+# Merge the PC scores with the annotation data
+pc_scores <- merge(pc_scores, annotation_data, by.x = "sample_names", by.y = "sample", all.x = TRUE)
+
+# Plot the PCA plot color coded by "group" column
+library(ggplot2)
+pc_plot_group <- ggplot(pc_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 3) +
+  labs(title = "PCA Plot (Color coded by Group)") +
+  theme_bw()
+print(pc_plot_group)
+```
+
+Step 5: Generate the second PCA plot color coded by "LibrarySelection" column
+```
+# Plot the PCA plot color coded by "LibrarySelection" column
+pc_plot_selection <- ggplot(pc_scores, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point(size = 3) +
+  labs(title = "PCA Plot (Color coded by Library Selection)") +
+  theme_bw()
+print(pc_plot_selection)
+```
+
+Please note that the code assumes that you have the necessary libraries installed (e.g., `readxl`, `edgeR`, `ggplot2`). If you do not have them installed, you can use the following commands to install them:
+```
+
+
+
+```

@@ -1,0 +1,49 @@
+prompt:
+I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+response:
+To determine the number of genes and samples in the dataset, we can use the R programming language and the `readxl` package to read the gene expression data from the Excel file. Then, we can use some basic functions to extract the information.
+
+First, let's install and load the `readxl` package:
+
+```
+  # Install the readxl package
+library(readxl)  # Load the readxl package
+```
+
+Now, we can read the gene expression data from the Excel file and store it in a variable called `gene_exp_data`:
+
+```
+gene_exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+```
+
+To determine the number of genes and samples, we can use the `dim()` function, which returns the dimensions of the data frame. 
+
+```
+num_genes <- dim(gene_exp_data)[1]  # Number of genes (number of rows)
+num_samples <- dim(gene_exp_data)[2] - 1  # Number of samples (number of columns minus the gene names column)
+```
+
+Finally, we can print the values:
+
+```
+print(paste("Number of genes:", num_genes))
+print(paste("Number of samples:", num_samples))
+```
+
+Here is the complete code:
+
+```
+  # Install the readxl package
+library(readxl)  # Load the readxl package
+
+gene_exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+num_genes <- dim(gene_exp_data)[1]
+num_samples <- dim(gene_exp_data)[2] - 1
+
+print(paste("Number of genes:", num_genes))
+print(paste("Number of samples:", num_samples))
+```
+
+Remember to replace `"Supplementary_Table_1_exp.xlsx"` with the actual file path if it's located in a different directory.

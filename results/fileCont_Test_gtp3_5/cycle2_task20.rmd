@@ -1,0 +1,60 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load required libraries
+library(readxl)
+library(DT)
+library(dplyr)
+library(stats)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Remove any rows with missing values
+count_table <- count_table[complete.cases(count_table), ]
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", sep="\t", header=TRUE)
+
+# Merge count table with annotation data using sample ids
+merged_data <- merge(count_table, annotation_data, by.x = "Genes", by.y = "diagnosis")
+
+# Define groups
+groups <- unique(merged_data$group)
+
+# Perform statistical tests for each group
+group_specific_genes <- list()
+for (group in groups) {
+  group_data <- merged_data[merged_data$group == group, ]
+  p_values <- apply(group_data[, -c(1, length(group_data))], 1, function(x) {
+    t.test(x[1:length(x) - 1], x[length(x)], alternative = "two.sided")$p.value
+  })
+  group_specific_genes[[group]] <- rownames(group_data)[which(p_values < 0.05)]
+}
+
+# Subset count table with group specific genes
+group_specific_count_table <- count_table[group_specific_genes[[1]], ]
+
+# Perform PCA using group specific genes
+pca_data <- prcomp(t(group_specific_count_table[-1]), scale = TRUE)
+
+# Create PCA plot
+plot(pca_data$x[,1], pca_data$x[,2], col = as.numeric(factor(annotation_data$group)), pch = 19)
+
+```
+Note: Make sure to adjust the file paths in the code to match the actual file locations on your system.

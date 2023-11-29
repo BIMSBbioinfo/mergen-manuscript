@@ -1,0 +1,56 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(tidyverse)
+library(readxl)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
+
+# Read the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Remove any leading/trailing white spaces in the gene names
+count_table$Genes <- trimws(count_table$Genes)
+
+# Set the row names of the count table to be the gene names
+rownames(count_table) <- count_table$Genes
+
+# Remove the gene names column from the count table
+count_table <- subset(count_table, select = -Genes)
+
+# Normalize counts
+normalized_counts <- count_table / colSums(count_table) * 1e6
+
+# Join the annotation data with the normalized counts based on sample ids
+normalized_counts_with_annotation <- inner_join(normalized_counts, annotation_data, 
+                                               by = c(names(normalized_counts)[1] = "SampleID"))
+
+# Perform PCA on the normalized counts
+pca <- prcomp(t(normalized_counts_with_annotation[, -c(1:3)]), scale. = TRUE)
+
+# PCA plot color coded by "group"
+plot(pca$x[, 1:2], col = normalized_counts_with_annotation$group, 
+     main = "PCA plot (color coded by group)")
+
+# PCA plot color coded by "LibrarySelection"
+plot(pca$x[, 1:2], col = normalized_counts_with_annotation$LibrarySelection, 
+     main = "PCA plot (color coded by LibrarySelection)")
+```
+

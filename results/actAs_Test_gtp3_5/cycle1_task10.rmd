@@ -1,0 +1,46 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we will follow these steps:
+
+1. Read the gene expression data from the "leukemiaExp.txt" file.
+2. Calculate the variance of each gene across all samples.
+3. Sort the genes based on their variance in descending order.
+4. Select the top 1000 genes with the highest variance.
+5. Perform clustering on the samples using the selected genes.
+6. Assign each sample to a cluster.
+7. Extract cluster-specific genes for each cluster.
+
+Here's the code to accomplish these tasks:
+
+```
+# Step 1: Read the gene expression data
+gene_data <- read.delim("leukemiaExp.txt", sep = "\t")
+
+# Step 2: Calculate variance of each gene
+gene_variances <- apply(gene_data[, -1], 1, var)
+
+# Step 3: Sort genes based on variance
+sorted_genes <- gene_data[order(gene_variances, decreasing = TRUE), ]
+
+# Step 4: Select top 1000 genes with highest variance
+top_var_genes <- sorted_genes[1:1000, ]
+
+# Step 5: Perform clustering on the samples
+library(cluster)
+set.seed(123)  # For reproducibility
+cluster_results <- kmeans(top_var_genes[, -1], centers = 5)  # Change the value of 'centers' as desired
+
+# Step 6: Assign each sample to a cluster
+cluster_assignments <- cluster_results$cluster
+
+# Step 7: Extract cluster-specific genes for each cluster
+cluster_specific_genes <- lapply(1:max(cluster_assignments), function(cluster) {
+  cluster_samples <- which(cluster_assignments == cluster)
+  cluster_genes <- top_var_genes[cluster_samples, ]
+  return(cluster_genes)
+})
+```
+
+Make sure to replace `'leukemiaExp.txt'` with the correct file path if needed. Also, adjust the number of `centers` in the `kmeans` function based on the desired number of clusters.

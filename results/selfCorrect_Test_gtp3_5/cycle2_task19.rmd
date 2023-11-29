@@ -1,0 +1,59 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(openxlsx)
+library(dplyr)
+library(edgeR)
+library(ggplot2)
+
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+# Read annotation data
+annotations <- read.delim("SRP021193.colData.tsv", header = TRUE)
+
+# Remove first column (gene names) from count table
+count_table <- count_table[, -1]
+
+# Normalize counts using TMM method
+norm_factors <- calcNormFactors(count_table)
+normalized_counts <- cpm(count_table, normalized.lib.sizes = norm_factors)
+
+# Perform PCA on normalized counts
+pca <- prcomp(t(normalized_counts))
+
+# Merge annotations and normalized counts
+merged_data <- cbind(annotations[, 1], normalized_counts)
+colnames(merged_data)[1] <- "Sample_ID"
+merged_data <- as.data.frame(merged_data)
+
+# Convert factor columns to character for plotting
+merged_data$group <- as.character(merged_data$group)
+merged_data$LibrarySelection <- as.character(merged_data$LibrarySelection)
+
+# Plot PCA with color coding by "group"
+ggplot(merged_data, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  ggtitle("PCA plot with color coded by 'group'")
+
+# Plot PCA with color coding by "LibrarySelection"
+ggplot(merged_data, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point() +
+  ggtitle("PCA plot with color coded by 'LibrarySelection'")
+```
+

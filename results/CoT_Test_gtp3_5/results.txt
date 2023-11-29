@@ -1,0 +1,104 @@
+"cycle"	"task"	"error"	"taskType"	"numData"	"complexity"
+1	1	NA	"read"	1	1
+2	1	"cannot open the connection"	"read"	1	1
+3	1	NA	"read"	1	1
+4	1	NA	"read"	1	1
+5	1	NA	"read"	1	1
+1	2	NA	"read"	1	1
+2	2	NA	"read"	1	1
+3	2	NA	"read"	1	1
+4	2	NA	"read"	1	1
+5	2	NA	"read"	1	1
+1	3	NA	"read"	1	1
+2	3	NA	"read"	1	1
+3	3	NA	"read"	1	1
+4	3	NA	"read"	1	1
+5	3	NA	"read"	1	1
+1	4	NA	"read"	1	1
+2	4	NA	"read"	1	1
+3	4	NA	"read"	1	1
+4	4	NA	"read"	1	1
+5	4	NA	"read"	1	1
+1	5	"arguments imply differing number of rows: 0, 1000"	"read | data wrangling"	1	2
+2	5	NA	"read | data wrangling"	1	2
+3	5	NA	"read | data wrangling"	1	2
+4	5	"undefined columns selected"	"read | data wrangling"	1	2
+5	5	"undefined columns selected"	"read | data wrangling"	1	2
+1	6	NA	"read | data wrangling"	1	2
+2	6	NA	"read | data wrangling"	1	2
+3	6	NA	"read | data wrangling"	1	2
+4	6	NA	"read | data wrangling"	1	2
+5	6	NA	"read | data wrangling"	1	2
+1	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+2	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+3	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+4	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+5	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+1	8	"'x' and 'y' lengths differ"	"read | data wrangling | visualization"	1	3
+2	8	"formal argument \"xlab\" matched by multiple actual arguments"	"read | data wrangling | visualization"	1	3
+3	8	"formal argument \"xlab\" matched by multiple actual arguments"	"read | data wrangling | visualization"	1	3
+4	8	NA	"read | data wrangling | visualization"	1	3
+5	8	"Problem while computing aesthetics."	"read | data wrangling | visualization"	1	3
+1	9	"`x' must be a numeric matrix"	"read | data wrangling | visualization | ML/Stats"	1	4
+2	9	"non-numeric argument to mathematical function"	"read | data wrangling | visualization | ML/Stats"	1	4
+3	9	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+4	9	"non-numeric argument to mathematical function"	"read | data wrangling | visualization | ML/Stats"	1	4
+5	9	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+1	10	"undefined columns selected"	"read | data wrangling | visualization | ML/Stats"	1	4
+2	10	"must have n >= 2 objects to cluster"	"read | data wrangling | visualization | ML/Stats"	1	4
+3	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+4	10	"<text>:24:38: unexpected '<'
+23: # Cut the dendrogram to obtain clusters
+24: cut_clusters <- cutree(clusters, k = <
+                                         ^"	"read | data wrangling | visualization | ML/Stats"	1	4
+5	10	""	"read | data wrangling | visualization | ML/Stats"	1	4
+1	11	"line 1 did not have 6 elements"	"read"	2	2
+2	11	"line 1 did not have 6 elements"	"read"	2	2
+3	11	"line 1 did not have 6 elements"	"read"	2	2
+4	11	"line 1 did not have 6 elements"	"read"	2	2
+5	11	"line 1 did not have 6 elements"	"read"	2	2
+1	12	"more columns than column names"	"read"	2	2
+2	12	NA	"read"	2	2
+3	12	NA	"read"	2	2
+4	12	NA	"read"	2	2
+5	12	"more columns than column names"	"read"	2	2
+1	13	"'by' must specify a uniquely valid column"	"read | data wrangling"	2	3
+2	13	"more columns than column names"	"read | data wrangling"	2	3
+3	13	"more columns than column names"	"read | data wrangling"	2	3
+4	13	"'by' must specify a uniquely valid column"	"read | data wrangling"	2	3
+5	13	"invalid 'row.names' length"	"read | data wrangling"	2	3
+1	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+2	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+3	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+4	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+5	14	"'by' must specify a uniquely valid column"	"read | data wrangling"	2	3
+1	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+2	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+3	15	"'by' must specify a uniquely valid column"	"read | data wrangling | visualization"	2	4
+4	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+5	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+1	16	"Join columns in `x` must be present in the data."	"read | data wrangling | visualization"	2	4
+2	16	"more columns than column names"	"read | data wrangling | visualization"	2	4
+3	16	"Join columns in `x` must be present in the data."	"read | data wrangling | visualization"	2	4
+4	16	"'by' must specify a uniquely valid column"	"read | data wrangling | visualization"	2	4
+5	16	"invalid 'row.names' length"	"read | data wrangling | visualization"	2	4
+1	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+2	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+1	18	"'by' must specify a uniquely valid column"	"read | data wrangling | ML/Stats | visualization"	2	5
+2	18	"undefined columns selected"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	18	"'x' must be numeric"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+1	19	NA	"read | data wrangling | ML/Stats | visualization"	2	5
+2	19	"object 'count_table_normalized' not found"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	19	"more columns than column names"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	19	"cannot rescale a constant/zero column to unit variance"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	19	"'by' must specify a uniquely valid column"	"read | data wrangling | ML/Stats | visualization"	2	5
+1	20	"invalid 'row.names' length"	"read | data wrangling | ML/Stats | visualization"	2	5
+2	20	"more columns than column names"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	20	"a dimension is zero"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	20	""	"read | data wrangling | ML/Stats | visualization"	2	5
+5	20	"unable to find an inherited method for function 'counts' for signature '\"tbl_df\"'"	"read | data wrangling | ML/Stats | visualization"	2	5

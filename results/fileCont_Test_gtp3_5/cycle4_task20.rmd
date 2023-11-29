@@ -1,0 +1,68 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(dplyr)
+library(pcaMethods)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Extract gene names from count table
+gene_names <- count_table$Genes
+
+# Remove first column and convert count table to matrix
+count_matrix <- as.matrix(count_table[,-1])
+
+# Extract group column from annotation data
+groups <- annotation_data$group
+
+# Perform statistical tests to find group-specific genes
+group_specific_genes <- apply(count_matrix, 1, function(row) {
+  group_stats <- t.test(row ~ groups)
+  if (group_stats$p.value < 0.05) {
+    return(gene_names[which.max(abs(group_stats$estimate))])
+  } else {
+    return(NA)
+  }
+})
+
+# Remove NA values from group-specific genes
+group_specific_genes <- group_specific_genes[!is.na(group_specific_genes)]
+
+# Subset count matrix to include only group-specific genes
+count_matrix_specific <- count_matrix[grep(paste(group_specific_genes, collapse = "|"), gene_names),]
+
+# Perform PCA using group-specific genes
+pca_result <- pca(count_matrix_specific)
+
+# Create data frame for plotting PCA results
+pca_data <- data.frame(pca_result$X, group = groups)
+
+# Plot PCA with color-coded groups
+ggplot(pca_data, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot", x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+```

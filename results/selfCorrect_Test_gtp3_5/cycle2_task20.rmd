@@ -1,0 +1,60 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(pcaMethods)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Transpose count table for easier manipulation
+count_table <- t(count_table)
+
+# Rename count table columns with gene names
+colnames(count_table) <- count_table[1,]
+count_table <- count_table[-1,]
+
+# Remove rows with missing values
+count_table <- count_table[complete.cases(count_table),]
+
+# Rename annotation data columns
+colnames(annotation_data) <- c("Sample_ID", "Diagnosis", "Group", "Library_Selection")
+
+# Perform statistical tests for group-specific genes
+group_specific_genes <- list()
+for (group in unique(annotation_data$Group)) {
+  samples_in_group <- annotation_data$Sample_ID[annotation_data$Group == group]
+  group_counts <- count_table[, samples_in_group]
+  p_values <- apply(group_counts, 1, function(x) {
+    t.test(x ~ group)$p.value
+  })
+  group_specific_genes[[group]] <- rownames(count_table)[p.adjust(p_values, method = "fdr") < 0.05]
+}
+
+# Get PCA scores for group-specific genes
+group_specific_counts <- count_table[, unlist(group_specific_genes)]
+pca_result <- prcomp(group_specific_counts, scale = TRUE)
+
+# Plot PCA with color-coded groups
+plot(pca_result$x[, 1], pca_result$x[, 2], col = annotation_data$Group, pch = 16)
+```

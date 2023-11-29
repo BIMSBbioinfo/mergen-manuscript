@@ -1,0 +1,60 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we will use R and several bioinformatics packages including `data.table`, `biomaRt`, `limma`, and `pheatmap`. 
+
+First, we will read the gene expression data from the "leukemiaExp.txt" file and store it in a data frame:
+
+```
+# Read the gene expression data
+gene_exp <- data.table::fread("leukemiaExp.txt", sep="\t", header=TRUE)
+```
+
+Next, we will filter the genes based on their variability and retain the top 1000 most variable genes:
+
+```
+# Calculate the variability of each gene
+gene_variability <- apply(gene_exp[, -1], 1, var)
+
+# Sort the genes by variability in descending order
+sorted_genes <- gene_exp[order(-gene_variability), ]
+
+# Retain the top 1000 most variable genes
+top_variable_genes <- sorted_genes[1:1000, ]
+```
+
+We will then cluster the samples based on the expression of the variable genes:
+
+```
+# Transpose the data for clustering
+cluster_data <- t(top_variable_genes[, -1])
+
+# Perform hierarchical clustering
+distance_matrix <- dist(cluster_data)
+hc <- hclust(distance_matrix)
+
+# Cut the clustering tree into a specified number of clusters
+num_clusters <- 4  # You can change this to the desired number of clusters
+cluster_labels <- cutree(hc, k=num_clusters)
+
+# Add the cluster labels as a column to the top variable genes data
+top_variable_genes$cluster <- cluster_labels
+```
+
+Finally, we will extract the cluster-specific genes for each cluster:
+
+```
+# Split the top variable genes data by cluster
+cluster_genes <- split(top_variable_genes[, -1], top_variable_genes$cluster)
+
+# Print the cluster-specific genes for each cluster
+for (i in 1:num_clusters) {
+  cluster_i_genes <- cluster_genes[[i]]
+  cluster_i_genes <- cluster_i_genes[, -ncol(cluster_i_genes)]
+  print(paste("Cluster", i, "- Specific Genes:"))
+  print(cluster_i_genes)
+}
+```
+
+This code will print the cluster-specific genes for each cluster. You can change the `num_clusters` variable to the desired number of clusters.

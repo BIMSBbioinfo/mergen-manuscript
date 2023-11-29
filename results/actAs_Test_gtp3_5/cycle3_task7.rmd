@@ -1,0 +1,42 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data. Create a boxplot of the columns
+
+response:
+To complete this task, we will use the R programming language. First, we need to read the gene expression data from the file "leukemiaExp.txt" and store it in a data frame. Then, we will check the number of columns and if it exceeds 500, we will randomly sample 500 columns and create a subset of the data. Finally, we will create a boxplot of the columns. 
+
+Here is the code to accomplish these tasks:
+
+```
+# Read gene expression data from file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Check the number of columns
+num_columns <- ncol(data)
+
+# Check if the number of columns exceeds 500
+if(num_columns > 500) {
+  # Randomly sample 500 columns
+  set.seed(123)  # For reproducibility
+  sampled_columns <- sample(num_columns, 500)
+  
+  # Create a subset of the data with sampled columns
+  data_subset <- data[, sampled_columns]
+} else {
+  # Use the original data
+  data_subset <- data
+}
+
+# Create a boxplot of the columns
+boxplot(data_subset, las = 2, cex.axis = 0.8)
+```
+
+Explanation:
+1. We use the `read.table()` function to read the gene expression data from the file "leukemiaExp.txt". The `header = TRUE` argument indicates that the first row contains the column names, and the `sep = "\t"` argument specifies that the file is tab-separated.
+2. We store the data in a data frame called `data`.
+3. We use the `ncol()` function to check the number of columns in the data.
+4. If the number of columns exceeds 500, we enter the if condition.
+5. We set a random seed using `set.seed()` to ensure reproducibility of the random sampling.
+6. We use the `sample()` function to randomly select 500 column indices out of the total number of columns.
+7. We subset the data using the sampled column indices.
+8. If the number of columns is 500 or less, we enter the else condition and use the original data without any subsetting.
+9. Finally, we create a boxplot of the columns in `data_subset` using the `boxplot()` function. The `las` argument sets the label orientation to 2 (vertical) and the `cex.axis` argument adjusts the size of the axis labels.

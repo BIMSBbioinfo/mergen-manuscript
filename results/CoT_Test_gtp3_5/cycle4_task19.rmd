@@ -1,0 +1,73 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To start, let's load the necessary libraries and read in the count table and annotation data.
+
+```
+# Load necessary libraries
+library(readxl)
+library(dplyr)
+library(DESeq2)
+library(ggplot2)
+library(pcaMethods)
+
+# Read in count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read in annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+```
+
+Next, let's normalize the counts using the DESeq2 package. We will use the "group" column from the annotation data for normalization.
+
+```
+# Set column names of count table as rownames
+rownames(count_table) <- count_table$gene_names
+count_table <- count_table[, -1]
+
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ group)
+
+# Perform normalization using DESeq2
+dds <- DESeq(dds)
+
+# Extract the normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+```
+
+Now, let's perform PCA (Principal Component Analysis) on the normalized counts and create two PCA plots, one color coded by "group" and the other by "LibrarySelection" in the annotation data.
+
+```
+# Perform PCA on normalized counts
+pca_result <- prcomp(t(normalized_counts), center = TRUE, scale. = TRUE)
+
+# Extract PC scores
+pc_scores <- pca_result$x
+
+# Add annotation data to PC scores
+pc_scores$group <- annotation_data$group
+pc_scores$library_selection <- annotation_data$LibrarySelection
+
+# Create PCA plot color coded by "group"
+p1 <- ggplot(pc_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 3) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot (Color Coded by 'group')")
+
+# Create PCA plot color coded by "LibrarySelection"
+p2 <- ggplot(pc_scores, aes(x = PC1, y = PC2, color = library_selection)) +
+  geom_point(size = 3) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot (Color Coded by 'LibrarySelection')")
+
+# Display the PCA plots
+p1
+p2
+```
+
+Please note that in order to run this code successfully, you will need to have the necessary packages (`readxl`, `dplyr`, `DESeq2`, `ggplot2`, and `pcaMethods`) installed in your R environment.

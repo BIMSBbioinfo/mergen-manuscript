@@ -1,0 +1,35 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To complete this task, we will follow the following steps:
+
+1. Read the gene expression data from the file "leukemiaExp.txt" and store it in a dataframe.
+2. Filter the genes based on their variability by calculating the standard deviation for each gene and selecting the top 1000 most variable genes.
+3. Normalize the gene expression data by scaling it to have zero mean and unit variance.
+4. Generate a heatmap of the selected genes with clustering.
+5. Plot a PCA (Principal Component Analysis) for the samples.
+
+Here's the code to perform these steps:
+
+```
+# Step 1: Read the gene expression data from the file
+gene_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+
+# Step 2: Filter the genes based on their variability
+gene_sd <- apply(gene_data, 1, sd)  # Calculate standard deviation for each gene
+top_genes <- head(order(gene_sd, decreasing = TRUE), 1000)  # Get indices of top 1000 most variable genes
+filtered_data <- gene_data[top_genes, ]  # Filter the gene expression data based on top genes
+
+# Step 3: Normalize the gene expression data
+normalized_data <- scale(filtered_data)
+
+# Step 4: Generate a heatmap with clustering
+heatmap(normalized_data, Colv = NA, scale = "none")
+
+# Step 5: Plot PCA for samples
+pca <- prcomp(t(normalized_data))
+plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2")
+```
+
+Please make sure to replace "leukemiaExp.txt" with the correct file path to your gene expression data. Also, you can modify the number of top variable genes and customize the labels and titles according to your specific requirements.

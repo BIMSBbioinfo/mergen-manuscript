@@ -1,0 +1,103 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To accomplish this task, we will need to perform the following steps:
+
+1. Load the count table and annotation data.
+2. Separate the count table into gene names and expression values.
+3. Filter the count table to include only the genes specific to each "group" in the annotation data.
+4. Perform a statistical test to identify the genes that are significantly differentially expressed across groups.
+5. Plot a PCA using the expression values of the group-specific genes and color code it based on the "group" variable in the annotation data.
+
+Let's start by loading the necessary libraries and the data files:
+
+```
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+# Load count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Load annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+```
+
+Next, we need to separate the count table into gene names and expression values. Assuming that the gene names are in the first column and the expression values are in the remaining columns, we can use the following code:
+
+```
+# Separate gene names and expression values
+gene_names <- count_table[, 1]
+expression_values <- count_table[, -1]
+```
+
+Now, let's filter the count table to include only the genes specific to each group in the annotation data. We can achieve this by subsetting the expression values based on the unique groups in the annotation data:
+
+```
+# Get unique groups from the annotation data
+groups <- unique(annotation_data$group)
+
+# Initialize a list to store the group-specific genes
+group_specific_genes <- list()
+
+# Filter count table for each group
+for (group in groups) {
+  # Get the samples corresponding to the current group
+  samples <- annotation_data$sample[annotation_data$group == group]
+  
+  # Subset expression values for the samples in the current group
+  group_expression <- expression_values[, samples]
+  
+  # Calculate the average expression for each gene in the group
+  average_expression <- rowMeans(group_expression)
+  
+  # Identify the genes with the highest average expression in the group
+  top_genes <- gene_names[order(average_expression, decreasing = TRUE)][1:10]
+  
+  # Add the top genes for the group to the list
+  group_specific_genes[[group]] <- top_genes
+}
+```
+
+Now that we have identified the group-specific genes, we can proceed to perform a statistical test to identify the genes that are significantly differentially expressed across groups. There are different methods available for this analysis, such as the t-test or DESeq2. Let's use the t-test as an example:
+
+```
+# Perform a t-test for each gene across all groups
+t_test_results <- apply(expression_values, 1, function(expr) {
+  t.test(expr ~ annotation_data$group)$p.value
+})
+
+# Adjust p-values for multiple testing using the Benjamini-Hochberg procedure
+adjusted_p_values <- p.adjust(t_test_results, method = "BH")
+
+# Select genes with adjusted p-value < 0.05 as significantly differentially expressed
+significant_genes <- gene_names[adjusted_p_values < 0.05]
+```
+
+Finally, let's plot a PCA using the expression values of the group-specific genes and color code it based on the "group" variable in the annotation data:
+
+```
+# Subset expression values for the group-specific genes
+group_specific_expression <- expression_values[significant_genes, ]
+
+# Perform PCA on the group-specific expression values
+pca <- prcomp(t(group_specific_expression))
+
+# Extract the PC scores
+pc_scores <- as.data.frame(pca$x)
+
+# Add the "group" variable from the annotation data
+pc_scores$group <- annotation_data$group
+
+# Plot PCA with color-coded groups
+ggplot(pc_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA of Group-Specific Genes") +
+  theme_minimal()
+```
+
+This code will load the count table and annotation data, identify group-specific genes using statistical tests, and plot a PCA with the group-specific genes colored based on the "group" variable in the annotation data.
+
+Please note that the code provided assumes certain data formats and may need to be adjusted based on the actual structure of your data files.

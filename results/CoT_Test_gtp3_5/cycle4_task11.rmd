@@ -1,0 +1,33 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the tables count number of rows and columns for each.
+
+response:
+To read the tables and count the number of rows and columns for each, we can use the `read.table()` function in R to read the tables and the `dim()` function to count the number of rows and columns. Here is the code to achieve this:
+
+```
+# Read the first table
+met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Count the number of rows and columns for the first table
+met_rows <- dim(met_table)[1]
+met_cols <- dim(met_table)[2]
+
+# Read the second table
+subject_table <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Count the number of rows and columns for the second table
+subject_rows <- dim(subject_table)[1]
+subject_cols <- dim(subject_table)[2]
+
+# Print the number of rows and columns for each table
+cat("Number of rows and columns for the first table (met_table):", "\n")
+cat("Rows:", met_rows, "\n")
+cat("Columns:", met_cols, "\n")
+
+cat("Number of rows and columns for the second table (subject_table):", "\n")
+cat("Rows:", subject_rows, "\n")
+cat("Columns:", subject_cols, "\n")
+```
+
+This code will read the two tables and then use the `dim()` function to count the number of rows and columns for each table. The results will be printed to the console.

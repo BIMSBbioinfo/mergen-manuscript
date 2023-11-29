@@ -1,0 +1,57 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we will use the following steps:
+
+1. Read the count table and annotation data.
+2. Normalize the count data.
+3. Perform PCA analysis and create plots.
+
+Let's start by reading the data:
+
+```
+# Load required libraries
+library(tidyverse)
+library(openxlsx)
+library(pcaMethods)
+
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+```
+
+Next, we will normalize the count data. There are several methods available for normalization, we will use the "TMM" method from the `edgeR` package:
+
+```
+# Extract the count values from the count table
+count_data <- as.matrix(count_table[, -1])
+
+# Perform normalization using TMM method
+norm_count_data <- calcNormFactors(count_data)
+```
+
+Now, let's perform PCA analysis and create the plots:
+
+```
+# Transpose the normalized count data
+norm_count_data_t <- t(norm_count_data)
+
+# Add sample information to the normalized count data
+norm_count_data_annotated <- cbind(norm_count_data_t, annotation_data)
+
+# Perform PCA analysis using prcomp function
+pca <- prcomp(norm_count_data_t)
+
+# Create first PCA plot color-coded by "group" in annotation data
+plot(pca$x[, 1:2], col = annotation_data$group, pch = 16)
+
+# Create second PCA plot color-coded by "LibrarySelection" in annotation data
+plot(pca$x[, 1:2], col = annotation_data$LibrarySelection, pch = 16)
+```
+
+This code will normalize the counts, perform PCA analysis, and create two PCA plots. The first plot will be color-coded by the "group" in the annotation data, and the second plot will be color-coded by "LibrarySelection" in the annotation data.
+
+Note: Make sure to install the required libraries (`tidyverse`, `openxlsx`, `pcaMethods`, `edgeR`) before running the code.

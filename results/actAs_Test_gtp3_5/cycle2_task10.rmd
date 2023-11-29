@@ -1,0 +1,57 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we need to perform the following steps:
+
+1. Read the gene expression data from the file "leukemiaExp.txt".
+2. Calculate the variability of each gene.
+3. Sort the genes based on their variability and select the top 1000 most variable genes.
+4. Perform clustering analysis on the selected genes to cluster the samples.
+5. Identify cluster-specific genes for each cluster.
+
+Here's the code to accomplish these steps:
+
+```
+# Step 1: Read gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Step 2: Calculate gene variability
+gene_variability <- apply(gene_data[, -1], 1, var)
+
+# Step 3: Select top 1000 most variable genes
+top_genes <- head(sort(gene_variability, decreasing = TRUE), 1000)
+
+# Step 4: Perform clustering analysis
+library(cluster)
+
+# Calculate dissimilarity matrix using Euclidean distance
+diss_matrix <- dist(gene_data[, -1], method = "euclidean")
+
+# Perform hierarchical clustering using complete linkage method
+hclust_result <- hclust(diss_matrix, method = "complete")
+
+# Cut the dendrogram into clusters
+num_clusters <- 5 # Assuming we want 5 clusters
+cluster_labels <- cutree(hclust_result, k = num_clusters)
+
+# Step 5: Identify cluster-specific genes
+cluster_specific_genes <- list()
+
+for (i in 1:num_clusters) {
+  # Get indices of samples in current cluster
+  cluster_indices <- which(cluster_labels == i)
+  
+  # Subset the gene data for samples in current cluster
+  cluster_genes <- gene_data[cluster_indices, ]
+  
+  # Calculate gene variability for the cluster
+  cluster_gene_variability <- apply(cluster_genes[, -1], 1, var)
+  
+  # Select top 100 variable genes for the cluster
+  cluster_specific_genes[[i]] <- rownames(head(sort(cluster_gene_variability, decreasing = TRUE), 100))
+}
+
+```
+
+The variable `top_genes` will contain the gene names of the top 1000 most variable genes. The variable `cluster_labels` will contain the cluster labels assigned to each sample. The list `cluster_specific_genes` will contain the gene names that are specific to each cluster. The index `i` in `cluster_specific_genes[[i]]` indicates the cluster number (1 to `num_clusters`).

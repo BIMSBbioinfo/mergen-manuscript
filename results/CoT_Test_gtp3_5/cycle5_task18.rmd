@@ -1,0 +1,74 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To find all CpGs associated with Age but not with sex or Race, we need to perform some data manipulation and filtering steps using the provided datasets. Here's the step-by-step solution:
+
+1. Read the "metRmOlWithDbgapIdHeader.txt" file, which contains the CpG methylation values per CpG and per individual, into a data frame.
+
+```
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+```
+
+2. Read the "subjects.txt" file, which contains information on the individuals, into a data frame.
+
+```
+subject_data <- read.table("subjects.txt", header = TRUE)
+```
+
+3. Rename the first column of the subject_data data frame to "dbGap ID" to match the first row of the met_data data frame.
+
+```
+colnames(subject_data)[1] <- "dbGap ID"
+```
+
+4. Merge the met_data and subject_data data frames based on the matching "dbGap ID" column.
+
+```
+merged_data <- merge(met_data, subject_data, by = "dbGap ID")
+```
+
+5. Filter the merged_data data frame to select only the columns "CpG_id", "Age", "sex", and "Race".
+
+```
+filtered_data <- merged_data[, c("CpG_id", "Age", "sex", "Race")]
+```
+
+6. Filter the filtered_data data frame to include only CpGs associated with Age but not with sex or Race.
+
+```
+cpgs_age <- filtered_data[is.na(filtered_data$sex) & is.na(filtered_data$Race), "CpG_id"]
+```
+
+7. Display the top 20 CpGs associated with Age.
+
+```
+top_20_cpgs_age <- head(cpgs_age, n = 20)
+top_20_cpgs_age
+```
+
+Here's the complete code block:
+
+```
+# Step 1
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+
+# Step 2
+subject_data <- read.table("subjects.txt", header = TRUE)
+
+# Step 3
+colnames(subject_data)[1] <- "dbGap ID"
+
+# Step 4
+merged_data <- merge(met_data, subject_data, by = "dbGap ID")
+
+# Step 5
+filtered_data <- merged_data[, c("CpG_id", "Age", "sex", "Race")]
+
+# Step 6
+cpgs_age <- filtered_data[is.na(filtered_data$sex) & is.na(filtered_data$Race), "CpG_id"]
+
+# Step 7
+top_20_cpgs_age <- head(cpgs_age, n = 20)
+top_20_cpgs_age
+```

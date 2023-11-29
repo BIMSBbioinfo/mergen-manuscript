@@ -1,0 +1,39 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To complete this task, we will use the following steps:
+
+1. Load the gene expression count table and annotation data from the provided files.
+2. Merge the annotation data with the gene expression count table based on the sample IDs.
+3. Plot boxplots of gene expression values per sample, with color-coded boxplots based on the "group" variable in the annotation data.
+
+Here's the code to accomplish these steps:
+
+```
+# Step 1: Load the gene expression count table and annotation data
+library(openxlsx)
+
+# Load the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+
+# Load the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
+
+# Step 2: Merge the annotation data with the gene expression count table
+merged_data <- merge(annotation_data, count_table, by.x = "sample_ids", by.y = "Column1")
+
+# Step 3: Plot boxplots of gene expression values per sample, with color-coded boxplots based on the "group" variable
+library(ggplot2)
+
+# Create a boxplot of gene expression values per sample, color-coded by "group"
+boxplot_plot <- ggplot(merged_data, aes(x = group, y = .)) +
+  geom_boxplot() +
+  labs(x = "Group", y = "Gene Expression") +
+  theme_bw()
+
+# Display the boxplot
+print(boxplot_plot)
+```
+
+Please note that you may need to install the "openxlsx" and "ggplot2" packages if you haven't already. You can do this by running `` and `` before running the code above.

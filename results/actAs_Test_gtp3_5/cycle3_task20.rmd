@@ -1,0 +1,61 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To complete this task, we will use the edgeR package in R to perform statistical tests and identify genes specific for each group. We will then use the DESeq2 package to perform Principal Component Analysis (PCA) using the group-specific genes and color code the PCA plot based on the "group" variable in the annotation data.
+
+Here is the code to accomplish the task:
+
+```
+# load required libraries
+library(edgeR)
+library(DESeq2)
+library(ggplot2)
+
+# read count table
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1, sep = "\t")
+
+# read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1, sep = "\t")
+
+# create a numeric matrix from count table
+counts <- as.matrix(count_table)
+
+# create DGEList object from count table
+dge <- DGEList(counts)
+
+# filter out low-expressed genes
+keep_expression <- rowSums(cpm(dge) >= 1) >= 2
+dge <- dge[keep_expression,]
+
+# normalize counts
+dge <- calcNormFactors(dge)
+
+# perform statistical tests
+design <- model.matrix(~ group, data = annotation_data)
+dge <- estimateDisp(dge, design)
+fit <- glmFit(dge, design)
+lrt <- glmLRT(fit, contrast = c("group", "specific_group", "rest"))
+topTags(lrt)
+
+# select genes specific for each group
+group_specific_genes <- decideTestsDGE(lrt, adjust.method = "BH", p.value = 0.05)$specific_group
+
+# perform PCA using selected genes
+pca_data <- counts[group_specific_genes, ]
+colnames(pca_data) <- annotation_data$group
+
+# run PCA
+pca <- prcomp(t(pca_data))
+
+# plot PCA
+pca_plot <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], Group = colnames(pca_data))
+ggplot(pca_plot, aes(x = PC1, y = PC2, color = Group)) + geom_point(size = 4)
+
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths to your count table and annotation data files.
+
+This code will perform statistical tests to identify genes specific for each group, and then use those genes to perform PCA and plot the PCA plot with color-coded groups.
+
+Note: Depending on the size of your count table and the number of groups, the analysis may take some time to complete.

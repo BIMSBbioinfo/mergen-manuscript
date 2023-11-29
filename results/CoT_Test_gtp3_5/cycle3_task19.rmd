@@ -1,0 +1,41 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To solve this task, we will use the following steps:
+
+1. Load the count table and annotation data.
+2. Normalize the counts.
+3. Perform PCA analysis on the count table.
+4. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
+
+Here is the code to accomplish these steps:
+
+```
+# Step 1: Load the count table and annotation data
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+
+# Step 2: Normalize the counts
+normalized_counts <- scale(count_table)
+
+# Step 3: Perform PCA analysis
+pca <- prcomp(normalized_counts)
+
+# Step 4: Create PCA plots
+library(ggplot2)
+
+# Color-coded by "group"
+ggplot(data = annotation_data, aes(x = pca$x[,1], y = pca$x[,2], color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", title = "PCA Plot - Color-coded by group")
+
+# Color-coded by "LibrarySelection"
+ggplot(data = annotation_data, aes(x = pca$x[,1], y = pca$x[,2], color = LibrarySelection)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", title = "PCA Plot - Color-coded by LibrarySelection")
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths for your data.
+
+Note: We assume that the count table and annotation data have the same sample order, so that the rows in the count table correspond to the same samples as the rows in the annotation data.

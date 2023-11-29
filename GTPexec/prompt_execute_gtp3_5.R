@@ -235,3 +235,6 @@ p2
 for (j in 1:length(pcpairs)){
   pcpairs[[j]]$nchars <- nchar(gsub("[\n]"," ",pcpairs[[j]]$response))
 }
+
+# save pcpairs as RDS
+saveRDS(pcpairs,file="pcpars.rds")

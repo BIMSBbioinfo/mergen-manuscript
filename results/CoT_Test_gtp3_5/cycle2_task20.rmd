@@ -1,0 +1,66 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To accomplish this task, we will need to use the DESeq2 package in R for differential gene expression analysis and the ggplot2 package for PCA plot visualization. Here is a step-by-step guide to complete the task:
+
+Step 1: Load the required libraries and read the count table and annotation data.
+
+```
+# Load DESeq2 and ggplot2 libraries
+library(DESeq2)
+library(ggplot2)
+
+# Read count table
+count_table <- as.matrix(read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1))
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1, sep = "\t")
+```
+
+Step 2: Create a DESeqDataSet object using the count table and annotation data.
+
+```
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
+```
+
+Step 3: Perform differential gene expression analysis using the DESeq2 package.
+
+```
+# Run DESeq analysis
+dds <- DESeq(dds)
+
+# Extract differentially expressed genes
+res <- results(dds)
+```
+
+Step 4: Filter the differentially expressed genes based on statistical significance.
+
+```
+# Apply statistical significance filter (p-value < 0.05 and absolute log fold change > 1)
+sig_genes <- subset(res, padj < 0.05 & abs(log2FoldChange) > 1)$gene
+```
+
+Step 5: Extract the expression data for the group-specific genes.
+
+```
+# Subset the count table for group-specific genes
+group_specific_genes <- count_table[sig_genes, ]
+```
+
+Step 6: Perform PCA using the group-specific genes and color code by the "group" variable.
+
+```
+# Calculate PCA
+pca <- prcomp(t(group_specific_genes))
+
+# Plot PCA with color-coded groups
+ggplot(data = annotation_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", title = "PCA of Group-Specific Genes")
+```
+
+This code will generate a PCA plot where each point represents a sample, color-coded by the "group" variable in the annotation data. Only the genes specific to each group will be used for the PCA analysis.
+
+Note: Make sure to change file paths accordingly and install the required packages if not already installed.

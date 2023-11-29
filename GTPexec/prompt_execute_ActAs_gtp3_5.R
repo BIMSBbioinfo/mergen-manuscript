@@ -42,7 +42,7 @@ fileContents=FALSE
 errorFeedback=FALSE
 
 ## output folder
-output_folder="../results/actAs_Test/"
+output_folder="../results/actAs_Test_gtp3_5/"
 
 
 
@@ -229,3 +229,14 @@ p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
         axis.text.x = element_text(angle = 60,hjust=1,size=8))
 
 p2
+
+# count nr of characters for response, remove \n first.
+for (j in 1:length(pcpairs)){
+  pcpairs[[j]]$nchars <- nchar(gsub("[\n]"," ",pcpairs[[j]]$response))
+}
+
+
+
+# save pcpairs as RDS and environment as RData
+saveRDS(pcpairs, file = paste0(output_folder,"pcpairs.rds"))
+

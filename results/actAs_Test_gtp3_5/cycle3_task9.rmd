@@ -1,0 +1,135 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To solve this task, we can use the R programming language and the Bioconductor package for analyzing gene expression data. Here's how we can approach this task:
+
+1. Read the gene expression data from the "leukemiaExp.txt" file and create a matrix with the gene expression values.
+
+```
+# Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Create a matrix with gene expression values
+expr_matrix <- as.matrix(gene_exp)
+
+# Transpose the matrix so that rows represent samples and columns represent genes
+expr_matrix <- t(expr_matrix)
+```
+
+2. Calculate the gene variability and select the top 1000 most variable genes.
+
+```
+# Calculate the gene variability
+gene_variability <- apply(expr_matrix, 2, var)
+
+# Sort the genes based on variability in descending order
+sorted_genes <- order(-gene_variability)
+
+# Select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000]
+
+# Subset the expression matrix to retain only the top 1000 genes
+expr_matrix_filtered <- expr_matrix[, top_1000_genes]
+```
+
+3. Plot a heatmap with clustering using the filtered gene expression matrix.
+
+```
+# Install and load the required packages
+
+library(pheatmap)
+
+# Plot the heatmap with clustering
+pheatmap(expr_matrix_filtered, show_rownames = TRUE, cluster_rows = TRUE, cluster_cols = TRUE)
+```
+
+4. Plot PCA for the samples using the filtered gene expression matrix.
+
+```
+# Install and load the required packages
+
+library(ggplot2)
+
+library(cowplot)
+
+library(Gviz)
+
+# Perform PCA on the filtered gene expression matrix
+pca_result <- prcomp(t(expr_matrix_filtered), scale = TRUE)
+
+# Create a data frame with PCA results
+pca_df <- as.data.frame(pca_result$x)
+
+# Add column names to the data frame for plotting
+colnames(pca_df) <- c("PC1", "PC2", "PC3", "PC4", "PC5")  # Add more PC columns if required
+
+# Plot the PCA using ggplot2
+pca_plot <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2") +
+  theme_bw()
+
+# Display the PCA plot
+plot(pca_plot)
+```
+
+Finally, here's the complete code block that performs all the tasks mentioned above:
+
+```
+# Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Create a matrix with gene expression values
+expr_matrix <- as.matrix(gene_exp)
+
+# Transpose the matrix so that rows represent samples and columns represent genes
+expr_matrix <- t(expr_matrix)
+
+# Calculate the gene variability
+gene_variability <- apply(expr_matrix, 2, var)
+
+# Sort the genes based on variability in descending order
+sorted_genes <- order(-gene_variability)
+
+# Select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000]
+
+# Subset the expression matrix to retain only the top 1000 genes
+expr_matrix_filtered <- expr_matrix[, top_1000_genes]
+
+# Install and load the required packages
+
+library(pheatmap)
+
+library(ggplot2)
+
+library(cowplot)
+
+library(Gviz)
+
+# Plot the heatmap with clustering
+pheatmap(expr_matrix_filtered, show_rownames = TRUE, cluster_rows = TRUE, cluster_cols = TRUE)
+
+# Perform PCA on the filtered gene expression matrix
+pca_result <- prcomp(t(expr_matrix_filtered), scale = TRUE)
+
+# Create a data frame with PCA results
+pca_df <- as.data.frame(pca_result$x)
+
+# Add column names to the data frame for plotting
+colnames(pca_df) <- c("PC1", "PC2", "PC3", "PC4", "PC5")  # Add more PC columns if required
+
+# Plot the PCA using ggplot2
+pca_plot <- ggplot(pca_df, aes(x = PC1, y = PC2)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2") +
+  theme_bw()
+
+# Display the PCA plot
+plot(pca_plot)
+```
+
+Please make sure to install the required packages mentioned in the code before running the code.

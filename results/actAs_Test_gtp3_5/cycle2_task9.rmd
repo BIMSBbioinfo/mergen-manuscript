@@ -1,0 +1,38 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To complete this task, we will use the `matrixStats` and `pheatmap` packages in R. First, we will read the gene expression data from the "leukemiaExp.txt" file and calculate the variability for each gene. Then, we will select the top 1000 most variable genes and create a heatmap with clustering. Finally, we will plot the PCA for the samples.
+
+Here's the code to accomplish this task:
+
+```
+# Load required libraries
+library(matrixStats)
+library(pheatmap)
+
+# Read gene expression data from file
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Calculate gene variability
+gene_variability <- rowVars(gene_exp)
+
+# Select top 1000 most variable genes
+top_var_genes <- rownames(gene_exp)[order(gene_variability, decreasing = TRUE)][1:1000]
+
+# Subset gene expression data to retain only the top variable genes
+gene_exp_subset <- gene_exp[top_var_genes, ]
+
+# Create heatmap with clustering
+pheatmap(gene_exp_subset, cluster_rows = TRUE, cluster_cols = TRUE)
+
+# Perform PCA on the gene expression data
+pca <- prcomp(t(gene_exp_subset))
+
+# Plot PCA for samples
+plot(pca$x[, 1], pca$x[, 2], xlab = "PC1", ylab = "PC2", main = "PCA for Samples")
+```
+
+This code will read the gene expression data from the "leukemiaExp.txt" file, calculate the variability for each gene, select the top 1000 most variable genes, create a heatmap with hierarchical clustering, and plot the PCA for samples.
+
+Note: Make sure to install the `matrixStats` and `pheatmap` packages if they are not already installed, by running `` and `` before running the code.

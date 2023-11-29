@@ -1,0 +1,59 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we will use the R programming language and the following packages: `tidyverse`, `readxl`, `DESeq2` and `factoextra`. Before we start, make sure you have installed these packages by running the following commands:
+
+```
+
+
+
+
+```
+
+Now, let's begin by loading the required libraries and reading the count table and annotation data. Assuming both files are in the same directory as the R script:
+
+```
+# Load the required libraries
+library(tidyverse)
+library(readxl)
+library(DESeq2)
+library(factoextra)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation <- read_tsv("SRP021193.colData.tsv")
+```
+
+Next, we will normalize the counts using the DESeq2 package. We will first convert the count table into a DESeqDataSet object and then perform the normalization:
+
+```
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
+                              colData = annotation,
+                              design = ~ 1)
+
+# Perform the normalization
+dds <- DESeq(dds)
+```
+
+Now that we have normalized counts, let's proceed to create two PCA plots. The first plot will be color-coded by the "group" variable, and the second plot will be color-coded by the "LibrarySelection" variable:
+
+```
+# Extract PCA coordinates
+pca <- prcomp(t(log2(counts(dds, normalized = TRUE) + 1)))
+
+# Plot 1: Color-coded by "group"
+fviz_pca_ind(pca, geom.ind = "point", col.ind = annotation$group,
+             palette = "jco", addEllipses = TRUE)
+
+# Plot 2: Color-coded by "LibrarySelection"
+fviz_pca_ind(pca, geom.ind = "point", col.ind = annotation$LibrarySelection,
+             palette = "jco", addEllipses = TRUE)
+```
+
+That's it! The above code will normalize the counts, create two PCA plots, and color-code the samples based on the specified variables in the annotation data.
+
+Remember to save the R script as a `.R` file and run it in an R environment to see the results.

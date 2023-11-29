@@ -1,0 +1,36 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To merge the annotation data and gene expression tables and plot boxplots for gene expression values per sample, you can follow these steps:
+
+Step 1: Read the count table and annotation data into R.
+Step 2: Merge the count table and annotation data using the sample IDs.
+Step 3: Prepare the data for plotting by converting it into long format (one column for gene expression values and one column for sample IDs).
+Step 4: Plot boxplots for gene expression values per sample and color code the boxplots based on the "group" variable in the annotation data.
+
+Here's the code to accomplish these steps:
+
+```
+# Step 1: Read the count table and annotation data
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+
+# Step 2: Merge the count table and annotation data
+merged_data <- merge(count_table, annotation_data, by = "row.names")
+rownames(merged_data) <- merged_data[,1]
+merged_data <- merged_data[,-1]
+
+# Step 3: Prepare the data for plotting
+library(tidyr)
+plot_data <- gather(merged_data, sample_id, gene_expression, -group)
+
+# Step 4: Plot boxplots with color coding
+library(ggplot2)
+ggplot(plot_data, aes(x = sample_id, y = gene_expression, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Sample ID", y = "Gene Expression") +
+  theme_bw()
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths to your count table and annotation data. Also, adjust the column names and variable names in the code according to your data.

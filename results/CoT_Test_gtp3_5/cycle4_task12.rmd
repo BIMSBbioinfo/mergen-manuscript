@@ -1,0 +1,40 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+response:
+To count the number of rows and columns in a table, we can use the functions nrow() and ncol() in R. 
+
+First, let's read the count table from the "Supplementary_Table_1_exp.xlsx" file using the read.xlsx() function from the "openxlsx" package. 
+
+```
+# Load the necessary library
+library(openxlsx)
+
+# Read count table from Excel file
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
+
+# Count number of rows and columns
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
+
+# Print the results
+count_rows
+count_cols
+```
+
+Next, let's read the annotation data from the "SRP021193.colData.tsv" file using the read.delim() function.
+
+```
+# Read annotation data from TSV file
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Count number of rows and columns
+annotation_rows <- nrow(annotation_data)
+annotation_cols <- ncol(annotation_data)
+
+# Print the results
+annotation_rows
+annotation_cols
+```
+
+This code will output the number of rows and columns for each table. Make sure that you have the required packages installed (openxlsx and tidyverse) before running the code.

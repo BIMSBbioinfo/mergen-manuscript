@@ -43,7 +43,7 @@ fileContents=TRUE
 errorFeedback=FALSE
 
 ## output folder
-output_folder="../results/fileCont_Test/"
+output_folder="../results/fileCont_Test_gtp3_5/"
 
 
 
@@ -112,7 +112,7 @@ for(j in 1:cycles){
 
   # for each prompt
   for( i in 1:length(pcpairs)){
-    
+
     message("responding to prompt ",i, "\n")
     
     
@@ -122,7 +122,7 @@ for(j in 1:cycles){
       filenames<-extractFilenames(pcpairs[[i]]$prompt) 
   
       # if there are files add their content to the thingy
-      if(!is.na(filenames)){ 
+      if(!is.na(filenames[1])){ 
         addon<-fileHeaderPrompt(filenames)
          
         # add to the prompt
@@ -233,3 +233,13 @@ p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
         axis.text.x = element_text(angle = 60,hjust=1,size=8))
 
 p2
+
+# count nr of characters for response, remove \n first.
+for (j in 1:length(pcpairs)){
+  pcpairs[[j]]$nchars <- nchar(gsub("[\n]"," ",pcpairs[[j]]$response))
+}
+
+
+
+# save pcpairs as RDS and environment as RData
+saveRDS(pcpairs, file = paste0(output_folder,"pcpairs.rds"))

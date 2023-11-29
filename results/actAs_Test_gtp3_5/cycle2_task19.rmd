@@ -1,0 +1,41 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we need to perform the following steps:
+
+1. Read the count table and annotation data.
+2. Normalize the counts.
+3. Perform PCA analysis.
+4. Create two PCA plots, one color coded by "group" and the other color coded by "LibrarySelection".
+
+Here's the code to accomplish these steps:
+
+```
+# Load required libraries
+library(readxl)
+library(reshape2)
+library(ggplot2)
+library(ggfortify)
+
+# Step 1: Read the count table and annotation data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+
+# Step 2: Normalize counts
+normalized_counts <- count_table[, -1] / rowSums(count_table[, -1]) * 1e6
+
+# Step 3: Perform PCA analysis
+pca <- prcomp(t(normalized_counts))
+
+# Step 4: Create PCA plots
+# Color coded by "group"
+pca_plot_group <- autoplot(pca, data = annotation_data, colour = "group")
+pca_plot_group
+
+# Color coded by "LibrarySelection"
+pca_plot_selection <- autoplot(pca, data = annotation_data, colour = "LibrarySelection")
+pca_plot_selection
+```
+
+Please make sure that the file paths to the count table and annotation data are correct in the code above. Additionally, you may need to install the required libraries if they are not already installed in your R environment.

@@ -1,0 +1,35 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+response:
+To read the count table and annotation data, we can use the `read.table()` function in R. 
+
+Here's the code to read the count table and retrieve the number of rows and columns:
+
+```
+# Read the count table
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE)
+
+# Get the number of rows and columns in the count table
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
+
+count_rows  # Number of rows in the count table
+count_cols  # Number of columns in the count table
+```
+
+Here's the code to read the annotation data and retrieve the number of rows and columns:
+
+```
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
+
+# Get the number of rows and columns in the annotation data
+annotation_rows <- nrow(annotation_data)
+annotation_cols <- ncol(annotation_data)
+
+annotation_rows  # Number of rows in the annotation data
+annotation_cols  # Number of columns in the annotation data
+```
+
+You can execute the above code by replacing the file names with the actual file paths in your system.

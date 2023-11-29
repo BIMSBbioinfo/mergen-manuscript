@@ -1,0 +1,34 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the tables count number of rows and columns for each.
+
+response:
+To read and count the number of rows and columns for each dataset, we can use the `read.table` function in R. Here's the code to achieve this:
+
+```
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
+
+# Count the number of rows and columns in metRmOl
+num_rows_metRmOl <- nrow(metRmOl)
+num_cols_metRmOl <- ncol(metRmOl)
+
+# Print the number of rows and columns in metRmOl
+print(paste("Number of rows in metRmOl:", num_rows_metRmOl))
+print(paste("Number of columns in metRmOl:", num_cols_metRmOl))
+
+# Read the "subjects.txt" file
+subjects <- read.table("subjects.txt", header = TRUE)
+
+# Count the number of rows and columns in subjects
+num_rows_subjects <- nrow(subjects)
+num_cols_subjects <- ncol(subjects)
+
+# Print the number of rows and columns in subjects
+print(paste("Number of rows in subjects:", num_rows_subjects))
+print(paste("Number of columns in subjects:", num_cols_subjects))
+```
+
+Make sure to replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file paths or file names if they are in the same directory as your R script.
+
+Note: The code assumes that the files are in a tab-delimited format, with the first row as the column headers.

@@ -1,0 +1,51 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
+
+response:
+To build a predictive model to predict Age from methylation values, we can use the dataset containing CpG methylation values per CpG and per individual, along with the dataset containing information on the individuals. Here is the code to achieve that:
+
+```
+# Load required libraries
+library(randomForest)
+
+# Read the methylation values dataset
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+
+# Transpose the methylation data to make individuals as rows and CpG as columns
+methylation_data <- t(methylation_data)
+
+# Read the subjects dataset
+subjects_data <- read.table("subjects.txt", header = TRUE)
+
+# Subset the subjects dataset to include only the required columns
+subjects_data <- subjects_data[, c("dbGap ID", "Age")]
+
+# Rename the first column of the subjects dataset to match the first row of methylation data
+colnames(subjects_data)[1] <- colnames(methylation_data)[1]
+
+# Merge the methylation data with subjects data based on dbGap ID
+merged_data <- merge(subjects_data, methylation_data, by = "dbGap ID")
+
+# Convert the Age column to numeric
+merged_data$Age <- as.numeric(as.character(merged_data$Age))
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Build a random forest model to predict Age
+rf_model <- randomForest(Age ~ ., data = merged_data)
+
+# Get the variable importance from the random forest model
+variable_importance <- importance(rf_model)
+
+# Sort the variable importance in descending order
+sorted_importance <- sort(variable_importance$MeanDecreaseAccuracy, decreasing = TRUE)
+
+# Get the top 10 most important variables/ CpGs
+top_10_importance <- head(sorted_importance, 10)
+
+# Print the top 10 most important variables/ CpGs
+print(top_10_importance)
+```
+
+This code reads the methylation values dataset and subjects dataset. It then combines the datasets based on the dbGap ID column. The Age column is converted to numeric for modeling purposes. The code then builds a random forest model to predict Age using all the variables/ CpGs. Finally, it calculates the variable importance using the Mean Decrease Accuracy method and prints the top 10 most important variables/ CpGs.

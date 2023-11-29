@@ -1,0 +1,29 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To complete this task, you can use the `readxl` and `tidyverse` packages in R to read and manipulate the data. Here's the code to merge the annotation data and gene expression tables, and plot the boxplots:
+
+```
+# Load required libraries
+library(readxl)
+library(tidyverse)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+
+# Merge annotation and gene expression tables based on sample ids
+merged_data <- merge(count_table, annotation_data, by.x = "column_name_of_sample_ids_in_count_table", 
+                     by.y = "column_name_of_sample_ids_in_annotation_data")
+
+# Plot boxplots for gene expression values per sample and color code boxplots based on "group" variable
+ggplot(data = merged_data, aes(x = group, y = gene_expression_values)) +
+  geom_boxplot(fill = "group")
+```
+
+Make sure to replace the `column_name_of_sample_ids_in_count_table` and `column_name_of_sample_ids_in_annotation_data` with the actual column names in your files that contain the sample ids. Similarly, replace `gene_expression_values` with the column name in your count table that contains the expression values, and replace `group` with the variable name in your annotation data that determines the groups.
+
+This code will read the count table and annotation data, merge them based on the sample ids, and then plot the boxplots of gene expression values per sample, with the boxplots color-coded based on the groups specified in the annotation data.

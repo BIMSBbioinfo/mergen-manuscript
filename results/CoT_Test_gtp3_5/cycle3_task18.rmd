@@ -1,0 +1,45 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To find CpGs associated with Age but not with sex or Race, we need to perform a data join between the "metRmOlWithDbgapIdHeader.txt" file and the "subjects.txt" file based on the common DBGap ID column. Then, we can filter the CpGs based on the conditions mentioned.
+
+Here are the steps to accomplish this:
+
+1. Read the "metRmOlWithDbgapIdHeader.txt" file and store it as a data frame called "methylation_data".
+
+```
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+```
+
+2. Read the "subjects.txt" file and store it as a data frame called "subject_data".
+
+```
+subject_data <- read.table("subjects.txt", header = TRUE)
+```
+
+3. Perform a data join between the two data frames based on the common DBGap ID column.
+
+```
+joined_data <- merge(methylation_data, subject_data, by.x = "DBGapId", by.y = "dbGap ID", all.x = TRUE)
+```
+
+4. Filter the joined data frame to keep only the CpGs associated with Age but not with sex or Race.
+
+```
+filtered_data <- subset(joined_data, !is.na(Age) & is.na(sex) & is.na(Race))
+```
+
+5. Sort the filtered data frame based on the methylation values and select the top 20 CpGs.
+
+```
+top_20_cpgs <- head(filtered_data[order(filtered_data$methylation_value, decreasing = TRUE), ], 20)
+```
+
+6. Display the top 20 CpGs.
+
+```
+top_20_cpgs
+```
+
+Please note that you need to adjust the file paths in the code snippets according to your specific file locations.

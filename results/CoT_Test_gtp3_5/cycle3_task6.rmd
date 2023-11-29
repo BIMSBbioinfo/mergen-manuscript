@@ -1,0 +1,28 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data
+
+response:
+To start, we need to load the gene expression data from the file "leukemiaExp.txt" into R. We will use the `read.delim()` function to read the tab-separated file.
+
+```
+# Read the gene expression data from the file
+gene_expression <- read.delim("leukemiaExp.txt", sep="\t")
+```
+
+Next, we will check the number of columns (samples) in the gene expression data. If there are more than 500 samples, we will randomly sample 500 samples and create a subset of the data.
+
+```
+# Check the number of columns (samples)
+num_samples <- ncol(gene_expression)
+
+# If there are more than 500 samples, randomly sample 500 samples
+if (num_samples > 500) {
+  set.seed(123)  # Set seed for reproducibility
+  sampled_columns <- sample(1:num_samples, size=500)
+  gene_expression_subset <- gene_expression[, sampled_columns]
+} else {
+  gene_expression_subset <- gene_expression
+}
+```
+
+Finally, we will have the gene expression data stored in the variable `gene_expression_subset`. This subset will contain either all the samples (if there are fewer than or equal to 500 samples) or a random sample of 500 samples.

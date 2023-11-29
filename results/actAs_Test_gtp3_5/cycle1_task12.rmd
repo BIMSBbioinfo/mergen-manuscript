@@ -1,0 +1,26 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+response:
+To read the count table and annotation data in R, we can use the `read.xlsx()` and `read.delim()` functions, respectively. Here's the code to accomplish this task:
+
+```
+# Load required libraries
+library(readxl)
+
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+num_rows_count_table <- nrow(count_table)
+num_columns_count_table <- ncol(count_table)
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+num_rows_annotation_data <- nrow(annotation_data)
+num_columns_annotation_data <- ncol(annotation_data)
+
+# Print the number of rows and columns for each table
+cat("Count Table: ", num_rows_count_table, "rows and", num_columns_count_table, "columns\n")
+cat("Annotation Data: ", num_rows_annotation_data, "rows and", num_columns_annotation_data, "columns\n")
+```
+
+Make sure to replace the file paths `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual path to your count table and annotation data files, respectively.

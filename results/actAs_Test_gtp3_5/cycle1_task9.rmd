@@ -1,0 +1,94 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To complete this task, we will need to read the gene expression data, calculate the gene variability, filter the top 1000 variable genes, plot a heatmap with clustering using these genes, and plot PCA for the samples.
+
+First, let's start by reading the gene expression data from the "leukemiaExp.txt" file. We will assume the file is present in the current working directory.
+
+```
+# Read the gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
+```
+
+Next, we need to calculate the variability of each gene. We will use the standard deviation as a measure of variability.
+
+```
+# Calculate the standard deviation for each gene
+gene_variability <- apply(gene_data, 1, sd)
+```
+
+Now, let's filter the top 1000 variable genes based on their variability.
+
+```
+# Get the indices of the top 1000 variable genes
+top_genes <- order(gene_variability, decreasing = TRUE)[1:1000]
+
+# Filter the gene expression data based on the top genes
+top_gene_data <- gene_data[top_genes, ]
+```
+
+We have now obtained the filtered gene expression data with the top 1000 variable genes. 
+Next, we can plot a heatmap with clustering for these genes. We will use the `heatmap` function in R to create the heatmap.
+
+```
+# Install required package if not already installed
+if (!requireNamespace("pheatmap", quietly = TRUE)) {
+  
+}
+
+# Load the package
+library(pheatmap)
+
+# Create the heatmap with clustering
+heatmap_data <- t(top_gene_data)
+pheatmap(heatmap_data, clustering_distance_rows = "euclidean", 
+         clustering_distance_cols = "euclidean", show_rownames = FALSE, show_colnames = FALSE)
+```
+
+Finally, let's plot the PCA for the samples using the filtered gene expression data. We will use the `prcomp` function to perform PCA and then plot the principal components.
+
+```
+# Perform PCA
+pca_result <- prcomp(top_gene_data)
+
+# Plot the first two principal components
+plot(pca_result$x[,1], pca_result$x[,2], xlab = "PC1", ylab = "PC2")
+```
+
+Complete Code Block:
+
+```
+# Read the gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
+
+# Calculate the standard deviation for each gene
+gene_variability <- apply(gene_data, 1, sd)
+
+# Get the indices of the top 1000 variable genes
+top_genes <- order(gene_variability, decreasing = TRUE)[1:1000]
+
+# Filter the gene expression data based on the top genes
+top_gene_data <- gene_data[top_genes, ]
+
+# Install required package if not already installed
+if (!requireNamespace("pheatmap", quietly = TRUE)) {
+  
+}
+
+# Load the package
+library(pheatmap)
+
+# Create the heatmap with clustering
+heatmap_data <- t(top_gene_data)
+pheatmap(heatmap_data, clustering_distance_rows = "euclidean", 
+         clustering_distance_cols = "euclidean", show_rownames = FALSE, show_colnames = FALSE)
+
+# Perform PCA
+pca_result <- prcomp(top_gene_data)
+
+# Plot the first two principal components
+plot(pca_result$x[,1], pca_result$x[,2], xlab = "PC1", ylab = "PC2")
+```
+
+This code will read the gene expression data, filter the top 1000 variable genes, plot a heatmap with clustering using these genes, and plot PCA for the samples.

@@ -1,0 +1,58 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To filter genes based on their variability and retain the top 1000 most variable genes, we can follow these steps in R:
+
+Step 1: Read the gene expression data file into a data frame.
+
+```
+# Read the gene expression data file
+expression_data <- read.delim("leukemiaExp.txt", sep="\t")
+```
+
+Step 2: Remove the first column containing gene names.
+
+```
+# Remove the first column containing gene names
+expression_data <- expression_data[, -1]
+```
+
+Step 3: Calculate the variance for each gene across samples and select the top 1000 genes with the highest variance.
+
+```
+# Calculate variance for each gene
+gene_variances <- apply(expression_data, 1, var)
+
+# Select top 1000 genes with highest variance
+top_1000_genes <- names(sort(gene_variances, decreasing = TRUE))[1:1000]
+
+# Filter expression data to retain only the top 1000 genes
+filtered_expression_data <- expression_data[top_1000_genes, ]
+```
+
+Step 4: Plot a heatmap with clustering using the filtered expression data.
+
+```
+# Load required library
+library(gplots)
+
+# Plot heatmap with clustering
+heatmap.2(as.matrix(filtered_expression_data), dendrogram = "row", scale = "row")
+```
+
+Step 5: Plot PCA for samples using the filtered expression data.
+
+```
+# Load required library
+library(ggplot2)
+library(ggfortify)
+
+# Perform PCA on the filtered expression data
+pca <- prcomp(t(filtered_expression_data), scale = TRUE)
+
+# Plot PCA
+autoplot(pca, data = expression_data, colour = "Sample_ID")
+```
+
+Please make sure to install the required R packages (gplots, ggplot2, ggfortify) before running the code. Let me know if you have any questions or need further assistance!

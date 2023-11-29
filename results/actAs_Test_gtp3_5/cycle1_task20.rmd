@@ -1,0 +1,68 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To complete this task, we will follow these steps:
+
+1. Read the count table and annotation data files.
+2. Perform statistical tests to find genes specific for each group.
+3. Select the group-specific genes.
+4. Plot PCA using the group-specific genes and color code by the "group" variable.
+
+Here is the code to accomplish these steps:
+
+```
+# Step 1: Read the count table and annotation data files
+library(openxlsx)
+
+# Read count table
+count_data <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2)
+genes <- count_data[, 1] # Extract gene names
+count_data <- count_data[, -1] # Remove gene names column
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Step 2: Perform statistical tests to find genes specific for each group
+library(edgeR)
+
+# Convert count data to DGEList object
+dge_data <- DGEList(counts = count_data, genes = genes)
+
+# Filter genes with low counts
+keep <- rowSums(dge_data$counts) >= 10
+dge_data <- dge_data[keep, , keep.lib.sizes = FALSE]
+
+# Perform differential expression analysis
+design <- model.matrix(~ annotation_data$group)
+dge_data <- calcNormFactors(dge_data)
+dge_data <- estimateDisp(dge_data, design)
+fit <- glmQLFit(dge_data, design)
+lrt <- glmQLFTest(fit, coef = 2)
+results <- decideTests(lrt, adjust.method = "BH")
+
+# Step 3: Select the group-specific genes
+group_specific_genes <- genes[results$padj < 0.05 & results$groupA_vs_groupB == "groupA_specific"]
+
+# Step 4: Plot PCA using the group-specific genes and color code by the "group" variable
+library(ggplot2)
+library(prcomp)
+
+# Get count data for group-specific genes
+group_specific_counts <- count_data[group_specific_genes, ]
+
+# Perform PCA
+pca_data <- prcomp(t(group_specific_counts))
+
+# Create a data frame for PCA results
+pca_results <- data.frame(PC1 = pca_data$x[, 1], PC2 = pca_data$x[, 2], Group = annotation_data$group)
+
+# Plot PCA with color-coded groups
+ggplot(pca_results, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot with Group-specific Genes")
+```
+
+This code reads the count table and annotation data, performs a statistical test (glmQLFTest) to find genes specific for each group, selects the group-specific genes, and finally plots a PCA using the group-specific genes with color-coded groups.

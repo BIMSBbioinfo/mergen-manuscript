@@ -1,0 +1,63 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary packages
+library(openxlsx)
+library(DESeq2)
+library(ggplot2)
+
+# Read count table
+counts <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2, colNames = TRUE)
+rownames(counts) <- counts[, 1]
+counts <- counts[, -1]
+
+# Read annotation data
+annotation <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE, row.names = 1)
+
+# Remove duplicate row names
+counts <- counts[!duplicated(rownames(counts)), ]
+
+# Create DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = counts, colData = annotation, design = ~1)
+
+# Normalize counts
+dds <- DESeq(dds)
+
+# Perform PCA analysis
+pca <- prcomp(t(assay(dds)))
+
+# Plot PCA with samples color coded by "group"
+group_colors <- levels(annotation$group)
+pca_plot_group <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2, color = annotation$group)) +
+  geom_point() +
+  scale_color_manual(values = group_colors) +
+  labs(title = "PCA Plot - Samples Color Coded by Group")
+
+# Plot PCA with samples color coded by "LibrarySelection"
+libsel_colors <- levels(annotation$LibrarySelection)
+pca_plot_libsel <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2, color = annotation$LibrarySelection)) +
+  geom_point() +
+  scale_color_manual(values = libsel_colors) +
+  labs(title = "PCA Plot - Samples Color Coded by LibrarySelection")
+
+# Print the PCA plots
+pca_plot_group
+pca_plot_libsel
+```
+
+Please note that the error `'duplicate 'row.names' are not allowed'` occurred because the row names of the count table were duplicated. I fixed it by removing the duplicates using the `duplicated()` function before creating the DESeq2 object.

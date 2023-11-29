@@ -41,7 +41,7 @@ fileContents=TRUE
 errorFeedback=TRUE
 
 ## output folder
-output_folder="../results/selfCorrect_Test/"
+output_folder="../results/selfCorrect_Test_gtp3_5/"
 
 
 
@@ -102,15 +102,16 @@ results <- matrix(nrow=cycles,ncol=length(pcpairs))
 
 # how many repetions per task defined by j
 for(j in 1:cycles){
+
   # create agent
   require(mergen)
-  myAgent<-mergen::setupopenaiAgent(model="gpt-3.5-turbo",type="chat")
+  myAgent<-mergen::setupAgent(name="openai",model="gpt-3.5-turbo",type="chat",ai_api_key=Sys.getenv("OPENAI_API_KEY"))
 
   message("cycle ",j, " starting...\n")
 
   # for each prompt
   for( i in 1:length(pcpairs)){
-    
+
     message("responding to prompt ",i, "\n")
     
     my.prompt<-pcpairs[[i]]$prompt
@@ -119,7 +120,7 @@ for(j in 1:cycles){
       filenames<-extractFilenames(pcpairs[[i]]$prompt) 
   
       # if there are files add their content to the thingy
-      if(!is.na(filenames)){ 
+      if(!is.na(filenames[1])){ 
         addon<-fileHeaderPrompt(filenames)
          
         # add to the prompt
@@ -243,3 +244,14 @@ p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
         axis.text.x = element_text(angle = 60,hjust=1,size=8))
 
 p2
+
+# count nr of characters for response, remove \n first.
+for (j in 1:length(pcpairs)){
+  pcpairs[[j]]$nchars <- nchar(gsub("[\n]"," ",pcpairs[[j]]$response))
+}
+
+
+
+# save pcpairs as RDS 
+saveRDS(pcpairs, file = paste0(output_folder,"pcpairs.rds"))
+
