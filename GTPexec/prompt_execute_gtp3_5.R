@@ -101,7 +101,7 @@ if (!file.exists(output_folder)) {
 results <- matrix(nrow=cycles,ncol=length(pcpairs))
 
 # how many repetions per task defined by j
-for(j in 5:cycles){
+for(j in 1:cycles){
   # create agent
   require(mergen)
   myAgent<-mergen::setupAgent(name="openai",model="gpt-3.5-turbo",type="chat",ai_api_key=Sys.getenv("OPENAI_API_KEY"))
@@ -109,7 +109,7 @@ for(j in 5:cycles){
   message("cycle ",j, " starting...\n")
 
   # for each prompt
-  for( i in 12:length(pcpairs)){
+  for( i in 1:length(pcpairs)){
 
     message("responding to prompt ",i, "\n")
 
