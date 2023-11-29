@@ -1,0 +1,48 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load required libraries
+library(DESeq2)
+library(tidyverse)
+library(openxlsx)
+
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, colNames = TRUE)
+
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Set row names as gene names
+rownames(count_table) <- count_table$Gene
+
+# Remove gene column
+count_table <- count_table[, -1]
+
+# Extract sample ids from annotation data
+sample_ids <- annotation_data$SAMPID
+
+# Subset count table and annotation data based on available samples
+count_table <- count_table[, sample_ids %in% colnames(count_table)]
+annotation_data <- annotation_data[sample_ids %in% colnames(count_table), ]
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~1)
+
+# Perform normalization
+dds <- DESeq(dds)
+
+# Get normalized counts
+norm_counts <- counts(dds, normalized = TRUE)
+
+# Calculate PCA
+pca_data <- prcomp(t(norm_counts))
+
+# Plot first PCA plot (color coded by "group")
+plot(pca_data$x[, c("group")], col = annotation_data$group, pch = 16, xlab = "PC1", ylab = "PC2", main = "PCA plot (group)")
+
+# Plot second PCA plot (color coded by "LibrarySelection")
+plot(pca_data$x[, c("LibrarySelection")], col = annotation_data$LibrarySelection, pch = 16, xlab = "PC1", ylab = "PC2", main = "PCA plot (LibrarySelection)")
+```
+```

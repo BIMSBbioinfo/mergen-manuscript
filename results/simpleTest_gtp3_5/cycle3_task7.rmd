@@ -1,0 +1,24 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data. Create a boxplot of the columns
+
+response:
+```
+# Read the data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Check the number of columns
+num_samples <- ncol(data)
+
+# Check if there are more than 500 samples
+if (num_samples > 500) {
+  # Randomly sample 500 columns
+  sampled_data <- data[, sample(1:num_samples, 500)]
+} else {
+  # If there are less than or equal to 500 samples, use the original data
+  sampled_data <- data
+}
+
+# Create a boxplot of the sampled data
+boxplot(sampled_data, main = "Gene Expression Boxplot")
+```
+

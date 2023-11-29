@@ -3,28 +3,24 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from file
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Read the data from the file
+leukemiaData <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Calculate the variance of each gene
-gene_variability <- apply(gene_data, 1, var)
+# Calculate the standard deviation for each gene and store it in a vector
+geneVariability <- apply(leukemiaData, 1, sd)
 
-# Find the indices of the top 1000 most variable genes
-top_genes <- order(gene_variability, decreasing=TRUE)[1:1000]
+# Sort the genes based on their variability
+sortedGenes <- sort(geneVariability, decreasing = TRUE)
 
-# Subset the gene expression data to retain the top 1000 most variable genes
-top_gene_data <- gene_data[top_genes, ]
+# Get the top 1000 most variable genes
+top1000Genes <- names(sortedGenes)[1:1000]
 
-# Calculate the variance of the two most variable genes
-gene_variability_2 <- apply(top_gene_data, 1, var)
-
-# Find the indices of the two most variable genes
-top_genes_2 <- order(gene_variability_2, decreasing=TRUE)[1:2]
+# Get the expression values for the two most variable genes
+gene1Expression <- leukemiaData[top1000Genes[1], ]
+gene2Expression <- leukemiaData[top1000Genes[2], ]
 
 # Create a scatterplot of the two most variable genes
-plot(top_gene_data[top_genes_2[1], ], top_gene_data[top_genes_2[2], ], 
-     xlab=paste("Gene: ", row.names(top_gene_data)[top_genes_2[1]]), 
-     ylab=paste("Gene: ", row.names(top_gene_data)[top_genes_2[2]]), 
-     main="Scatterplot of Two Most Variable Genes")
+plot(gene1Expression, gene2Expression, main = "Scatterplot of the Two Most Variable Genes", 
+     xlab = top1000Genes[1], ylab = top1000Genes[2])
 ```
-Note: Make sure to replace "leukemiaExp.txt" with the actual file path of your gene expression data file.
+```

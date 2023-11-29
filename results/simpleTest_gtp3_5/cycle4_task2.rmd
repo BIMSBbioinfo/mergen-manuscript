@@ -1,0 +1,21 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. The file is tab separated. The table has gene names on the first column. How many genes and samples does the dataset have?
+
+response:
+```
+# Read the gene expression data file
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+
+# Get the number of genes
+num_genes <- nrow(data)
+
+# Get the number of samples
+num_samples <- ncol(data) - 1  # Subtract 1 to exclude the first column
+
+# Print the number of genes and samples
+print(paste("Number of genes:", num_genes))
+print(paste("Number of samples:", num_samples))
+```
+Output:
+Number of genes: [number of genes in the dataset]
+Number of samples: [number of samples in the dataset]

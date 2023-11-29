@@ -3,20 +3,26 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-#Load required libraries
+# Load required libraries
 library(readxl)
+library(tidyr)
 
-#Read count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-#Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
 
-#Merge annotation data and count table
-merged_data <- merge(annotation_data, count_table, by.x = "sample ids", by.y = colnames(count_table)[1])
+# Rename first column of annotation data as "SampleID"
+colnames(annotation_data)[1] <- "SampleID"
 
-#Calculate number of columns
+# Merge annotation data and gene expression table
+merged_data <- merge(annotation_data, count_table, by.x = "SampleID", by.y = 0, all.x = TRUE)
+
+# Calculate number of columns
 num_columns <- ncol(merged_data)
+
+# Print the number of columns
 num_columns
 ```
-```
+

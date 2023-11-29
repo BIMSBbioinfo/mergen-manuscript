@@ -3,25 +3,21 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the data from the file
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from file
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check the number of columns (samples)
-numSamples <- ncol(leukemiaExp)
-
-# Check if there are more than 500 samples
-if (numSamples > 500) {
-  # Randomly sample 500 columns
-  sampledColumns <- sample(1:numSamples, size = 500, replace = FALSE)
-  
-  # Create the subset of the data using the sampled columns
-  leukemiaExpSubset <- leukemiaExp[, sampledColumns]
+# Check the number of samples
+num_samples <- ncol(gene_data)
+if(num_samples > 500) {
+  # Randomly sample the columns
+  sampled_columns <- sample(colnames(gene_data), 500)
+  # Subset the data based on the sampled columns
+  sampled_data <- gene_data[, sampled_columns]
+  # Print the subsetted data
+  sampled_data
 } else {
-  # If there are less than or equal to 500 samples, keep the original data
-  leukemiaExpSubset <- leukemiaExp
+  # If the number of samples is less than or equal to 500, just print the original data
+  gene_data
 }
-
-# Print the subset of the data
-leukemiaExpSubset
 ```
-Note: Replace "leukemiaExp.txt" with the actual file name if it's different.
+

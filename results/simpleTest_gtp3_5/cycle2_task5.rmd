@@ -3,21 +3,27 @@ I have the following gene expression data, "leukemiaExp.txt".The file is tab sep
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read gene expression data
+gene_data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
 
-# Calculate the variance for each gene
-variance <- apply(data[, -1], 1, var)
+# Subset the gene expression data to exclude the first column (gene names)
+gene_data <- gene_data[, -1]
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- names(variance[order(variance, decreasing=TRUE)])
+# Calculate the variability of each gene
+gene_variability <- apply(gene_data, 1, var)
 
-# Select the top 1000 genes with the highest variance
-top_genes <- sorted_genes[1:1000]
+# Sort the genes based on their variability in descending order
+sorted_genes <- sort(gene_variability, decreasing=TRUE)
 
-# Filter the data to retain only the top 1000 genes
-filtered_data <- data[c("Gene_Name", top_genes)]
+# Get the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000]
 
-# Save the filtered data to a new file
-write.table(filtered_data, file="filtered_leukemiaExp.txt", sep="\t", row.names=FALSE)
+# Filter the gene expression data to include only the top 1000 genes
+filtered_gene_data <- gene_data[rownames(gene_data) %in% names(top_1000_genes), ]
+
+# Print the filtered gene expression data
+print(filtered_gene_data)
 ```
+```
+
+Note: Make sure to replace "leukemiaExp.txt" with the actual file path and name of the gene expression data file.

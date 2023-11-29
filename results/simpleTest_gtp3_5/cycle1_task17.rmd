@@ -4,43 +4,25 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 response:
 ```
 # Load required libraries
-library(tibble)
-library(dplyr)
-library(tidyr)
-library(caret)
 library(randomForest)
 
-# Load the datasets
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subject_data <- read.table("subjects.txt", header = TRUE)
+# Read the methylation values dataset
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
 
-# Transpose the met_data table to have individuals as rows and CpGs as columns
-met_data_transposed <- as.data.frame(t(met_data))
-names(met_data_transposed)[1] <- "dbGap ID"
+# Read the individuals information dataset
+individuals_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Merge the met_data and subject_data tables based on the dbGap ID
-merged_data <- merge(met_data_transposed, subject_data, by = "dbGap ID", all.x = TRUE)
+# Merge the two datasets based on dbGap ID
+merged_data <- merge(methylation_data, individuals_data, by.x = "dbGaPId", by.y = "dbGap ID")
 
-# Prepare the data for modeling
-# Remove unnecessary columns and convert Age to numeric
-data <- merged_data %>%
-  select(-dbGap.ID) %>%
-  mutate(Age = as.numeric(Age))
+# Convert Age column to numeric
+merged_data$Age <- as.numeric(merged_data$Age)
 
-# Split the data into training and testing sets
-set.seed(123)
-train_index <- sample(1:nrow(data), 0.7*nrow(data))
-train_data <- data[train_index, ]
-test_data <- data[-train_index, ]
+# Create a random forest model for age prediction
+model <- randomForest(Age ~ ., data = merged_data, importance = TRUE)
 
-# Build a random forest model
-model <- randomForest(Age ~ ., data = train_data, ntree = 100)
-
-# Get variable importance
-importance <- importance(model)
-top_variables <- head(importance, n = 10)
-
-# Display the most important variables
-top_variables
+# Display the variable importance
+var_importance <- importance(model)
+print(var_importance)
 ```
 ```

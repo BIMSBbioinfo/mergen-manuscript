@@ -1,0 +1,18 @@
+prompt:
+I have the following count table for an RNA-seq experiment, "SRP021193.raw_counts.tsv". The first column contains the gene names, the last column is gene length and the rest are samples.The file is tab separated. How many genes and samples does the dataset have?
+
+response:
+```
+# Read the count table
+count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+
+# Count the number of genes
+num_genes <- nrow(count_table)
+
+# Count the number of samples
+num_samples <- ncol(count_table) - 2   # Subtract 2 to exclude the first and last columns
+
+# Print the results
+print(paste("Number of genes:", num_genes))
+print(paste("Number of samples:", num_samples))
+```

@@ -1,0 +1,40 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+```
+# load required packages
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+# read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# set row names of the count table as gene names
+row.names(count_table) <- count_table[, 1]
+
+# remove the first column (gene names) from the count table
+count_table <- count_table[, -1]
+
+# merge annotation data and count table using sample ids
+merged_data <- merge(annotation_data, count_table, by.x = "sample_id", by.y = "Column names")
+
+# convert the "group" variable to a factor for color coding
+merged_data$group <- factor(merged_data$group)
+
+# reshape the merged data for plotting
+reshaped_data <- merged_data %>%
+  gather(gene, expression, -sample_id, -group)
+
+# plot boxplots for gene expression values per sample with color coded boxplots
+ggplot(reshaped_data, aes(x = sample_id, y = expression, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Sample", y = "Gene Expression",
+       title = "Gene Expression Boxplots per Sample",
+       fill = "Group")
+```
+Note: Please make sure to update the file paths for the count table and annotation data in the code. Also, update the column names used for merging the data if they differ in your actual data.

@@ -3,16 +3,23 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required packages
-library(readxl)
+# Load required libraries
 library(DESeq2)
+library(readxl)
 library(ggplot2)
+library(RColorBrewer)
 
 # Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+# Remove any rows with missing values
+count_table <- count_table[complete.cases(count_table), ]
+# Set row names as gene names
+rownames(count_table) <- count_table$Gene
 
 # Read annotation data
 annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Set row names as sample IDs
+rownames(annotation_data) <- annotation_data$Sample
 
 # Create DESeq2 object
 dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
@@ -22,28 +29,38 @@ dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
 # Perform statistical tests
 dds <- DESeq(dds)
 
-# Get gene-specific results for each group
-results <- lapply(unique(annotation_data$group), function(group) {
-  res <- results(dds, contrast = c("group", group, "control"))
-  res <- res[which(res$padj < 0.05), ]
-  res$group <- group
-  res
-})
+# Extract group-specific genes
+group_specific_genes <- list()
+groups <- levels(annotation_data$group)
+for (group in groups) {
+  # Find differentially expressed genes specific to each group
+  res <- results(dds, contrast = c("group", group, "Control"))
+  # Set threshold for significant differential expression
+  res <- subset(res, padj < 0.05 & abs(log2FoldChange) > 1)
+  # Store group-specific genes
+  group_specific_genes[[group]] <- rownames(res)
+}
 
-# Combine the results into a single data frame
-results <- do.call(rbind, results)
+# Extract group-specific genes from count table
+group_specific_count_table <- count_table[, c("Gene", groups)]
+group_specific_count_table <- group_specific_count_table[group_specific_count_table$Gene %in% unlist(group_specific_genes), ]
 
-# Plot PCA using group-specific genes
-pca_data <- t(count_table[results$rownames, -1])
-pca <- prcomp(pca_data)
-pca_df <- as.data.frame(pca$x)
-pca_df$group <- annotation_data$group[results$rownames]
+# Perform PCA using group-specific genes
+pca <- prcomp(t(group_specific_count_table[, -1]))
 
-pca_plot <- ggplot(pca_df, aes(PC1, PC2, color = group)) +
+# Create data frame for PCA plot
+pca_df <- data.frame(Sample = row.names(group_specific_count_table),
+                     PC1 = pca$x[, 1],
+                     PC2 = pca$x[, 2],
+                     Group = annotation_data[row.names(group_specific_count_table), "group"])
+
+# Set color palette
+colors <- brewer.pal(length(unique(pca_df$Group)), "Set1")
+
+# Plot PCA
+ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
   geom_point(size = 3) +
-  labs(x = "PC1", y = "PC2") +
-  theme_minimal()
-
-pca_plot
+  scale_color_manual(values = colors) +
+  labs(title = "PCA using Group-Specific Genes", x = "PC1", y = "PC2")
 ```
 ```

@@ -3,22 +3,25 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read the gene expression data from file
+data <- read.delim("leukemiaExp.txt", sep="\t")
 
-# Check the number of samples
-num_samples <- ncol(gene_data) - 1
+# Check the number of columns (samples)
+num_samples <- ncol(data)
 
-# If there are more than 500 samples
-if(num_samples > 500) {
-  # Randomly select 500 samples
-  selected_samples <- sample(2:(num_samples + 1), 500, replace = FALSE)
+# Check if there are more than 500 samples
+if (num_samples > 500) {
+  # Randomly sample 500 samples
+  sampled_columns <- sample(colnames(data), 500)
   
-  # Create a subset of the data with the selected samples
-  subset_data <- gene_data[, c(1, selected_samples + 1)]
+  # Create subset of the data using the sampled columns
+  subset_data <- data[, sampled_columns]
   
-  # Print the subset of the data
+  # View the subset data
   subset_data
+} else {
+  # If there are less than or equal to 500 samples, no need to subset
+  data
 }
 ```
-Note: The assumption here is that the first column contains gene names, and the remaining columns contain the sample data. The code reads the data from the file and checks the number of samples. If there are more than 500 samples, it randomly selects 500 samples. Then it creates a subset of the data with the gene names and the selected samples only. Finally, it prints the subset of the data.
+

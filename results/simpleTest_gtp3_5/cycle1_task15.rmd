@@ -3,37 +3,21 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the CpG methylation data
-cpg_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
-# Read the subjects data
-subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Remove the "dbGap ID" column from subjects_data
-subjects_data <- subjects_data[-1]
+# Read the "subjects.txt" file
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Transpose the cpg_data to have individuals as rows and CpG as columns
-cpg_data <- t(cpg_data)
+# Merge the two datasets based on dbGap ID
+merged_data <- merge(met_data, subjects_data, by.x = "DBGapId", by.y = "dbGap ID")
 
-# Set column names of cpg_data to the values in the first row
-colnames(cpg_data) <- cpg_data[1,]
-
-# Remove the first row from cpg_data
-cpg_data <- cpg_data[-1,]
-
-# Convert the dbGap IDs to character in both data frames
-cpg_data$dbGap.ID <- as.character(cpg_data$dbGap.ID)
-subjects_data$dbGap.ID <- as.character(subjects_data$dbGap.ID)
-
-# Merge the two data frames based on dbGap.ID
-merged_data <- merge(cpg_data, subjects_data, by = "dbGap.ID")
-
-# Convert the Age column to numeric
-merged_data$Age <- as.numeric(merged_data$Age)
-
-# Subset the data to include only the two oldest subjects
+# Get the two oldest subjects
 oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
 
-# Plot a scatter plot of CpG methylation values for the two oldest subjects
-plot(oldest_subjects[, -1], main = "CpG Methylation", xlab = "CpG", ylab = "Methylation")
+# Scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects$CpG_id, oldest_subjects[, 2:ncol(oldest_subjects)],
+     xlab = "CpG ID", ylab = "Methylation Value", main = "Scatter plot of CpG Methylation")
+legend("bottomright", legend = oldest_subjects$DBGapId, fill = 1:2)
 ```
 

@@ -1,0 +1,30 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+```
+# Read the metRmOlWithDbgapIdHeader.txt file
+data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+
+# Read the subjects.txt file
+subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+
+# Get the DBGap IDs from the subjects dataset
+dbgap_ids <- subjects$dbGap.ID
+
+# Subset the data to include only the columns with DBGap IDs present in the subjects dataset
+subset_data <- data[, dbgap_ids]
+
+# Filter the CpGs associated with Age but not with sex or Race
+filtered_data <- subset_data[which(!is.na(subjects$Age) & is.na(subjects$Sex) & is.na(subjects$Race)), ]
+
+# Calculate the mean methylation values for each CpG
+mean_methylation <- apply(filtered_data, 1, mean)
+
+# Get the top 20 CpGs
+top_20_cpgs <- head(sort(mean_methylation, decreasing = TRUE), 20)
+
+# Display the top 20 CpGs
+top_20_cpgs
+```
+```

@@ -1,0 +1,36 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+```
+# Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Calculate the variability for each gene
+gene_variability <- apply(gene_exp, 1, var)
+
+# Select the top 1000 most variable genes
+top_var_genes <- names(head(sort(gene_variability, decreasing = TRUE), 1000))
+
+# Filter the gene expression data to retain only the top variable genes
+filtered_gene_exp <- gene_exp[top_var_genes, ]
+
+# Compute the distance matrix based on the gene expression data
+dist_mat <- dist(filtered_gene_exp)
+
+# Perform hierarchical clustering based on the distance matrix
+heatmap_order <- hclust(dist_mat)$order
+
+# Generate the heatmap plot
+heatmap(filtered_gene_exp[heatmap_order, ], scale = "row", 
+        Colv = NA, main = "Heatmap of Gene Expression")
+
+# Perform principal component analysis (PCA) on the gene expression data
+pca_result <- prcomp(t(filtered_gene_exp))
+
+# Generate the PCA plot
+plot(pca_result$x[,1], pca_result$x[,2], 
+     main = "PCA Plot of Gene Expression", xlab = "PC1", ylab = "PC2")
+
+```
+Note: Make sure to replace "leukemiaExp.txt" with the actual path to your gene expression data file.

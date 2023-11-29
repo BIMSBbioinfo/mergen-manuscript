@@ -4,18 +4,18 @@ I have the following gene expression data, "leukemiaExp.txt".The file is tab sep
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, stringsAsFactors=FALSE)
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Calculate the variance of each gene
-variances <- apply(data[, -1], 1, var)
+# Calculate the variance of each gene expression across samples
+gene_var <- apply(gene_data[, -1], 1, var)
 
-# Sort the genes based on their variance
-sorted_genes <- data[order(variances, decreasing=TRUE), ]
+# Sort the genes based on their variability in descending order
+sorted_genes <- gene_data[order(gene_var, decreasing=TRUE), ]
 
-# Retain the top 1000 most variable genes
-filtered_genes <- sorted_genes[1:1000, ]
+# Select the top 1000 most variable genes
+top_1000_genes <- head(sorted_genes, 1000)
 
-# Print the filtered genes
-print(filtered_genes)
+# Save the filtered genes to a new file
+write.table(top_1000_genes, file="filtered_genes.txt", sep="\t", quote=FALSE, row.names=FALSE)
 ```
-Note: Replace "leukemiaExp.txt" with the actual file name if it's different.
+

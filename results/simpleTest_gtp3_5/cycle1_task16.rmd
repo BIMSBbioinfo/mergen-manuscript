@@ -3,11 +3,9 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-
 # Load necessary libraries
+library(tidyverse)
 library(readxl)
-library(tibble)
-library(ggplot2)
 
 # Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
@@ -15,17 +13,20 @@ count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 # Read the annotation data
 annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Set row names of count table as gene names
-row.names(count_table) <- count_table[[1]]
+# Transpose the count table to have genes as columns
+count_table <- count_table %>%
+  pivot_longer(cols = -1, names_to = "Sample", values_to = "Expression")
 
 # Merge annotation data and count table
-merged_data <- merge(annotation_data, count_table, by.x = "sample.ids", by.y = 0)
+merged_data <- count_table %>%
+  left_join(annotation_data, by = c("Sample" = "sample_id"))
 
-# Plot boxplots for gene expression values per sample
-ggplot(merged_data, aes(x = group, y = V2, fill = group)) +
+# Plot boxplots
+ggplot(merged_data, aes(x = Group, y = Expression, fill = Group)) +
   geom_boxplot() +
-  labs(x = "Group", y = "Gene Expression") +
-  theme_bw()
+  xlab("Group") +
+  ylab("Gene Expression") +
+  ggtitle("Gene Expression Boxplots by Group") +
+  theme_minimal()
 ```
 
-Note: Replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths and names for your specific case.

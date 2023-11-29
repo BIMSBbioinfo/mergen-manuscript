@@ -5,21 +5,17 @@ Read the tables count number of rows and columns for each.
 response:
 ```
 # Read the "metRmOlWithDbgapIdHeader.txt" file
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-
-# Count the number of rows and columns in the "metRmOl" table
-row_count_metRmOl <- nrow(metRmOl)
-col_count_metRmOl <- ncol(metRmOl)
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
 # Read the "subjects.txt" file
-subjects <- read.table("subjects.txt", header = TRUE)
+subject_data <- read.table("subjects.txt", header = TRUE)
 
-# Count the number of rows and columns in the "subjects" table
-row_count_subjects <- nrow(subjects)
-col_count_subjects <- ncol(subjects)
+# Count the number of rows and columns for the "met_data" table
+num_rows_met <- nrow(met_data)
+num_cols_met <- ncol(met_data)
 
-# Print the number of rows and columns for each table
-print(paste("Number of rows and columns in metRmOl table:", row_count_metRmOl, "rows", col_count_metRmOl, "columns"))
-print(paste("Number of rows and columns in subjects table:", row_count_subjects, "rows", col_count_subjects, "columns"))
+# Count the number of rows and columns for the "subject_data" table
+num_rows_subject <- nrow(subject_data)
+num_cols_subject <- ncol(subject_data)
 ```
-```
+The number of rows and columns for the "met_data" table can be obtained using the `nrow()` and `ncol()` functions, respectively. Similarly, the number of rows and columns for the "subject_data" table can also be obtained using these functions.

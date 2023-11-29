@@ -1,0 +1,45 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(DESeq2)
+library(readxl)
+library(data.table)
+library(reshape2)
+library(ggplot2)
+
+# Read the count table
+counts <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+
+# Read the annotation data
+annotation <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Set row names for count table as gene names
+rownames(counts) <- counts[,1]
+counts <- counts[,-1]
+
+# Normalize the counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = counts, colData = annotation, design = ~ group)
+dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Convert the normalized counts to a data.frame
+normalized_counts_df <- data.frame(normalized_counts)
+row.names(normalized_counts_df) <- rownames(normalized_counts)
+
+# Perform PCA analysis
+pca_df <- prcomp(t(normalized_counts_df))
+
+# Plot PCA color coded by "group"
+ggplot(data = pca_df, aes(x = PC1, y = PC2, color = annotation$group)) +
+  geom_point() +
+  labs(title = "PCA Plot: Samples colored by Group")
+
+# Plot PCA color coded by "LibrarySelection"
+ggplot(data = pca_df, aes(x = PC1, y = PC2, color = annotation$LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot: Samples colored by LibrarySelection")
+}
+```

@@ -101,7 +101,7 @@ if (!file.exists(output_folder)) {
 results <- matrix(nrow=cycles,ncol=length(pcpairs))
 
 # how many repetions per task defined by j
-for(j in 1:cycles){
+for(j in 5:cycles){
   # create agent
   require(mergen)
   myAgent<-mergen::setupAgent(name="openai",model="gpt-3.5-turbo",type="chat",ai_api_key=Sys.getenv("OPENAI_API_KEY"))
@@ -109,7 +109,7 @@ for(j in 1:cycles){
   message("cycle ",j, " starting...\n")
 
   # for each prompt
-  for( i in 1:length(pcpairs)){
+  for( i in 12:length(pcpairs)){
 
     message("responding to prompt ",i, "\n")
 
@@ -230,3 +230,8 @@ p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
 
 p2
 
+
+# count nr of characters for response, remove \n first.
+for (j in 1:length(pcpairs)){
+  pcpairs[[j]]$nchars <- nchar(gsub("[\n]"," ",pcpairs[[j]]$response))
+}

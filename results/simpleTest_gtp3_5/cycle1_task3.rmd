@@ -3,21 +3,18 @@ I have the following gene expression data as an excel sheet,  "Supplementary_Tab
 
 response:
 ```
-# Install and load the 'readxl' package for reading Excel files
-
+# Load the necessary library
 library(readxl)
 
-# Read the Excel file containing gene expression data
+# Read the Excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Calculate the number of rows (genes) and columns (samples) in the dataset
+# Get the number of rows (genes) and columns (samples)
 num_genes <- nrow(data)
 num_samples <- ncol(data)
 
 # Print the number of genes and samples
-cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples, "\n")
+num_genes
+num_samples
 ```
 ```
-
-Alternatively, if you have the data already stored in a data frame object called `data`, you can omit the first two lines of code that install and load the 'readxl' package and directly use the rest of the code.

@@ -3,42 +3,42 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
+# Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability of each gene by calculating the standard deviation
-variance <- apply(data[, -1], 1, sd)
+# Remove the first column (gene names)
+data <- data[, -1]
 
-# Order the genes based on their variability in descending order
-ordered_genes <- order(variance, decreasing = TRUE)
+# Calculate the variance of each gene
+variances <- apply(data, 1, var)
+
+# Sort the genes based on their variance in descending order
+sorted_genes <- sort(variances, decreasing = TRUE)
 
 # Select the top 1000 most variable genes
-top_1000_genes <- ordered_genes[1:1000]
+top_genes <- names(sorted_genes)[1:1000]
 
-# Filter the data to include only the most variable genes
-filtered_data <- data[top_1000_genes, ]
+# Create a matrix with only the selected top genes
+selected_data <- data[top_genes, ]
 
-# Calculate the distance matrix between samples using the Euclidean distance
-distance_matrix <- dist(filtered_data[, -1], method = "euclidean")
+# Cluster the samples using hierarchical clustering
+diss_matrix <- dist(selected_data)
+hc <- hclust(diss_matrix)
+clusters <- cutree(hc, k = 5)  # Assuming we want 5 clusters
 
-# Cluster the samples using hierarchical clustering with complete linkage
-clusters <- hclust(distance_matrix, method = "complete")
+# Extract cluster specific genes for each cluster
+cluster_specific_genes <- list()
+for (i in 1:max(clusters)) {
+  cluster_samples <- which(clusters == i)
+  cluster_data <- selected_data[, cluster_samples]
+  cluster_variances <- apply(cluster_data, 1, var)
+  cluster_sorted_genes <- sort(cluster_variances, decreasing = TRUE)
+  cluster_specific_genes[[i]] <- names(cluster_sorted_genes)[1:100]  # Assuming we want top 100 specific genes per cluster
+}
 
-# Cut the dendrogram into clusters
-num_clusters <- 3  # Specify the number of clusters
-cluster_labels <- cutree(clusters, k = num_clusters)
-
-# Extract the cluster-specific genes
-cluster_specific_genes <- lapply(unique(cluster_labels), function(cluster){
-  genes_in_cluster <- which(cluster_labels == cluster)
-  cluster_genes <- filtered_data[genes_in_cluster, ]
-  cluster_genes
-})
-
-# Print the cluster-specific genes
-for (i in 1:num_clusters) {
-  cat("Cluster", i, "specific genes:\n")
-  print(cluster_specific_genes[[i]])
+# Output the cluster specific genes
+for (i in 1:max(clusters)) {
+  cat("Cluster", i, "specific genes:", cluster_specific_genes[[i]], "\n")
 }
 ```
-
+Note: This code assumes that the number of samples is larger than the number of genes. If the number of genes is larger than the number of samples, you may need to transpose the data before applying the code.

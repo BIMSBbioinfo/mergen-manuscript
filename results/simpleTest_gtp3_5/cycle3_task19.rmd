@@ -1,0 +1,42 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+
+# Read count table
+counts <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
+
+# Read annotation data
+annotation <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+
+# Create DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = annotation,
+                              design = ~ 1)
+
+# Normalize counts using DESeq2
+dds <- DESeq(dds)
+
+# Get normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Make PCA plot color coded by "group"
+pca_group <- prcomp(t(normalized_counts))
+pca_df_group <- data.frame(pca_group$x, Group = annotation$group)
+ggplot(pca_df_group, aes(x = PC1, y = PC2, color = Group)) + 
+  geom_point() +
+  labs(title = "PCA Plot (Color Coded by Group)")
+
+# Make PCA plot color coded by "LibrarySelection"
+pca_library <- prcomp(t(normalized_counts))
+pca_df_library <- data.frame(pca_library$x, LibrarySelection = annotation$LibrarySelection)
+ggplot(pca_df_library, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
+  geom_point() +
+  labs(title = "PCA Plot (Color Coded by LibrarySelection)")
+}
+```

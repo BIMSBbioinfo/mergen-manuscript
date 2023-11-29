@@ -3,34 +3,37 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the metRmOlWithDbgapIdHeader.txt file
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
 
-# Remove the first row
-met_data <- met_data[-1, ]
+# Read the "subjects.txt" file
+subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Read the subjects.txt file
-subject_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Extract the age, sex, and race columns from the "subjects" dataset
+age <- subjects$Age
+sex <- subjects$sex
+race <- subjects$Race
 
-# Get the dbGap IDs from the subject_data table
-dbGapIDs <- subject_data[, 1]
+# Get the dbGap ID values from the "subjects" dataset
+dbGap_ID <- subjects$dbGap ID
 
-# Subset the met_data table to include only the CpGs associated with Age
-age_cpgs <- met_data[, c("CpG_id", dbGapIDs)]
+# Subset the "metRmOl" dataset based on the dbGap ID values in the "subjects" dataset
+metRmOl_subset <- metRmOl[, dbGap_ID]
 
-# Check if the dbGap IDs column matches the first row of the met_data table
-age_cpgs <- age_cpgs[, colnames(age_cpgs) %in% met_data[1, ]]
+# Calculate the correlation between CpGs and age, sex, and race
+cor_age <- cor(metRmOl_subset, age)
+cor_sex <- cor(metRmOl_subset, sex)
+cor_race <- cor(metRmOl_subset, race)
 
-# Remove the dbGap IDs column
-age_cpgs <- age_cpgs[, -1]
+# Subset the CpGs associated with age but not with sex or race
+age_cpg <- names(which(abs(cor_age) > 0.5))
+sex_cpg <- names(which(abs(cor_sex) > 0.5))
+race_cpg <- names(which(abs(cor_race) > 0.5))
 
-# Get the CpGs associated with Age but not with sex or Race
-age_only_cpgs <- age_cpgs[!colnames(age_cpgs) %in% subject_data[, c("sex", "Race")], ]
+final_cpg <- setdiff(age_cpg, intersect(sex_cpg, race_cpg))
+top_20_cpg <- final_cpg[1:20]
 
-# Get the top 20 CpGs
-top_20_cpgs <- head(age_only_cpgs, 20)
-
-# Display the top 20 CpGs
-print(top_20_cpgs)
+# Display the top 20 CpGs associated with Age
+top_20_cpg
 ```
-```
+Note: Modify the file paths in the `read.table` function calls based on the actual file location in your system.

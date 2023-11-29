@@ -3,31 +3,41 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Load required libraries
+library(gplots)
+library(RColorBrewer)
+library(pheatmap)
+library(ggplot2)
 
-# Calculate the variance for each gene
-variance <- apply(data[, -1], 1, var)
-
-# Sort the genes based on variance in descending order
-sorted_genes <- data[order(variance, decreasing = TRUE), ]
-
-# Select the top 1000 genes with highest variance
-top_genes <- sorted_genes[1:1000, ]
+# Read the gene expression data
+data <- read.delim("leukemiaExp.txt", sep = "\t")
 
 # Remove the gene names column
-selected_genes <- top_genes[, -1]
+expr_data <- data[, -1]
 
-# Calculate the z-scores for the selected genes
-z_scores <- scale(selected_genes)
+# Calculate the variance of each gene
+variances <- apply(expr_data, 1, var)
 
-# Plot the heatmap with clustering
-heatmap(z_scores, Colv = NA)
+# Sort the genes based on their variance in descending order
+sorted_genes <- order(variances, decreasing = TRUE)
 
-# Perform PCA on the data
-pca <- prcomp(selected_genes)
+# Select the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000]
 
-# Plot the PCA
-plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2")
+# Subset the expression data to retain only the top variable genes
+filtered_data <- expr_data[top_genes, ]
+
+# Perform clustering and create a heatmap
+heatmap_data <- t(filtered_data)
+heatmap_colors <- colorRampPalette(brewer.pal(9, "Blues"))(50)
+pheatmap(heatmap_data, cluster_rows = TRUE, cluster_cols = TRUE, col = heatmap_colors)
+
+# Perform PCA and create a plot
+pca_data <- prcomp(filtered_data, scale = TRUE)
+pca_plot <- ggplot() + 
+  geom_point(aes(x = pca_data$x[,1], y = pca_data$x[,2])) + 
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
+print(pca_plot)
 ```
-Please note that you need to replace "leukemiaExp.txt" with the actual file path/name of your gene expression data file.
+

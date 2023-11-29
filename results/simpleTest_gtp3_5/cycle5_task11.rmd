@@ -1,0 +1,27 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the tables count number of rows and columns for each.
+
+response:
+```
+# Read the first dataset
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+
+# Count number of rows and columns in the first dataset
+nrow_metRmOl <- nrow(metRmOl)
+ncol_metRmOl <- ncol(metRmOl)
+
+# Read the second dataset
+subjects <- read.table("subjects.txt", header = TRUE)
+
+# Count number of rows and columns in the second dataset
+nrow_subjects <- nrow(subjects)
+ncol_subjects <- ncol(subjects)
+
+# Print the number of rows and columns for each dataset
+print(paste("Number of rows in metRmOl dataset:", nrow_metRmOl))
+print(paste("Number of columns in metRmOl dataset:", ncol_metRmOl))
+print(paste("Number of rows in subjects dataset:", nrow_subjects))
+print(paste("Number of columns in subjects dataset:", ncol_subjects))
+```
+Note: Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file names and provide the correct file paths if they are not in the working directory.

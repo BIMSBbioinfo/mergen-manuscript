@@ -1,0 +1,40 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
+
+response:
+```
+# Read the methylation data
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+
+# Read the subjects data
+subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
+
+# Rename the first column of methylation data to "CpG_id"
+colnames(methylation_data)[1] <- "CpG_id"
+
+# Transpose the methylation data to have individuals as rows and CpG sites as columns
+methylation_data_transposed <- t(methylation_data)
+
+# Get the common individuals between the two datasets
+common_individuals <- intersect(colnames(methylation_data_transposed), subjects_data$dbGap.ID)
+
+# Subset the methylation data and subjects data with common individuals
+methylation_data_subset <- methylation_data_transposed[, common_individuals]
+subjects_data_subset <- subjects_data[subjects_data$dbGap.ID %in% common_individuals, ]
+
+# Create a data frame with Age and methylation values
+combined_data <- data.frame(Age = subjects_data_subset$Age, methylation_data_subset)
+
+# Split the data into training and testing sets
+set.seed(123)
+train_indices <- sample(1:nrow(combined_data), nrow(combined_data) * 0.7)
+train_data <- combined_data[train_indices, ]
+test_data <- combined_data[-train_indices, ]
+
+# Build a linear regression model to predict Age from methylation values
+model <- lm(Age ~ ., data = train_data)
+
+# Display the most important variables for the predictive model
+summary(model)
+```
+

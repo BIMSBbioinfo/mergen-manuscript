@@ -1,0 +1,58 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(DESeq2)
+library(tidyverse)
+library(readxl)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
+
+# Assign the row names of the count table as gene names
+rownames(count_table) <- count_table[,1]
+
+# Remove the first column (gene names) from the count table
+count_table <- count_table[, -1]
+
+# Transpose the count table to have samples as rows and genes as columns
+count_table <- t(count_table)
+
+# Create a DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
+
+# Perform differential expression analysis
+dds <- DESeq(dds)
+
+# Extract the results table
+results <- results(dds)
+
+# Subset genes specific for each group
+group_specific_genes <- lapply(levels(annotation_data$group), function(group) {
+  group_results <- results[annotation_data$group == group, ]
+  group_specific_genes <- subset(group_results, padj <= 0.05 & abs(log2FoldChange) >= 1)
+  return(group_specific_genes$gene_id)
+})
+
+# Combine all group-specific genes
+all_specific_genes <- unique(unlist(group_specific_genes))
+
+# Filter expression data for group-specific genes
+expression_specific <- assay(dds)[all_specific_genes, ]
+
+# Perform PCA on the filtered expression data
+pca <- prcomp(t(expression_specific))
+
+# Extract the sample metadata
+sample_metadata <- annotation_data[, c(1, "group")]
+
+# Plot PCA with color coded by group variable
+plot(pca$x[, c(1,2)], col = sample_metadata$group)
+
+```
+Note: Make sure to install the necessary libraries (`DESeq2`, `tidyverse`, `readxl`) before running the code. The count table and annotation data files should be in the same directory as the R script.

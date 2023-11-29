@@ -1,0 +1,64 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(limma)
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(pcaMethods)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+
+# Remove any row or column with NA values
+count_table <- count_table[complete.cases(count_table), ]
+annotation_data <- annotation_data[complete.cases(annotation_data), ]
+
+# Set gene names as row names
+rownames(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
+
+# Remove gene names column from annotation_data
+annotation_data <- annotation_data[, -1]
+
+# Perform differential expression analysis using limma
+design_matrix <- model.matrix(~ group, data = annotation_data)
+fit <- lmFit(count_table, design_matrix)
+fit <- eBayes(fit)
+results <- decideTests(fit)
+
+# Split genes based on significant differential expression
+DE_genes <- split(row.names(count_table), results)
+
+# Filter out genes specific for each group
+group_specific_genes <- lapply(DE_genes, function(x) intersect(x, row.names(count_table)))
+
+# Prepare data for PCA
+pca_data <- count_table[group_specific_genes[[1]], ]
+for (i in 2:length(group_specific_genes)) {
+  pca_data <- rbind(pca_data, count_table[group_specific_genes[[i]], ])
+}
+
+# Perform PCA
+pca_result <- prcomp(pca_data)
+
+# Get percentage of variance explained by principal components
+variance_explained <- pca_result$sdev^2 / sum(pca_result$sdev^2) * 100
+
+# Plot PCA
+ggplot(data = as.data.frame(pca_result$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
+  geom_point() +
+  scale_color_manual(values = c("blue", "red")) +
+  geom_text_repel(aes(label = rownames(pca_result$x)), size = 3) +
+  xlab(paste0("PC1 (", round(variance_explained[1], 2), "%)")) +
+  ylab(paste0("PC2 (", round(variance_explained[2], 2), "%)")) +
+  labs(color = "Group")
+```
+```

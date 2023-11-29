@@ -3,22 +3,21 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# read the gene expression data from the file
-data <- read.delim("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read in the gene expression data
+gene_expression <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
 
-# check the number of samples
-num_samples <- ncol(data)
-
-# if there are more than 500 samples, randomly sample 500 samples
+# Check the number of samples
+num_samples <- ncol(gene_expression)
 if (num_samples > 500) {
-  set.seed(123) # set seed for reproducibility
-  sampled_columns <- sample(1:num_samples, 500)
-  sampled_data <- data[,sampled_columns]
+  # Randomly select 500 samples
+  selected_samples <- sample(1:num_samples, 500)
+  # Subset the data to the selected samples
+  gene_expression_subset <- gene_expression[, selected_samples]
 } else {
-  sampled_data <- data
+  gene_expression_subset <- gene_expression
 }
 
-# create a boxplot of the columns
-boxplot(sampled_data, main="Boxplot of Gene Expression Data", xlab="Samples", ylab="Expression Value")
+# Create a boxplot of the columns
+boxplot(gene_expression_subset, main="Boxplot of Gene Expression", xlab="Columns", ylab="Expression Level")
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path if the file is not in the current working directory.
+Note: Remember to replace "leukemiaExp.txt" with your actual file name if it's different.

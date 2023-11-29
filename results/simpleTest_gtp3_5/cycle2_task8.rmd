@@ -3,19 +3,24 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from the file
-gene_exp <- read.delim("leukemiaExp.txt", sep = "\t")
+# Load the data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability of each gene
-var_genes <- apply(gene_exp[, -1], 1, var)
+# Calculate the variance of each gene
+variance <- apply(data[, -1], 1, var)
 
-# Sort the genes based on their variability in descending order
-sorted_genes <- gene_exp[order(var_genes, decreasing = TRUE), ]
+# Sort the genes based on their variance in descending order
+sorted_genes <- sort(variance, decreasing = TRUE)
 
-# Retain the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000, ]
+# Select the top 1000 most variable genes
+top_genes <- names(sorted_genes)[1:1000]
 
-# Create a scatterplot of the two most variable genes
-plot(top_1000_genes[, 2], top_1000_genes[, 3], xlab = "Gene 1", ylab = "Gene 2", main = "Scatterplot of Two Most Variable Genes")
+# Subset the data to only include the top variable genes
+filtered_data <- data[c("gene_name", top_genes)]
+
+# Create a scatter plot of the two most variable genes
+plot(filtered_data[, 2], filtered_data[, 3], 
+     xlab = "Gene 1", ylab = "Gene 2", 
+     main = "Scatterplot of Most Variable Genes")
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path if the file is not located in the current working directory.
+Note: Replace "gene_name" in the code with the actual name of the column containing the gene names in your data.
