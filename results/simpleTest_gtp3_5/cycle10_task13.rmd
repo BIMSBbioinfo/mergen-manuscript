@@ -1,0 +1,32 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables and calculate number of columns.
+
+response:
+```
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheetName = 1)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
+
+# Remove any rows with duplicate gene names in the count table
+count_table <- count_table[!duplicated(count_table$Gene), ]
+
+# Get the sample IDs from the annotation data
+sample_ids <- annotation_data[, 1]
+
+# Get the column names from the count table (excluding the first column)
+column_names <- colnames(count_table)[-1]
+
+# Merge the count table and annotation data based on the sample IDs
+merged_data <- merge(annotation_data, count_table, by.x = "SampleIDs", by.y = "Gene", all = FALSE)
+
+# Calculate the number of columns (excluding the first column)
+num_columns <- ncol(merged_data) - 1
+
+# Print the number of columns
+print(num_columns)
+```
+Note: Make sure you have the 'openxlsx' package installed to read the Excel file. If not, you can install it using the following command:
+```
+
+```

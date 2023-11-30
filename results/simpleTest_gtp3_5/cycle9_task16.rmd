@@ -1,0 +1,30 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+```
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(ggplot2)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+
+# Merge annotation data and count table
+merged_data <- left_join(count_table, annotation_data, by = c("Sample_ID" = "sample_id"))
+
+# Plot boxplots for gene expression values per sample, color coded based on group variable
+merged_data %>%
+  gather(Sample_ID, Expression, -Gene) %>%
+  ggplot(aes(x = Group, y = Expression, fill = Group)) +
+  geom_boxplot() +
+  xlab("Group") +
+  ylab("Gene Expression") +
+  ggtitle("Gene Expression Values per Sample") +
+  theme_minimal()
+```
+

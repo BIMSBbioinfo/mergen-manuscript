@@ -1,0 +1,60 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load required libraries
+library(openxlsx)
+library(magrittr)
+library(DESeq2)
+library(ggplot2)
+
+# Read count table and annotation data
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", skipEmptyRows = TRUE)
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Extract gene names from count table
+genes <- count_table$Genes
+
+# Remove gene names column from count table
+count_table <- count_table %>% select(-Genes)
+
+# Transpose count table to have samples as rows and genes as columns
+count_table_t <- t(count_table)
+
+# Remove row names from count table
+rownames(count_table_t) <- NULL
+
+# Remove row names from annotation data
+rownames(annotation_data) <- NULL
+
+# Convert count table to DESeq2-friendly format
+dds <- DESeqDataSetFromMatrix(countData = count_table_t, colData = annotation_data, design = ~ LibrarySelection)
+
+# Normalize counts
+dds_norm <- counts(dds, normalized = TRUE)
+
+# Perform PCA on normalized counts
+pca_norm <- prcomp(t(dds_norm))
+
+# Create PCA plot color coded by "group"
+plot(pca_norm$x[, 1:2], col = annotation_data$group, pch = 16, xlab = "PC1", ylab = "PC2")
+
+# Create PCA plot color coded by "LibrarySelection"
+plot(pca_norm$x[, 1:2], col = annotation_data$LibrarySelection, pch = 16, xlab = "PC1", ylab = "PC2")
+```
+
+Note: The error `ncol(countData) == nrow(colData) is not TRUE` suggests that the number of samples in the count data does not match the number of rows in the annotation data. I removed the row names from both the count table and the annotation data to ensure that the dimensions match. Please check if the error still persists.

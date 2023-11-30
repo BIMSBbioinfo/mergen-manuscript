@@ -1,0 +1,70 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(pcaExplorer)
+
+# Read count table and remove duplicate row names
+count_table <- readxl::read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- count_table[!duplicated(count_table$Genes), ]
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Set row names of count table as gene names
+rownames(count_table) <- count_table$Genes
+
+# Remove the first column from count table as it is now the row names
+count_table <- count_table[, -1]
+
+# Match the column names of count table with row names of annotation data
+annotation_data <- annotation_data[match(colnames(count_table), annotation_data$diagnosis), ]
+
+# Create a DESeq2 object for differential expression analysis
+dds <- DESeq2::DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
+
+# Perform differential expression analysis
+dds <- DESeq2::DESeq(dds)
+
+# Get differential expression results
+results <- DESeq2::results(dds)
+
+# Perform statistical tests for each group and get significant genes
+specific_genes <- NULL
+for (group in unique(annotation_data$group)) {
+  group_data <- annotation_data[annotation_data$group == group, ]
+  group_results <- results[rownames(results) %in% rownames(group_data), ]
+  specific_genes <- rbind(specific_genes, group_results[which(group_results$padj < 0.05), ])
+}
+
+# Get the specific gene names
+specific_gene_names <- rownames(specific_genes)
+
+# Filter count table to include only specific genes
+specific_count_table <- count_table[specific_gene_names, ]
+
+# Plot PCA using specific genes for each group
+pca_data <- t(scale(t(specific_count_table)))
+metadata <- data.frame(Group = annotation_data$group)
+pcaExplorer::plotPCA(pca_data, metadata = metadata)
+```
+
+I've added a step to remove duplicate row names in the count table before setting them as gene names. This should resolve the `duplicate 'row.names' are not allowed` error.

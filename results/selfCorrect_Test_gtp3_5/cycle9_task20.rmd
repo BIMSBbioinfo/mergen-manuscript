@@ -1,0 +1,101 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(dplyr)
+library(limma)
+library(ggplot2)
+library(pheatmap)
+library(scales)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation <- read.delim("SRP021193.colData.tsv")
+
+# Transpose the count table
+count_table <- t(count_table)
+
+# Rename the columns of the count table
+colnames(count_table) <- count_table[1, ]
+count_table <- count_table[-1, ]
+
+# Get the row names of the count table
+row_names <- rownames(count_table)
+
+# Remove the "Genes" column from the count table
+count_table <- count_table[, -1]
+
+# Convert the count table to numeric matrix
+count_matrix <- as.matrix(count_table)
+count_matrix <- data.matrix(count_matrix)
+
+# Perform statistical tests to find group-specific genes
+groups <- unique(annotation$group)
+group_specific_genes <- list()
+
+for (group in groups) {
+  # Get the samples belonging to the current group
+  samples <- annotation$SampleID[annotation$group == group]
+  
+  if (length(samples) < 2) {
+    cat("Skipping group", group, "due to insufficient samples.\n")
+    next
+  }
+  
+  # Extract the count matrix for the group samples
+  group_count_matrix <- count_matrix[, samples]
+  
+  # Perform differential expression analysis using limma
+  design <- model.matrix(~0 + factor(samples))
+  colnames(design) <- samples
+  fit <- lmFit(group_count_matrix, design)
+  fit <- eBayes(fit)
+  
+  # Get the group-specific genes
+  group_specific <- topTable(fit, coef = 1, number = Inf)
+  group_specific_genes[[group]] <- row_names[group_specific$ID]
+}
+
+# Get group-specific genes as a single vector
+group_specific_genes_vector <- unique(unlist(group_specific_genes))
+
+# Prepare the data for PCA plot
+pca_data <- count_matrix[row_names %in% group_specific_genes_vector, ]
+pca_data <- t(pca_data)
+
+# Perform PCA
+pca_result <- prcomp(pca_data, scale. = TRUE)
+
+# Extract the principal components
+pca_scores <- pca_result$x
+
+# Add group information to PCA scores
+pca_scores <- cbind(pca_scores, group = annotation$group)
+
+# Plot PCA with color coding
+ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00")) +
+  guides(color = guide_legend(title = "Group")) +
+  theme_minimal()
+```
+
+Please make sure you have installed the required libraries before running the code. Also, ensure that the count table and annotation data files are in the correct format and their paths are correctly specified in the code.

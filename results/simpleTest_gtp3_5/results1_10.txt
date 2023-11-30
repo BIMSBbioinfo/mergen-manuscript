@@ -1,0 +1,219 @@
+"cycle"	"task"	"error"	"taskType"	"numData"	"complexity"
+1	1	NA	"read"	1	1
+2	1	NA	"read"	1	1
+3	1	NA	"read"	1	1
+4	1	NA	"read"	1	1
+5	1	NA	"read"	1	1
+6	1	NA	"read"	1	1
+7	1	NA	"read"	1	1
+8	1	NA	"read"	1	1
+9	1	NA	"read"	1	1
+10	1	NA	"read"	1	1
+1	2	NA	"read"	1	1
+2	2	NA	"read"	1	1
+3	2	NA	"read"	1	1
+4	2	NA	"read"	1	1
+5	2	NA	"read"	1	1
+6	2	NA	"read"	1	1
+7	2	NA	"read"	1	1
+8	2	NA	"read"	1	1
+9	2	NA	"read"	1	1
+10	2	NA	"read"	1	1
+1	3	NA	"read"	1	1
+2	3	NA	"read"	1	1
+3	3	NA	"read"	1	1
+4	3	NA	"read"	1	1
+5	3	NA	"read"	1	1
+6	3	"<text>:17:8: unexpected symbol
+16: 
+17: Number of
+           ^"	"read"	1	1
+7	3	NA	"read"	1	1
+8	3	NA	"read"	1	1
+9	3	NA	"read"	1	1
+10	3	NA	"read"	1	1
+1	4	NA	"read"	1	1
+2	4	NA	"read"	1	1
+3	4	NA	"read"	1	1
+4	4	NA	"read"	1	1
+5	4	NA	"read"	1	1
+6	4	NA	"read"	1	1
+7	4	NA	"read"	1	1
+8	4	NA	"read"	1	1
+9	4	NA	"read"	1	1
+10	4	NA	"read"	1	1
+1	5	NA	"read | data wrangling"	1	2
+2	5	NA	"read | data wrangling"	1	2
+3	5	"undefined columns selected"	"read | data wrangling"	1	2
+4	5	NA	"read | data wrangling"	1	2
+5	5	"undefined columns selected"	"read | data wrangling"	1	2
+6	5	NA	"read | data wrangling"	1	2
+7	5	NA	"read | data wrangling"	1	2
+8	5	NA	"read | data wrangling"	1	2
+9	5	NA	"read | data wrangling"	1	2
+10	5	NA	"read | data wrangling"	1	2
+1	6	NA	"read | data wrangling"	1	2
+2	6	NA	"read | data wrangling"	1	2
+3	6	NA	"read | data wrangling"	1	2
+4	6	NA	"read | data wrangling"	1	2
+5	6	NA	"read | data wrangling"	1	2
+6	6	NA	"read | data wrangling"	1	2
+7	6	NA	"read | data wrangling"	1	2
+8	6	NA	"read | data wrangling"	1	2
+9	6	NA	"read | data wrangling"	1	2
+10	6	NA	"read | data wrangling"	1	2
+1	7	"could not find function \"melt\""	"read | data wrangling | visualization"	1	3
+2	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+3	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+4	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+5	7	NA	"read | data wrangling | visualization"	1	3
+6	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+7	7	NA	"read | data wrangling | visualization"	1	3
+8	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+9	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+10	7	"non-numeric argument to binary operator"	"read | data wrangling | visualization"	1	3
+1	8	"formal argument \"xlab\" matched by multiple actual arguments"	"read | data wrangling | visualization"	1	3
+2	8	"undefined columns selected"	"read | data wrangling | visualization"	1	3
+3	8	NA	"read | data wrangling | visualization"	1	3
+4	8	"formal argument \"xlab\" matched by multiple actual arguments"	"read | data wrangling | visualization"	1	3
+5	8	"'x' and 'y' lengths differ"	"read | data wrangling | visualization"	1	3
+6	8	"figure margins too large"	"read | data wrangling | visualization"	1	3
+7	8	"formal argument \"xlab\" matched by multiple actual arguments"	"read | data wrangling | visualization"	1	3
+8	8	NA	"read | data wrangling | visualization"	1	3
+9	8	NA	"read | data wrangling | visualization"	1	3
+10	8	NA	"read | data wrangling | visualization"	1	3
+1	9	"'x' must be a numeric matrix"	"read | data wrangling | visualization | ML/Stats"	1	4
+2	9	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+3	9	"'x' must be a numeric matrix"	"read | data wrangling | visualization | ML/Stats"	1	4
+4	9	"'x' must be a numeric matrix"	"read | data wrangling | visualization | ML/Stats"	1	4
+5	9	"'x' must be a numeric matrix"	"read | data wrangling | visualization | ML/Stats"	1	4
+6	9	"could not find function \"rank.dendrogram\""	"read | data wrangling | visualization | ML/Stats"	1	4
+7	9	"undefined columns selected"	"read | data wrangling | visualization | ML/Stats"	1	4
+8	9	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+9	9	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+10	9	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+1	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+2	10	"must have n >= 2 objects to cluster"	"read | data wrangling | visualization | ML/Stats"	1	4
+3	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+4	10	"<text>:19:43: unexpected '<'
+18: # Cut the dendrogram into clusters
+19: clusters <- cutree(clustered_samples, k = <
+                                              ^"	"read | data wrangling | visualization | ML/Stats"	1	4
+5	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+6	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+7	10	"invalid first argument"	"read | data wrangling | visualization | ML/Stats"	1	4
+8	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+9	10	NA	"read | data wrangling | visualization | ML/Stats"	1	4
+10	10	"undefined columns selected"	"read | data wrangling | visualization | ML/Stats"	1	4
+1	11	"line 1 did not have 6 elements"	"read"	2	2
+2	11	"line 1 did not have 6 elements"	"read"	2	2
+3	11	"line 1 did not have 6 elements"	"read"	2	2
+4	11	"line 1 did not have 6 elements"	"read"	2	2
+5	11	"line 1 did not have 6 elements"	"read"	2	2
+6	11	NA	"read"	2	2
+7	11	"line 1 did not have 6 elements"	"read"	2	2
+8	11	NA	"read"	2	2
+9	11	"line 1 did not have 6 elements"	"read"	2	2
+10	11	"line 1 did not have 6 elements"	"read"	2	2
+1	12	"could not find function \"read_delim\""	"read"	2	2
+2	12	NA	"read"	2	2
+3	12	NA	"read"	2	2
+4	12	"no code returned"	"read"	2	2
+5	12	NA	"read"	2	2
+6	12	NA	"read"	2	2
+7	12	"more columns than column names"	"read"	2	2
+8	12	NA	"read"	2	2
+9	12	NA	"read"	2	2
+10	12	NA	"read"	2	2
+1	13	"could not find function \"read_delim\""	"read | data wrangling"	2	3
+2	13	"Join columns in `x` must be present in the data."	"read | data wrangling"	2	3
+3	13	NA	"read | data wrangling"	2	3
+4	13	"Join columns in `x` must be present in the data."	"read | data wrangling"	2	3
+5	13	"Join columns in `x` must be present in the data."	"read | data wrangling"	2	3
+6	13	"could not find function \"read.xlsx\""	"read | data wrangling"	2	3
+7	13	"'by' must specify a uniquely valid column"	"read | data wrangling"	2	3
+8	13	"'by' must specify a uniquely valid column"	"read | data wrangling"	2	3
+9	13	NA	"read | data wrangling"	2	3
+10	13	"unused argument (sheetName = 1)"	"read | data wrangling"	2	3
+1	14	"'by' must specify a uniquely valid column"	"read | data wrangling"	2	3
+2	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+3	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+4	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+5	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+6	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+7	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+8	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+9	14	"line 1 did not have 6 elements"	"read | data wrangling"	2	3
+10	14	"Join columns in `x` must be present in the data."	"read | data wrangling"	2	3
+1	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+2	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+3	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+4	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+5	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+6	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+7	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+8	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+9	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+10	15	"line 1 did not have 6 elements"	"read | data wrangling | visualization"	2	4
+1	16	"Join columns in `y` must be present in the data."	"read | data wrangling | visualization"	2	4
+2	16	"'by' must specify a uniquely valid column"	"read | data wrangling | visualization"	2	4
+3	16	"invalid 'row.names' length"	"read | data wrangling | visualization"	2	4
+4	16	"Join columns in `x` must be present in the data."	"read | data wrangling | visualization"	2	4
+5	16	"Join columns in `x` must be present in the data."	"read | data wrangling | visualization"	2	4
+6	16	""	"read | data wrangling | visualization"	2	4
+7	16	"Join columns in `x` must be present in the data."	"read | data wrangling | visualization"	2	4
+8	16	"Join columns in `y` must be present in the data."	"read | data wrangling | visualization"	2	4
+9	16	"Join columns in `x` must be present in the data."	"read | data wrangling | visualization"	2	4
+10	16	"more columns than column names"	"read | data wrangling | visualization"	2	4
+1	17	"'by' must specify a uniquely valid column"	"read | data wrangling | ML/Stats | visualization"	2	5
+2	17	"'by' must specify a uniquely valid column"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	17	"arguments imply differing number of rows: 0, 109"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	17	"Passed a vector of type 'list'. Needs to be type 'character'."	"read | data wrangling | ML/Stats | visualization"	2	5
+6	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+7	17	"undefined columns selected"	"read | data wrangling | ML/Stats | visualization"	2	5
+8	17	"missing values in object"	"read | data wrangling | ML/Stats | visualization"	2	5
+9	17	"'by' must specify a uniquely valid column"	"read | data wrangling | ML/Stats | visualization"	2	5
+10	17	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+1	18	"<text>:14:28: unexpected symbol
+13: # Get the dbGap ID values from the \"subjects\" dataset
+14: dbGap_ID <- subjects$dbGap ID
+                               ^"	"read | data wrangling | ML/Stats | visualization"	2	5
+2	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	18	NA	"read | data wrangling | ML/Stats | visualization"	2	5
+4	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+6	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+7	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+8	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+9	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+10	18	"line 1 did not have 6 elements"	"read | data wrangling | ML/Stats | visualization"	2	5
+1	19	NA	"read | data wrangling | ML/Stats | visualization"	2	5
+2	19	"more columns than column names"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	19	"<text>:37:1: unexpected '}'
+36:   labs(title = \"PCA Plot (Color Coded by LibrarySelection)\")
+37: }
+    ^"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	19	"<text>:40:1: unexpected '}'
+39:   labs(title = \"PCA Plot: Samples colored by LibrarySelection\")
+40: }
+    ^"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	19	"duplicate 'row.names' are not allowed"	"read | data wrangling | ML/Stats | visualization"	2	5
+6	19	"invalid 'row.names' length"	"read | data wrangling | ML/Stats | visualization"	2	5
+7	19	"unused argument (header = TRUE)"	"read | data wrangling | ML/Stats | visualization"	2	5
+8	19	"invalid color name 'CASE'"	"read | data wrangling | ML/Stats | visualization"	2	5
+9	19	"ncol(countData) == nrow(colData) is not TRUE"	"read | data wrangling | ML/Stats | visualization"	2	5
+10	19	"<text>:46:1: unexpected '}'
+45:   labs(title = \"PCA Plot by LibrarySelection\")
+46: }
+    ^"	"read | data wrangling | ML/Stats | visualization"	2	5
+1	20	""	"read | data wrangling | ML/Stats | visualization"	2	5
+2	20	"invalid 'row.names' length"	"read | data wrangling | ML/Stats | visualization"	2	5
+3	20	"one of coef or contrast required if 'res' is missing"	"read | data wrangling | ML/Stats | visualization"	2	5
+4	20	"cannot open the connection"	"read | data wrangling | ML/Stats | visualization"	2	5
+5	20	"invalid 'row.names' length"	"read | data wrangling | ML/Stats | visualization"	2	5
+6	20	"ncol(countData) == nrow(colData) is not TRUE"	"read | data wrangling | ML/Stats | visualization"	2	5
+7	20	"invalid 'row.names' length"	"read | data wrangling | ML/Stats | visualization"	2	5
+8	20	"more columns than column names"	"read | data wrangling | ML/Stats | visualization"	2	5
+9	20	"ncol(countData) == nrow(colData) is not TRUE"	"read | data wrangling | ML/Stats | visualization"	2	5
+10	20	"dim(X) must have a positive length"	"read | data wrangling | ML/Stats | visualization"	2	5

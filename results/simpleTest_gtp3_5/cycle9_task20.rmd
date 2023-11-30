@@ -1,0 +1,48 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Step 1: Load required libraries
+library(DESeq2)
+library(readxl)
+library(data.table)
+library(ggplot2)
+library(ggrepel)
+library(factoextra)
+
+# Step 2: Read count table and annotation data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- fread("SRP021193.colData.tsv")
+
+# Step 3: Prepare count table and annotation data for DESeq2 analysis
+rownames(count_table) <- count_table$Gene
+count_table <- count_table[-1] # Remove gene name column
+colnames(count_table) <- colnames(count_table)[-1] # Remove sample name column
+coldata <- annotation_data[, .SD, .SDcols = c("group", colnames(count_table))]
+rownames(coldata) <- coldata$sampleid
+coldata <- coldata[-1] # Remove sampleid column
+
+# Step 4: DESeq2 analysis and finding group-specific genes
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = coldata, design = ~ group)
+dds <- DESeq(dds)
+res <- results(dds)
+group_specific_genes <- lapply(unique(coldata$group), function(g){
+  top_genes <- rownames(res)[which(res$padj < 0.05 & res$log2FoldChange > 1 & coldata$group == g)]
+  return(top_genes)
+})
+
+# Step 5: Plot PCA using group-specific genes
+group_specific_counts <- count_table[group_specific_genes[[1]],]
+for (i in 2:length(group_specific_genes)) {
+  group_specific_counts <- rbind(group_specific_counts, count_table[group_specific_genes[[i]],])
+}
+pca <- prcomp(t(group_specific_counts))
+pca_df <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], Group = coldata$group)
+
+ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point() +
+  scale_color_manual(values = c("red", "blue", "green")) +
+  geom_text_repel(aes(label = rownames(pca_df)), size = 3)
+```
+Note: Make sure to install the required libraries before running the code.

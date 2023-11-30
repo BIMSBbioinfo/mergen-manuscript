@@ -1,0 +1,38 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+```
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Calculate the variance for each gene
+variance <- apply(data[, -1], 1, var)
+
+# Sort the genes based on their variance in descending order
+sorted_genes <- names(sort(variance, decreasing = TRUE))
+
+# Select the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000]
+
+# Filter the data to retain only the top variable genes
+filtered_data <- data[c("Gene", top_genes)]
+
+# Perform hierarchical clustering on the samples
+hc <- hclust(dist(filtered_data[, -1]))
+clusters <- cutree(hc, k = 5)  # Assuming you want 5 clusters
+
+# Extract cluster specific genes for each cluster
+cluster_specific_genes <- lapply(unique(clusters), function(cluster) {
+  cluster_genes <- filtered_data$Gene[clusters == cluster]
+  cluster_data <- filtered_data[clusters == cluster, ]
+  cluster_var <- apply(cluster_data[, -1], 1, var)
+  cluster_sorted_genes <- names(sort(cluster_var, decreasing = TRUE))
+  cluster_specific_genes <- cluster_sorted_genes[1:10]  # Assuming you want top 10 specific genes
+  return(data.frame(Cluster = cluster, Genes = cluster_genes, Specific_Genes = cluster_specific_genes))
+})
+
+# Combine the cluster specific genes into a single data frame
+cluster_specific_genes_df <- do.call(rbind, cluster_specific_genes)
+```
+Note: Replace "leukemiaExp.txt" with the actual path to the file containing the gene expression data. Adjust the parameters according to your specific requirements, such as the number of clusters and the number of specific genes per cluster.

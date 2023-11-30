@@ -1,0 +1,42 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
+
+response:
+```
+# Load necessary libraries
+library(caret)
+library(randomForest)
+
+# Read the data files
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
+
+# Match the individuals in both datasets based on dbGap ID
+matched_data <- merge(methylation_data, subjects_data, by.x = "DBGapId", by.y = "dbGap ID", all.x = TRUE)
+
+# Remove unnecessary columns
+matched_data <- matched_data[,c("DBGapId", "Age", colnames(methylation_data))]
+
+# Convert methylation values to numeric
+for (i in 3:ncol(matched_data)) {
+  matched_data[,i] <- as.numeric(as.character(matched_data[,i]))
+}
+
+# Split the data into training and testing sets
+set.seed(123)
+train_index <- createDataPartition(matched_data$Age, p = 0.7, list = FALSE)
+train_data <- matched_data[train_index, ]
+test_data <- matched_data[-train_index, ]
+
+# Build the predictive model using random forest
+model <- randomForest(Age ~ ., data = train_data, ntree = 500)
+
+# Display the variable importance
+importance <- importance(model)
+var_importance <- data.frame(Variable = row.names(importance), Importance = importance[,1])
+var_importance <- var_importance[order(-var_importance$Importance), ]
+
+# Print the top 10 important variables
+print(var_importance[1:10, ])
+```
+```

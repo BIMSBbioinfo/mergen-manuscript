@@ -1,0 +1,43 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load required packages
+library(tidyverse)
+library(openxlsx)
+library(apeglm)
+
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, header = TRUE) 
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
+
+# Extract sample ids from annotation data
+sample_ids <- annotation_data$sample_id
+
+# Subset count table to include only the samples present in the annotation data
+count_table <- count_table[, sample_ids]
+
+# Normalize counts using the voom function from the limma package
+library(limma)
+normalized_counts <- voom(count_table)
+
+# Perform PCA on the normalized counts
+
+# Transpose the normalized counts matrix
+normalized_counts_transposed <- t(normalized_counts)
+
+# Perform PCA
+pca <- prcomp(normalized_counts_transposed)
+
+# Plot PCA color coded by "group" in the annotation data
+group_colors <- annotation_data$group
+plot(pca$x[,1:2], col = group_colors, pch = 16, xlab = "PC1", ylab = "PC2")
+
+# Plot PCA color coded by "LibrarySelection" in the annotation data
+library_selection_colors <- annotation_data$LibrarySelection
+plot(pca$x[,1:2], col = library_selection_colors, pch = 16, xlab = "PC1", ylab = "PC2")
+```
+```

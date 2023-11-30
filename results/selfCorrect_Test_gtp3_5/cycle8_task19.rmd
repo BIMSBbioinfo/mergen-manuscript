@@ -1,0 +1,61 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(openxlsx)
+library(DESeq2)
+library(ggplot2)
+
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", colNames = TRUE, rowNames = TRUE)
+count_table <- count_table[, -1]
+
+# Read annotation data
+annotation <- read.delim("SRP021193.colData.tsv", sep = "\t")
+
+# Extract sample names from count table
+sample_names <- colnames(count_table)
+
+# Create design matrix based on annotations
+design <- model.matrix(~0 + group + LibrarySelection, data = annotation)
+
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation,
+                              design = design)
+dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Perform PCA based on normalized counts
+pca <- prcomp(t(normalized_counts))
+
+# Plot PCA with samples color coded by "group"
+ggplot(data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], group = annotation$group)) +
+  geom_point(aes(x = PC1, y = PC2, color = group)) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA - Color coded by Group")
+
+# Plot PCA with samples color coded by "LibrarySelection"
+ggplot(data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], LibrarySelection = annotation$LibrarySelection)) +
+  geom_point(aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA - Color coded by LibrarySelection")
+```
+```

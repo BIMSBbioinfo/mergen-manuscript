@@ -1,0 +1,23 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+
+# Read the count table and annotation data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Count number of rows and columns for each table
+count_rows <- nrow(count_table)
+count_columns <- ncol(count_table)
+annotation_rows <- nrow(annotation_data)
+annotation_columns <- ncol(annotation_data)
+
+count_rows
+count_columns
+annotation_rows
+annotation_columns
+```

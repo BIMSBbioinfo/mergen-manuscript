@@ -1,0 +1,48 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load required libraries
+library(DESeq2)
+library(dplyr)
+library(ggplot2)
+library(pcaMethods)
+
+# Load count table
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t")
+
+# Load annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
+                              colData = annotation_data,
+                              design = ~ group)
+
+# Perform differential expression analysis
+dds <- DESeq(dds)
+
+# Get results of differential expression analysis
+results <- results(dds)
+
+# Get genes specific for each group
+group_specific_genes <- lapply(levels(annotation_data$group), function(x) {
+  specific_genes <- as.character(rownames(results)[which(results$padj < 0.05 & results$log2FoldChange > 2 & results$group == x)])
+  return(specific_genes)
+})
+
+# Perform PCA using group-specific genes
+group_specific_counts <- count_table[, c("Gene", unlist(group_specific_genes))]
+rownames(group_specific_counts) <- group_specific_counts[, "Gene"]
+group_specific_counts <- group_specific_counts[, -1]
+pca <- pca(group_specific_counts)
+
+# Plot PCA with color-coded group variable
+pca_df <- as.data.frame(pca$x)
+pca_df$group <- annotation_data$group
+ggplot(pca_df, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "Group")
+```
+

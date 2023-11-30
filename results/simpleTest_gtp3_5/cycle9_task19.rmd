@@ -1,0 +1,59 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
+# Transpose the count table to have samples as rows and genes as columns
+count_table <- t(count_table)
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+
+# Remove rows with missing annotation data
+annotation_data <- annotation_data[!is.na(annotation_data$sample_ids), ]
+
+# Get the sample ids from the annotation data
+sample_ids <- annotation_data$sample_ids
+
+# Subset the count table using the sample ids
+count_table <- count_table[sample_ids, ]
+
+# Create a DESeqDataSet object for normalization
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ Group + LibrarySelection)
+
+# Perform normalization using DESeq2
+dds <- DESeq(dds)
+
+# Get normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Perform PCA
+pca <- prcomp(t(normalized_counts))
+
+# Plot PCA colored by "group"
+plot_data <- as.data.frame(pca$x)
+plot_data$group <- annotation_data$Group
+ggplot(plot_data, aes(x = PC1, y = PC2, color = group)) + 
+  geom_point() +
+  labs(title = "PCA Plot - Group",
+       x = "PC1",
+       y = "PC2")
+
+# Plot PCA colored by "LibrarySelection"
+plot_data$LibrarySelection <- annotation_data$LibrarySelection
+ggplot(plot_data, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
+  geom_point() +
+  labs(title = "PCA Plot - LibrarySelection",
+       x = "PC1",
+       y = "PC2")
+```
+```

@@ -1,0 +1,63 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load necessary packages
+library(readxl)
+library(dplyr)
+library(limma)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Transpose the count table
+count_table_t <- t(count_table)
+
+# Filter specific genes for each group using statistical tests
+group_specific_genes <- rownames(count_table_t) %>% 
+  apply(., 1, function(x) {
+    # Get counts for each gene across groups
+    counts <- count_table_t[x, ]
+    
+    # Perform statistical tests (e.g., ANOVA) to identify group-specific genes
+    p_values <- apply(counts, 2, function(y) {
+      model <- lm(y ~ annotation_data$group)
+      anova_res <- anova(model)
+      anova_res$`Pr(>F)`[1]
+    })
+    
+    # Adjust p-values for multiple testing using the Benjamini-Hochberg method
+    adj_p_values <- p.adjust(p_values, method = "BH")
+    
+    # Select genes with adjusted p-value less than 0.05
+    group_specific <- x[adj_p_values < 0.05]
+    
+    # Return the group-specific genes
+    group_specific
+  }) %>%
+  unlist()
+
+# Subset count table with group-specific genes
+count_table_specific <- count_table[, rownames(count_table) %in% group_specific_genes]
+
+# Perform PCA using group-specific genes
+pca_res <- prcomp(count_table_specific, scale. = TRUE)
+
+# Extract PCA scores
+pca_scores <- as.data.frame(pca_res$x)
+
+# Add group information from annotation data
+pca_scores$group <- annotation_data$group
+
+# Plot PCA with color-coded groups
+ggplot(pca_scores, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+Note: Please make sure to adjust the file paths in the code to match the location of your count table and annotation data files.

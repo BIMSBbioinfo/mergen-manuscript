@@ -1,0 +1,43 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+The R code for accomplishing these tasks is as follows:
+
+```
+# Load necessary libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+
+# Read count table
+count_table <- as.matrix(read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE))
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ group)
+
+# Perform statistical tests to find group-specific genes
+dds <- DESeq(dds)
+results <- results(dds, contrast = c("group", "groupB", "groupA"))
+
+# Filter out non-significant genes
+filtered_genes <- subset(results, padj < 0.05)
+
+# Get gene names of group-specific genes
+groupA_genes <- rownames(subset(filtered_genes, log2FoldChange > 0))
+groupB_genes <- rownames(subset(filtered_genes, log2FoldChange < 0))
+
+# Plot PCA using group-specific genes
+pca_data <- plotPCA(dds, intgroup = "group", genes = c(groupA_genes, groupB_genes))
+ggplot(pca_data, aes(PC1, PC2, color = group)) + 
+  geom_point() + 
+  labs(color = "Group") +
+  theme_minimal()
+```
+
+Note: Make sure to install the necessary libraries (`readxl`, `DESeq2`, and `ggplot2`) before running the code. Also, replace the file paths in the `read_excel()` and `read.table()` functions with the actual paths to the files on your system.

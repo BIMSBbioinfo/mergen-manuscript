@@ -1,0 +1,51 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(sva)
+library(reshape2)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Transpose the count table to have genes as columns and samples as rows
+count_table <- t(count_table)
+
+# Normalize the counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ 1)
+dds <- DESeq(dds)
+
+# Extract normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Principal Component Analysis (PCA) plot by group
+df_group <- cbind(normalized_counts, group = annotation_data$group)
+df_group_m <- melt(df_group, id.vars = "group")
+pca_group <- prcomp(t(df_group_m[, -1]))
+pc_group <- as.data.frame(pca_group$x[, 1:2])
+pc_group$group <- df_group_m[, "group"]
+ggplot(pc_group, aes(x = PC1, y = PC2, color = group)) + 
+  geom_point() + 
+  labs(title = "PCA Plot by Group")
+
+# Principal Component Analysis (PCA) plot by LibrarySelection
+df_library <- cbind(normalized_counts, LibrarySelection = annotation_data$LibrarySelection)
+df_library_m <- melt(df_library, id.vars = "LibrarySelection")
+pca_library <- prcomp(t(df_library_m[, -1]))
+pc_library <- as.data.frame(pca_library$x[, 1:2])
+pc_library$LibrarySelection <- df_library_m[, "LibrarySelection"]
+ggplot(pc_library, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
+  geom_point() + 
+  labs(title = "PCA Plot by LibrarySelection")
+}
+```

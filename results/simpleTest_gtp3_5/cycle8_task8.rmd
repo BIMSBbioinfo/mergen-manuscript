@@ -1,0 +1,34 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Create a scatterplot of the two most variable genes.
+
+response:
+```
+# Load the required library
+library(ggplot2)
+
+# Read the data from the "leukemiaExp.txt" file
+data <- read.delim("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Remove the first column (gene names) from the data
+data <- data[, -1]
+
+# Calculate the variability of each gene
+variability <- apply(data, 1, function(x) var(x))
+
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(variability)[order(variability, decreasing = TRUE)]
+
+# Select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000]
+
+# Subset the original data to keep only the most variable genes
+filtered_data <- data[top_1000_genes, ]
+
+# Create a scatterplot of the two most variable genes
+ggplot(filtered_data, aes(x = filtered_data[, 1], y = filtered_data[, 2])) +
+  geom_point() +
+  xlab("Gene 1") +
+  ylab("Gene 2") +
+  ggtitle("Scatterplot of the Two Most Variable Genes")
+```
+

@@ -1,0 +1,50 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+```
+# Load necessary libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(PCAtools)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+
+# Set row names as gene names
+rownames(count_table) <- count_table[,1]
+count_table <- count_table[,-1]
+
+# Extract group labels from annotation data
+group_labels <- annotation_data$group
+
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ group)
+
+# Perform differential expression analysis
+dds <- DESeq(dds)
+
+# Get differentially expressed genes for each group
+group_specific_genes <- list()
+
+for (group in unique(group_labels)){
+  res <- results(dds, contrast=c("group", group, "control"))
+  group_specific_genes[[group]] <- rownames(res)[padj(res) < 0.05 & abs(log2FoldChange(res)) > 1]
+}
+
+# Create a matrix containing group-specific genes only
+group_specific_counts <- count_table[group_specific_genes[[1]], ]
+
+# Plot PCA using group-specific genes
+pca_plot <- plotPCA(group_specific_counts, metadata = annotation_data, color = "group")
+
+# Show PCA plot
+pca_plot
+```
+Note: This code assumes that you have the necessary libraries installed (`readxl`, `DESeq2`, `ggplot2`, `PCAtools`). You may need to install them before running the code using the `install.packages()` function. Also, make sure to adjust the file paths in the code to match the location of your files.

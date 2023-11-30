@@ -1,0 +1,50 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+```
+# Load required libraries
+library(DESeq2)
+library(gplots)
+library(ggplot2)
+library(RColorBrewer)
+library(ggfortify)
+
+# Read the gene expression data file
+leukemia_exp <- read.table("leukemiaExp.txt", header=TRUE, sep="\t", row.names=1)
+
+# Calculate variance across samples for each gene
+variance <- apply(leukemia_exp, 1, var)
+
+# Sort the genes based on their variance in descending order
+sorted_genes <- order(variance, decreasing=TRUE)
+
+# Select the top 1000 most variable genes
+selected_genes <- sorted_genes[1:1000]
+
+# Subset the expression data for the selected genes
+selected_exp <- leukemia_exp[selected_genes, ]
+
+# Compute the z-scores for the expression data
+selected_exp_zscore <- t(scale(t(selected_exp)))
+
+# Perform clustering on the selected genes
+d <- dist(selected_exp_zscore)
+hc <- hclust(d)
+cluster_order <- as.dendrogram(hc)
+cluster_ordered_exp <- selected_exp_zscore[rank.dendrogram(cluster_order), ]
+
+# Plot heatmap with clustering
+heatmap.2(cluster_ordered_exp, trace="none", col=colorRampPalette(brewer.pal(9, "BuGn"))(64), 
+          main="Heatmap with Clustering", xlab="Samples", ylab="Genes")
+
+# Perform PCA on the expression data
+pca <- prcomp(t(selected_exp_zscore))
+
+# Plot PCA
+autoplot(pca, loadings = TRUE, loadings.label = TRUE) + 
+  ggtitle("PCA for Samples") + 
+  xlab("Principle Component 1") + 
+  ylab("Principle Component 2")
+```
+Note: The code assumes that you have installed the required packages (DESeq2, gplots, ggplot2, RColorBrewer, ggfortify) and loaded them into your workspace. The file "leukemiaExp.txt" should be present in the current working directory.

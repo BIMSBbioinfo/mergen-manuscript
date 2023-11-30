@@ -1,0 +1,15 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt".The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  Filter genes based on their variability so we retain the most variable top 1000 genes. 
+
+response:
+```
+# Read the gene expression data from the file
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Calculate the variance of each gene and select the top 1000 genes with highest variance
+top_1000_genes <- gene_data[order(apply(gene_data[, -1], 1, var), decreasing = TRUE)[1:1000], ]
+
+# Print the selected genes
+print(top_1000_genes)
+```
+Note: Make sure to replace "leukemiaExp.txt" with the correct file path if the file is located in a different directory.

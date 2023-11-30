@@ -1,0 +1,35 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
+
+response:
+```
+# Load required libraries
+library(randomForest)
+
+# Read the methylation data
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+
+# Read the subjects data
+subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+
+# Match the dbGap ID column in subjects data with the first row of methylation data
+dbGapId <- subjects[, 2]
+methylation <- methylation[, dbGapId]
+
+# Transpose the methylation data
+methylation <- t(methylation)
+
+# Add the Age column from subjects data to the methylation data
+methylation$Age <- subjects$Age
+
+# Convert Age column to numeric
+methylation$Age <- as.numeric(as.character(methylation$Age))
+
+# Build the random forest model
+model <- randomForest(Age ~ ., data = methylation)
+
+# Display the most important variables for the predictive model
+importance <- importance(model)
+varImpPlot(model)
+```
+```
