@@ -1,0 +1,55 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we will perform the following steps:
+
+1. Read the count table from the "Supplementary_Table_1_exp.xlsx" file.
+2. Read the annotation data from the "SRP021193.colData.tsv" file.
+3. Normalize the counts.
+4. Perform PCA analysis and create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
+
+Assuming that the count table and annotation data files are in the current working directory, here's the code to accomplish the task:
+
+```
+# Load required libraries
+library(tidyverse)
+library(openxlsx)
+library(DESeq2)
+library(pcaMethods)
+library(RColorBrewer)
+
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 1, colNames = TRUE)
+gene_names <- count_table[, 1]
+count_table <- count_table[, -1]
+
+# Read the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Set row names of count table to gene names
+rownames(count_table) <- gene_names
+
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ 1)
+dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+
+# Perform PCA analysis
+pca <- prcomp(t(log2(normalized_counts + 1)))
+
+# Create color vectors for the two PCA plots
+color_by_group <- factor(annotation_data$group)
+color_by_library_selection <- factor(annotation_data$LibrarySelection)
+
+# Create PCA plots
+par(mfrow = c(1, 2))
+
+plot(pca$x[, 1:2], col = color_by_group, pch = 16, main = "PCA Plot - Color by Group")
+
+plot(pca$x[, 1:2], col = color_by_library_selection, pch = 16, main = "PCA Plot - Color by LibrarySelection")
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file names if they are different in your case.

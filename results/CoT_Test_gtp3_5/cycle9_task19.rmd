@@ -1,0 +1,54 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To perform the task, we can follow these steps:
+
+1. Load the necessary packages and the count table data.
+2. Clean and preprocess the count table data.
+3. Load the annotation data and merge it with the count table data.
+4. Normalize the counts.
+5. Perform PCA analysis using the normalized counts.
+6. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
+
+Here's the code to accomplish this task:
+
+```
+# Step 1: Load the necessary packages
+library(tidyverse)
+library(readxl)
+library(PCAtools)
+
+# Step 2: Load and preprocess the count table data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")  # Update the file path accordingly
+
+# Remove rows with NAs (if any)
+count_table <- count_table[complete.cases(count_table), ]
+
+# Extract gene names as row names
+row.names(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
+
+# Step 3: Load and merge the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")  # Update the file path accordingly
+
+# Merge count table and annotation data
+merged_data <- merge(count_table, annotation_data, by.x = "colnames(count_table)", by.y = "SampleID", all.x = TRUE)
+
+# Step 4: Normalize the counts
+normalized_counts <- log2(counts(merged_data)[, 1:ncol(counts(merged_data)) - 2] + 1)
+
+# Step 5: Perform PCA analysis
+pca <- prcomp(t(normalized_counts))
+
+# Step 6: Create PCA plots
+# Color-coded by "group"
+plotPCA(pca, group = merged_data$group, title = "PCA Plot (Color-coded by Group)")
+
+# Color-coded by "LibrarySelection"
+plotPCA(pca, group = merged_data$LibrarySelection, title = "PCA Plot (Color-coded by LibrarySelection)")
+```
+
+Make sure to update the file paths in the code where the count table and annotation data files are located. This code assumes that the count table is in Excel format and the annotation data is in tab-separated values (tsv) format. Adjust the code accordingly if your data is in a different format.
+
+The PCA plots will be displayed as separate windows. You can inspect and save the plots as desired.

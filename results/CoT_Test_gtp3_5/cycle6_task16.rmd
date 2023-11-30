@@ -1,0 +1,43 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To merge the annotation data and gene expression tables, we will use the "sample ids" column from the annotation data as the key to match the columns of the count table. Once we have merged the two tables, we can plot boxplots of the gene expression values per sample and color code the boxplots based on the "group" variable in the annotation data.
+
+Here is an example code to perform the steps:
+
+```
+# Load required libraries
+library(readxl)
+library(ggplot2)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+
+# Set the sample ids column as row names in annotation data
+row.names(annotation_data) <- annotation_data$sample_ids
+
+# Subset the annotation data to include only the relevant columns (sample ids and group)
+annotation_data <- annotation_data[, c("sample_ids", "group")]
+
+# Transpose the count table to have samples as row and genes as columns
+count_table <- t(count_table)
+
+# Merge annotation data and count table
+merged_data <- merge(annotation_data, count_table, by = "sample_ids")
+
+# Plot boxplots
+ggplot(merged_data, aes(x = group, y = value, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Group", y = "Gene Expression Value") +
+  scale_fill_discrete(name = "Group")
+```
+
+Make sure to replace the file names "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths to your data files.
+
+This code will read the count table and annotation data, merge them based on the sample ids, transpose the count table, and plot boxplots of the gene expression values per sample, with color-coded boxplots based on the "group" variable in the annotation data.
+
+Note: This code assumes that the column names in the count table are the gene names, and that the sample ids in the annotation data match the column names in the count table. Adjust the code accordingly if your data is structured differently.

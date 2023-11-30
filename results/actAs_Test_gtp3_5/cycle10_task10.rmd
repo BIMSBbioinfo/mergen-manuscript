@@ -1,0 +1,117 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we will use R programming language and several packages such as "tidyverse" for data manipulation, "factoextra" for clustering analysis, and "dplyr" for data filtering.
+
+First, let's read the gene expression data from the "leukemiaExp.txt" file and load the necessary packages:
+
+```
+# Load necessary packages
+library(tidyverse)
+library(factoextra)
+
+# Read gene expression data
+gene_expression <- read.delim("leukemiaExp.txt", stringsAsFactors = FALSE)
+```
+
+Next, let's filter the genes based on their variability:
+
+```
+# Calculate the variance of each gene across samples
+gene_variances <- apply(gene_expression[, -1], 1, var)
+
+# Order genes based on variance in descending order and select the top 1000 most variable genes
+top_variable_genes <- gene_expression[order(gene_variances, decreasing = TRUE), ][1:1000, ]
+```
+
+Now that we have the top 1000 variable genes, let's perform clustering analysis on the samples:
+
+```
+# Perform hierarchical clustering on the samples
+clustering <- hclust(dist(t(top_variable_genes[, -1])))
+
+# Determine the optimal number of clusters using the elbow method
+fviz_nbclust(t(top_variable_genes[, -1]),
+             FUNcluster = hclust,
+             method = "wss")
+
+# From the elbow method plot, choose an appropriate number of clusters
+
+# Set the desired number of clusters
+num_clusters <- 5
+
+# Perform k-means clustering with the chosen number of clusters
+kmeans_clusters <- kmeans(t(top_variable_genes[, -1]), centers = num_clusters)
+
+# Add the cluster labels to the gene expression data
+top_variable_genes$cluster <- kmeans_clusters$cluster
+```
+
+Finally, let's extract cluster-specific genes for each cluster:
+
+```
+# Create a list to store each cluster's specific genes
+cluster_specific_genes <- list()
+
+# Iterate over each cluster
+for (cluster in 1:num_clusters) {
+  # Get the genes belonging to the current cluster
+  cluster_genes <- top_variable_genes %>% filter(cluster == cluster)
+  
+  # Store the cluster-specific genes in the list
+  cluster_specific_genes[[cluster]] <- cluster_genes
+}
+```
+
+The `cluster_specific_genes` list will contain the cluster-specific genes for each cluster.
+
+Complete code:
+
+```
+# Load necessary packages
+library(tidyverse)
+library(factoextra)
+
+# Read gene expression data
+gene_expression <- read.delim("leukemiaExp.txt", stringsAsFactors = FALSE)
+
+# Calculate the variance of each gene across samples
+gene_variances <- apply(gene_expression[, -1], 1, var)
+
+# Order genes based on variance in descending order and select the top 1000 most variable genes
+top_variable_genes <- gene_expression[order(gene_variances, decreasing = TRUE), ][1:1000, ]
+
+# Perform hierarchical clustering on the samples
+clustering <- hclust(dist(t(top_variable_genes[, -1])))
+
+# Determine the optimal number of clusters using the elbow method
+fviz_nbclust(t(top_variable_genes[, -1]),
+             FUNcluster = hclust,
+             method = "wss")
+
+# From the elbow method plot, choose an appropriate number of clusters
+
+# Set the desired number of clusters
+num_clusters <- 5
+
+# Perform k-means clustering with the chosen number of clusters
+kmeans_clusters <- kmeans(t(top_variable_genes[, -1]), centers = num_clusters)
+
+# Add the cluster labels to the gene expression data
+top_variable_genes$cluster <- kmeans_clusters$cluster
+
+# Create a list to store each cluster's specific genes
+cluster_specific_genes <- list()
+
+# Iterate over each cluster
+for (cluster in 1:num_clusters) {
+  # Get the genes belonging to the current cluster
+  cluster_genes <- top_variable_genes %>% filter(cluster == cluster)
+  
+  # Store the cluster-specific genes in the list
+  cluster_specific_genes[[cluster]] <- cluster_genes
+}
+```
+
+Note: Remember to replace "leukemiaExp.txt" with the actual file path and name containing the gene expression data. Also, adjust the number of clusters based on the elbow method plot or your specific requirements.

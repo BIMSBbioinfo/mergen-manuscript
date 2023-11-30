@@ -50,7 +50,7 @@ output_folder="../results/CoT_Test_gtp3_5/"
 myPromptsFile="../scripts/mergen_prompts.Rmd"
 
 ## number of cycles: how many times each prompt should be run
-cycles=5
+cycles=10
 
 ### --- Being tests 
 
@@ -134,7 +134,7 @@ for(j in 1:cycles){
                            max_tokens = 1200)
     
     # sometimes error 200 is returned, if that's the case it should retry getting
-    # the response until success, check the chat app by the indian boy
+    # the response until success.
     
     #clear response of weird characters, otherwise this will return as error
     response<-clean_code_blocks(response)

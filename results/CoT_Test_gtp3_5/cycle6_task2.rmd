@@ -1,0 +1,21 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". Each row is a gene and each column is a distinct sample. The file is tab separated. The table has gene names on the first column. How many genes and samples does the dataset have?
+
+response:
+To determine the number of genes and samples in the dataset, we can read the gene expression data file into R and then check the dimensions of the data frame.
+
+Here's the code to accomplish this:
+
+```
+# Read the gene expression data from the file
+gene_exp <- read.delim("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Check the dimensions of the data frame
+num_genes <- nrow(gene_exp)  # Number of genes
+num_samples <- ncol(gene_exp)  # Number of samples
+
+num_genes  # Print the number of genes
+num_samples  # Print the number of samples
+```
+
+The variable `num_genes` will store the number of genes in the dataset, while `num_samples` will store the number of samples. The corresponding values will be printed at the end.

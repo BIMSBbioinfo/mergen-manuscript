@@ -1,0 +1,49 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
+
+response:
+To complete this task, we will use the R programming language and some bioinformatics packages. Follow the steps below:
+
+1. Load the required packages:
+```
+      # for reading microarray data
+       # for differential gene expression analysis
+     # for heatmap visualization
+library(Biobase)
+library(DESeq2)
+library(pheatmap)
+```
+
+2. Read the gene expression data into R:
+```
+expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+```
+
+3. Filter genes based on their variability and retain the top 1000 most variable genes using the "DESeq2" package:
+```
+dds <- DESeqDataSetFromMatrix(countData = expression_data, colData = NULL, design = ~ 1)
+dds <- DESeq(dds)
+vr <- varianceStabilizingTransformation(dds)
+variances <- rowVars(assay(vr))
+top_var_genes <- order(variances, decreasing = TRUE)[1:1000]
+filtered_expression_data <- expression_data[top_var_genes, ]
+```
+
+4. Cluster the samples based on the filtered gene expression data:
+```
+dist_mat <- dist(t(filtered_expression_data))
+hc <- hclust(dist_mat, method = "complete")
+sample_clusters <- cutree(hc, k = 5)  # Assuming we want 5 clusters, change 'k' according to your requirement
+```
+
+5. Extract cluster-specific genes for each cluster:
+```
+cluster_genes <- list()
+for (i in unique(sample_clusters)) {
+  cluster_genes[[i]] <- rownames(filtered_expression_data)[sample_clusters == i]
+}
+```
+
+The code above will filter the genes based on their variability and retain the top 1000 most variable genes. Then, it will cluster the samples based on the filtered gene expression data and extract cluster-specific genes for each cluster.
+
+Note: Adjust the number of clusters (k) according to your specific requirements.

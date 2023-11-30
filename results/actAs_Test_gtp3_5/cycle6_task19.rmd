@@ -1,0 +1,63 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, you can use the following steps:
+
+1. Load the necessary libraries, such as `readxl` and `tidyverse`, for reading and manipulating the data.
+
+2. Read the count table and annotation data into separate data frames.
+
+3. Normalize the counts using an appropriate method, such as the Transcripts Per Million (TPM) method. This helps to account for differences in library sizes and gene lengths.
+
+4. Perform PCA analysis on the normalized counts to obtain the principal components.
+
+5. Create two PCA plots, one color-coded by the "group" column in the annotation data and the other color-coded by the "LibrarySelection" column.
+
+Here is the code to complete these tasks:
+
+```
+# Load the required libraries
+library(readxl)
+library(tidyverse)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+
+# Set the row names of count table as the gene names
+rownames(count_table) <- count_table[,1]
+
+# Remove the first column (gene names) from the count table
+count_table <- count_table[, -1]
+
+# Normalize the counts using TPM method
+norm_counts <- count_table / (colSums(count_table) / 1e6)
+
+# Perform PCA on the normalized counts
+pca <- prcomp(t(norm_counts))
+
+# Extract the scores of the first two principal components
+scores <- data.frame(pca$x[, 1:2])
+
+# Add the sample annotations to the scores data frame
+scores <- cbind(scores, annotation_data)
+
+# Create the first PCA plot color-coded by "group"
+plot1 <- ggplot(scores, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color-coded by Group)")
+
+# Create the second PCA plot color-coded by "LibrarySelection"
+plot2 <- ggplot(scores, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color-coded by LibrarySelection)")
+
+# Display the plots
+plot1
+plot2
+```
+
+Note: Make sure to replace the file paths `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual paths to the files on your computer.

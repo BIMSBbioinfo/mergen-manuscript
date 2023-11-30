@@ -1,0 +1,80 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To complete this task, we'll need to do the following steps:
+
+1. Read the count table from the "Supplementary_Table_1_exp.xlsx" file and store it as a data frame.
+2. Read the annotation data from the "SRP021193.colData.tsv" file and store it as a data frame.
+3. Perform statistical tests to identify genes specific for each group.
+4. Filter the count table to include only the genes specific for each group.
+5. Perform PCA on the filtered count table and color code the PCA plot by the group variable.
+
+Here's the code to accomplish these steps:
+
+```
+# Step 1: Read the count table
+library(readxl)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Step 2: Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+
+# Step 3: Perform statistical tests to identify group-specific genes
+library(edgeR)
+counts <- count_table[, -1] # exclude the first column with gene names
+group <- annotation_data$group
+
+# Create a DGEList object
+d <- DGEList(counts = counts, group = group)
+
+# Perform differential expression analysis using edgeR
+d <- calcNormFactors(d)
+d <- estimateDisp(d)
+fit <- glmFit(d)
+
+# Perform group-wise comparisons
+group_specific_genes <- c()
+groups <- unique(group)
+for (i in 1:length(groups)) {
+  group_1 <- groups[i]
+  group_2 <- groups[-i]
+  
+  # Perform hypothesis testing using the likelihood ratio test
+  result <- glmLRT(fit, contrast=c(group_1, group_2))
+  
+  # Identify genes specific for group_1
+  group_specific_genes <- c(group_specific_genes, rownames(result$table[result$table$FDR < 0.05, ]))
+}
+
+# Step 4: Filter the count table to include only the group-specific genes
+group_specific_counts <- count_table[row.names(count_table) %in% group_specific_genes, ]
+
+# Step 5: Perform PCA on the filtered count table
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+library(prcomp)
+
+# Normalize the count data
+normalized_counts <- group_specific_counts[, -1] / rowSums(group_specific_counts[, -1]) * 1e6
+
+# Perform PCA
+pca <- prcomp(normalized_counts[, -1], scale = TRUE)
+
+# Create a data frame with PCA results and annotation data
+pca_data <- as.data.frame(pca$x)
+pca_data$group <- annotation_data$group
+
+# Plot PCA with group color coding
+ggplot(pca_data, aes(PC1, PC2, color = group)) +
+  geom_point(size = 3) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot") +
+  theme_minimal() +
+  theme(legend.title = element_blank()) +
+  geom_text_repel(aes(label = rownames(pca_data)), size = 3)
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" with the actual file path for your count table, and "SRP021193.colData.tsv" with the actual file path for your annotation data.

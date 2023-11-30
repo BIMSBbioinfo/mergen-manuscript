@@ -1,0 +1,26 @@
+prompt:
+I have the following count table for an RNA-seq experiment, "SRP021193.raw_counts.tsv". The first column contains the gene names, the last column is gene length and the rest are samples.The file is tab separated. How many genes and samples does the dataset have?
+
+response:
+To determine the number of genes and samples in the given RNA-seq count table, we can read the file into R and use the appropriate functions to count the number of rows (genes) and columns (samples) in the dataset.
+
+Here's the code to accomplish this task:
+
+```
+# Read the count table file
+count_table <- read.table("SRP021193.raw_counts.tsv", sep = "\t", header = TRUE)
+
+# Count the number of genes
+num_genes <- nrow(count_table)
+
+# Count the number of samples
+num_samples <- ncol(count_table) - 2  # Subtract 2 for the first gene name column and the last gene length column
+
+# Print the results
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
+```
+
+Make sure to replace "SRP021193.raw_counts.tsv" in the `read.table` function with the actual file name and path, if different from the current working directory.
+
+This code will print the number of genes and samples present in the dataset.

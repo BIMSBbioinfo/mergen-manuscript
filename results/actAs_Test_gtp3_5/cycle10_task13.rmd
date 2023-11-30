@@ -1,0 +1,31 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables and calculate number of columns.
+
+response:
+To merge the annotation data and gene expression table, we need to read both files, match the sample IDs, and then combine the data into a single table. Here's the code to accomplish this task:
+
+```
+# Load required libraries
+library(openxlsx)
+
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 1, colNames = TRUE)
+# Transpose the count table to match the annotation data structure
+count_table <- t(count_table)
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
+
+# Match and merge the annotation data with the count table
+merged_data <- merge(annotation_data, count_table, by.x = "sample_id", by.y = "row.names")
+
+# Calculate the number of columns
+num_columns <- ncol(merged_data)
+
+# Print the number of columns
+num_columns
+```
+
+Please make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths or provide the files in the working directory.
+
+Note: This code assumes that the sample ID column in the annotation data is named "sample_id" and the row names in the count table correspond to the sample IDs. If the column names or structure of your files are different, please adjust the code accordingly.

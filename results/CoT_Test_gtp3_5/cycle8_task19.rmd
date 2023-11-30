@@ -1,0 +1,92 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To accomplish this task, we will use the following steps:
+
+1. Load the count table and annotation data.
+2. Normalize the counts.
+3. Perform PCA using the normalized counts.
+4. Create a PCA plot color coded by the "group" column.
+5. Create a PCA plot color coded by the "LibrarySelection" column.
+
+Let's go through each step in detail.
+
+Step 1: Load the count table and annotation data
+```
+# Load the required libraries
+library(readxl)
+library(dplyr)
+
+# Load the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+# Assuming your gene names are in the first column, you can extract them as follows:
+gene_names <- count_table[,1]
+
+# Load the annotation data
+annotations <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+```
+
+Step 2: Normalize the counts
+```
+# Normalize the counts using the DESeq2 package, assuming you have installed it.
+library(DESeq2)
+
+# Remove the gene names from the count table before normalizing
+normalized_counts <- count_table[, -1]
+
+# Create the DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = normalized_counts,
+                              colData = annotations,
+                              design = ~ 1)
+
+# Perform normalization using the DESeq2 package
+dds_norm <- DESeq(dds)
+
+# Extract the normalized counts
+normalized_counts <- counts(dds_norm, normalized = TRUE)
+```
+
+Step 3: Perform PCA using the normalized counts
+```
+# Perform PCA
+pca <- prcomp(t(normalized_counts))
+
+# Extract the PCA scores
+pca_scores <- as.data.frame(pca$x)
+
+# Add sample information to the PCA scores
+pca_scores <- cbind(pca_scores, annotations)
+
+# Rename the column names for better visualization in plots
+colnames(pca_scores) <- c("PC1", "PC2", "SampleID", "Group", "LibrarySelection")
+```
+
+Step 4: Create a PCA plot color coded by the "group" column
+```
+# Load the required library for visualization
+library(ggplot2)
+
+# Create the PCA plot color coded by the "group" column
+pca_plot_group <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color Coded by Group Column)")
+
+# Display the plot
+print(pca_plot_group)
+```
+
+Step 5: Create a PCA plot color coded by the "LibrarySelection" column
+```
+# Create the PCA plot color coded by the "LibrarySelection" column
+pca_plot_library <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot (Color Coded by LibrarySelection Column)")
+
+# Display the plot
+print(pca_plot_library)
+```
+
+Note: You may need to install the required packages using the `install.packages()` function if you haven't already installed them.
+
+That's it! You now have two PCA plots, one color coded by the "group" column and the other color coded by the "LibrarySelection" column, based on the normalized counts from your RNA-seq experiment.

@@ -1,0 +1,50 @@
+prompt:
+I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+response:
+To determine the number of genes and samples in the gene expression dataset, we can use the `readxl` and `dplyr` packages in R to read the Excel file and perform data manipulation.
+
+First, we need to install and load the necessary packages:
+```
+
+
+
+library(readxl)
+library(dplyr)
+```
+Next, we can read the Excel file into a data frame using the `read_excel()` function from the `readxl` package:
+```
+gene_expr_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+```
+To find the number of genes and samples, we can use the `nrow()` and `ncol()` functions:
+```
+num_genes <- nrow(gene_expr_data) - 1  # Subtract 1 for the gene name column
+num_samples <- ncol(gene_expr_data) - 1  # Subtract 1 for the gene name row
+
+num_genes
+num_samples
+```
+The code subtracts 1 from the total number of rows to exclude the row containing gene names and from the total number of columns to exclude the column containing sample names.
+
+Finally, we can print the number of genes and samples:
+```
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
+```
+
+Complete code:
+```
+
+
+
+library(readxl)
+library(dplyr)
+
+gene_expr_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+num_genes <- nrow(gene_expr_data) - 1  # Subtract 1 for the gene name column
+num_samples <- ncol(gene_expr_data) - 1  # Subtract 1 for the gene name row
+
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
+```

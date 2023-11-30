@@ -1,0 +1,65 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Import required libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+
+# Read the count table
+count_table <- read_xls("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Set row names as gene names
+rownames(count_table) <- count_table$Genes
+count_table <- count_table[, -1] # Remove gene names column
+
+# Filter genes specific to each group using statistical tests
+groups <- unique(annotation_data$group)
+specific_genes <- list()
+
+for (group in groups) {
+  samples <- annotation_data$diagnosis[annotation_data$group == group]
+  design <- model.matrix(~0 + samples)
+  colnames(design) <- levels(annotation_data$diagnosis)
+  
+  dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = design)
+  dds <- DESeq(dds)
+
+  results <- results(dds, contrast = c(group, "CTRL_1", group))
+  specific_genes[[group]] <- rownames(results)[results$padj < 0.05 & results$log2FoldChange > 1]
+}
+
+# Extract PCA specific genes and create a new count table
+pca_genes <- Reduce(union, specific_genes)
+pca_count_table <- count_table[pca_genes, ]
+
+# Perform PCA
+pca <- prcomp(t(pca_count_table), scale. = TRUE)
+
+# Plot PCA with color-coded groups
+plot_data <- annotation_data[annotation_data$diagnosis %in% colnames(pca_count_table), ]
+plot_data$pca1 <- pca$x[, 1]
+plot_data$pca2 <- pca$x[, 2]
+
+ggplot(plot_data, aes(x = pca1, y = pca2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "Group")

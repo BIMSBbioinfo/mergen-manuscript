@@ -1,0 +1,51 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To complete this task, we will use the `tidyverse`, `readxl`, `SingleCellExperiment`, and `ggplot2` libraries in R. Please make sure you have these libraries installed before running the code. You will also need to place the "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" files in the working directory of R or provide the correct file paths in the code.
+
+Here's the code to read the count table and annotation data, normalize the counts, and create the PCA plots:
+
+```
+# Load libraries
+library(tidyverse)
+library(readxl)
+library(SingleCellExperiment)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+# Convert count table to SingleCellExperiment object
+sce <- SingleCellExperiment(assays = list(counts = as.matrix(count_table[, -1])), 
+                            colData = annotation_data[row.names(count_table),])
+
+# Normalize counts
+sce <- normalize(sce)
+
+# Perform PCA
+pca <- prcomp(t(log2(counts(sce))), scale = TRUE)
+
+# Create PCA plot color coded by group
+pca_plot_group <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2, color = sce$group)) +
+  geom_point() +
+  labs(title = "PCA Plot - Group Color Coded", x = "PC1", y = "PC2")
+
+# Create PCA plot color coded by LibrarySelection
+pca_plot_libsel <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2, color = sce$LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot - Library Selection Color Coded", x = "PC1", y = "PC2")
+
+# Display the PCA plots
+pca_plot_group
+pca_plot_libsel
+```
+
+This code will read the count table and annotation data into R, convert the count table into a `SingleCellExperiment` object, normalize the counts using the `normalize()` function from the `SingleCellExperiment` package, perform PCA using the `prcomp()` function, and create two PCA plots using `ggplot2`, one color coded by the "group" annotation and the other color coded by the "LibrarySelection" annotation. The plots will be displayed automatically in the R environment.
+
+Please note that the code assumes that the count table has a header row and the gene names are in the first column. Adjust the code accordingly if your data structure is different.
+
+If you encounter any issues or have further questions, feel free to ask.

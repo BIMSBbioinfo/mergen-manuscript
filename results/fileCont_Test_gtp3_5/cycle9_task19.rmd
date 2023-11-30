@@ -1,0 +1,60 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+```
+# Load necessary libraries
+library(openxlsx)
+library(dplyr)
+library(ggplot2)
+
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1)
+
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Remove first column of count table (gene names)
+count_table <- count_table[, -1]
+
+# Normalize counts
+norm_counts <- log2(count_table + 1)
+
+# Merge annotation data with normalized counts
+merged_data <- cbind(annotation_data, t(norm_counts))
+
+# Perform PCA for group
+pca_group <- prcomp(merged_data[, -1], scale. = TRUE)
+
+# Perform PCA for LibrarySelection
+pca_library <- prcomp(merged_data[, -1], scale. = TRUE)
+
+# Create PCA plots
+pca_plot_group <- ggplot(data = merged_data, aes(x = pca_group$x[, 1], y = pca_group$x[, 2], color = group)) +
+  geom_point() +
+  labs(color = "Group") +
+  ggtitle("PCA Plot: Samples Color Coded by Group")
+
+pca_plot_library <- ggplot(data = merged_data, aes(x = pca_library$x[, 1], y = pca_library$x[, 2], color = LibrarySelection)) +
+  geom_point() +
+  labs(color = "Library Selection") +
+  ggtitle("PCA Plot: Samples Color Coded by Library Selection")
+
+# Display the PCA plots
+print(pca_plot_group)
+print(pca_plot_library)
+```
+```

@@ -50,7 +50,7 @@ output_folder="../results/actAs_Test_gtp3_5/"
 myPromptsFile="../scripts/mergen_prompts.Rmd"
 
 ## number of cycles: how many times each prompt should be run
-cycles=5
+cycles=10
 
 ### --- Being tests 
 

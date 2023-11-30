@@ -1,0 +1,37 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To find all CpGs associated with Age but not with sex or Race, we need to perform the following steps:
+
+1. Read the "metRmOlWithDbgapIdHeader.txt" file and store it as a dataframe, where each column represents an individual and each row represents a CpG.
+2. Read the "subjects.txt" file and store it as a dataframe, containing information about the individuals including Age, sex, and Race.
+3. Merge the two dataframes based on the matching dbGap ID column.
+4. Filter out the CpGs where Age is associated but sex or Race is not.
+5. Sort the CpGs by their association with Age.
+6. Display the top 20 CpGs.
+
+Here's the code to accomplish this:
+
+```
+# Step 1: Read "metRmOlWithDbgapIdHeader.txt" file
+metData <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+
+# Step 2: Read "subjects.txt" file
+subjectData <- read.table("subjects.txt", header = TRUE)
+
+# Step 3: Merge the two dataframes based on dbGap ID
+mergedData <- merge(metData, subjectData, by.x = "dbGap ID", by.y = "dbGap ID")
+
+# Step 4: Filter CpGs associated with Age but not with sex or Race
+filteredData <- mergedData[!is.na(mergedData$Age) & is.na(mergedData$sex) & is.na(mergedData$Race), ]
+
+# Step 5: Sort CpGs by association with Age
+sortedData <- filteredData[order(filteredData$Age, decreasing = TRUE), ]
+
+# Step 6: Display top 20 CpGs
+top20CpGs <- sortedData[1:20, "CpG_id"]
+top20CpGs
+```
+
+Please make sure to replace the file names ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") with the actual file names and provide the correct path to the files if they are stored in a different directory.

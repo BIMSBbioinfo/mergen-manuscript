@@ -1,0 +1,30 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+response:
+To count the number of rows and columns in the count table and annotation data, we can use the `read_excel()` function from the `readxl` package in R. Here's how you can do it:
+
+```
+# Install and load the required packages
+
+library(readxl)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read_excel("SRP021193.colData.tsv")
+
+# Count the number of rows and columns for each table
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
+
+annotation_rows <- nrow(annotation_data)
+annotation_cols <- ncol(annotation_data)
+
+# Print the results
+cat("Count Table: Rows =", count_rows, "Columns =", count_cols, "\n")
+cat("Annotation Data: Rows =", annotation_rows, "Columns =", annotation_cols, "\n")
+```
+
+Make sure to provide the correct file paths for the count table and annotation data in the `read_excel()` function. This code will read both tables, count the number of rows and columns for each, and print the results.

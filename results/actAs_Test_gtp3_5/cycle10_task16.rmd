@@ -1,0 +1,30 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+response:
+To merge the annotation data and gene expression tables, we will use the R programming language. Here is the code to perform this task:
+
+```
+# Load required libraries
+library(openxlsx)
+
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+
+# Merge annotation data and gene expression tables
+merged_data <- merge(annotation_data, count_table, by.x = "sample_ids", by.y = 0)
+
+# Plot boxplots for gene expression values per sample
+boxplot_data <- merged_data[,-c(1:2)] # Exclude non-numeric columns from boxplot data
+boxplot(boxplot_data, col = annotation_data$group)
+
+```
+
+Make sure to install and load the `openxlsx` library before running the code. The `read.xlsx` function is used to read the count table from the Excel file, and the `read.delim` function is used to read the annotation data from the TSV file.
+
+The `merge` function is then used to merge the two datasets based on the sample IDs.
+
+Finally, the `boxplot` function is used to plot the boxplots for gene expression values per sample. The `col` argument is set to `annotation_data$group` to color code the boxplots based on the "group" variable in the annotation data.

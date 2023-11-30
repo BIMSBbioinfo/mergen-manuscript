@@ -1,0 +1,53 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To find the CpGs associated with Age but not with sex or Race, we need to perform the following steps:
+
+1. Read the "metRmOlWithDbgapIdHeader.txt" file and store it as a data frame. The first row should be used as column names.
+
+2. Read the "subjects.txt" file and store it as a data frame.
+
+3. Merge the two data frames using the "dbGap ID" column as the key.
+
+4. Filter the merged data frame to include only the columns "Age", "sex", "Race", and the CpG columns.
+
+5. Perform a statistical test (e.g., t-test or ANOVA) between the "Age" column and each CpG column to find the association with Age.
+
+6. Exclude the CpGs that are also associated with sex or Race.
+
+7. Display the top 20 CpGs associated with Age.
+
+Here is the code to accomplish these steps:
+
+```
+# Step 1: Read the "metRmOlWithDbgapIdHeader.txt" file
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+
+# Step 2: Read the "subjects.txt" file
+subjects_data <- read.table("subjects.txt", header = TRUE)
+
+# Step 3: Merge the two data frames
+merged_data <- merge(methylation_data, subjects_data, by.x = "dbGap ID", by.y = "dbGap ID")
+
+# Step 4: Filter the merged data frame
+filtered_data <- merged_data[, c("Age", "sex", "Race", colnames(methylation_data))]
+
+# Step 5: Perform statistical test for each CpG column
+p_values <- sapply(colnames(methylation_data), function(cpg) {
+  if (cpg != "dbGap ID") {
+    t.test(filtered_data$Age, filtered_data[[cpg]])$p.value
+  } else {
+    NA
+  }
+})
+
+# Step 6: Exclude CpGs associated with sex or Race
+significant_cpgs <- colnames(methylation_data)[p_values < 0.05 & is.na(merged_data$sex) & is.na(merged_data$Race)]
+
+# Step 7: Display top 20 CpGs associated with Age
+top_20_cpgs <- head(significant_cpgs, 20)
+top_20_cpgs
+```
+
+Please note that you need to replace the file names in the code with the actual file names you have. Also, make sure the data in the files is formatted correctly according to the description you provided.

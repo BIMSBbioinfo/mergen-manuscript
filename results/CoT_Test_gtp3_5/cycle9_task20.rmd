@@ -1,0 +1,80 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To accomplish this task, we will follow these steps:
+
+1. Read the count table and annotation data.
+2. Perform statistical tests to identify genes specific to each group.
+3. Select the specific genes for each group.
+4. Conduct PCA using the selected genes.
+5. Color code the PCA plot by the group variable in the annotation data.
+
+Let's start with step 1 by reading the count table and annotation data. Assuming the count table is in Excel format, we can use the `readxl` package to read it into R. The annotation data is in TSV (tab-separated values) format, so we can use the `read.table` function.
+
+```
+# Load required packages
+library(readxl)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+```
+
+Moving on to step 2, we will perform statistical tests to identify genes specific to each group. A common statistical test for this purpose is the analysis of variance (ANOVA). We will use the `glm` function to fit a linear model, and then extract the p-values associated with the group factor.
+
+```
+# Perform ANOVA
+anova_results <- apply(count_table[, -1], 1, function(x) {
+  model <- glm(x ~ annotation_data$group)
+  anova_result <- anova(model)
+  anova_result$"Pr(>F)"[1]
+})
+
+# Adjust p-values for multiple testing using the false discovery rate (FDR) method
+adjusted_pvalues <- p.adjust(anova_results, method = "fdr")
+```
+
+Moving on to step 3, we will select the specific genes for each group based on the statistical test results. We can define a threshold for the adjusted p-values, and select the genes with p-values below the threshold for each group.
+
+```
+# Define threshold for adjusted p-values
+pvalue_threshold <- 0.05
+
+# Select group-specific genes
+group_specific_genes <- lapply(levels(annotation_data$group), function(group) {
+  significant_genes <- annotation_data$gene_name[adjusted_pvalues < pvalue_threshold & annotation_data$group == group]
+  return(significant_genes)
+})
+```
+
+Now, let's move on to step 4 and conduct PCA using the selected genes. We will use the `prcomp` function to perform PCA on the count table, considering only the selected group-specific genes.
+
+```
+# Select the subset of count table with group-specific genes
+subset_count_table <- count_table[c("Gene", unlist(group_specific_genes)), ]
+
+# Perform PCA
+pca <- prcomp(subset_count_table[, -1])
+```
+
+Finally, in step 5, we will plot the PCA and color code it by the group variable in the annotation data. We can use the `ggplot2` package to create the PCA plot and add color coding using the `geom_point` function.
+
+```
+# Load required packages
+library(ggplot2)
+
+# Create PCA plot
+pca_plot <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
+  geom_point() +
+  labs(title = "PCA of Group-Specific Genes", x = "PC1", y = "PC2")
+
+# Print the PCA plot
+print(pca_plot)
+```
+
+That's it! The code provided above should allow you to perform statistical tests to find genes specific to each group in your annotation data, and then plot the PCA using only the group-specific genes, with color coding based on the group variable in the annotation data.
+
+Please note that you may need to adjust the file paths and column names in the code based on your specific data format.

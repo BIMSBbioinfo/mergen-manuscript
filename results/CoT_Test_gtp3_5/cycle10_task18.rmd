@@ -1,0 +1,70 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
+
+response:
+To find all CpGs associated with Age but not with sex or Race, we need to perform some data manipulation and filtering. Here's how we can approach this problem step by step:
+
+1. Load the datasets:
+```
+library(tidyverse)
+
+# Load the CpG methylation dataset
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Load the subjects dataset
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+```
+
+2. Extract the relevant columns from the subjects dataset:
+```
+subjects_data <- subjects_data[, c("dbGap.ID", "Age", "sex", "Race")]
+```
+
+3. Transpose the methylation data to have individuals as rows and CpGs as columns:
+```
+methylation_data <- as.data.frame(t(methylation_data))
+```
+
+4. Merge the methylation data with the subjects data based on dbGap.ID:
+```
+merged_data <- merge(subjects_data, methylation_data, by.x = "dbGap.ID", by.y = "Row.names")
+```
+
+5. Filter the merged data to select CpGs associated with Age and not with sex or Race:
+```
+filtered_data <- merged_data %>% filter(!is.na(Age) & is.na(sex) & is.na(Race))
+```
+
+6. Sort the CpGs by age and select the top 20 CpGs:
+```
+top_20_cpgs <- filtered_data[order(filtered_data$Age, decreasing = TRUE), "CpG_id"][1:20]
+```
+
+Here's the complete code:
+
+```
+library(tidyverse)
+
+# Load the CpG methylation dataset
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Load the subjects dataset
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+
+# Extract the relevant columns from the subjects dataset
+subjects_data <- subjects_data[, c("dbGap.ID", "Age", "sex", "Race")]
+
+# Transpose the methylation data to have individuals as rows and CpGs as columns
+methylation_data <- as.data.frame(t(methylation_data))
+
+# Merge the methylation data with the subjects data based on dbGap.ID
+merged_data <- merge(subjects_data, methylation_data, by.x = "dbGap.ID", by.y = "Row.names")
+
+# Filter the merged data to select CpGs associated with Age and not with sex or Race
+filtered_data <- merged_data %>% filter(!is.na(Age) & is.na(sex) & is.na(Race))
+
+# Sort the CpGs by age and select the top 20 CpGs
+top_20_cpgs <- filtered_data[order(filtered_data$Age, decreasing = TRUE), "CpG_id"][1:20]
+```
+
+Please note that you need to replace the file names ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") with the actual file names and make sure they are in the correct directory. Also, adjust the column names in step 2 if the actual column names in your "subjects.txt" file are different.

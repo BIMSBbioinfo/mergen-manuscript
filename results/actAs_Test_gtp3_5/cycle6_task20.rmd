@@ -1,0 +1,118 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To complete this task, we will perform the following steps:
+
+1. Load the count table and annotation data.
+2. Identify the genes specific for each group using statistical tests.
+3. Filter the count table using the specific genes for each group.
+4. Plot PCA using the filtered count table and color code by group.
+
+Here's the code to accomplish these steps:
+
+```
+# Step 1: Load the count table and annotation data
+
+# Install required packages if not already installed
+
+
+# Load required libraries
+library(readxl)
+library(tidyverse)
+library(limma)
+library(pheatmap)
+library(ggplot2)
+library(factoextra)
+
+# Load count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Load annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delimiter = "\t")
+
+# Step 2: Identify genes specific for each group using statistical tests
+# We will use linear modeling and empirical Bayes statistics (limma package)
+
+# Transpose the count table to have samples as rows and genes as columns
+count_table_t <- as.data.frame(t(count_table[-1]))
+
+# Assign sample names as column names
+colnames(count_table_t) <- count_table[, 1]
+
+# Create a design matrix for linear modeling
+design <- model.matrix(~ 0 + group, data = annotation_data)
+
+# Fit the linear model
+fit <- lmFit(count_table_t, design)
+
+# Empirical Bayes statistics for differential expression
+fit_eb <- eBayes(fit)
+
+# Perform pairwise comparisons between groups
+contr <- makeContrasts(
+  group1 - group2,
+  group1 - group3,
+  group1 - group4,
+  levels = colnames(design)
+)
+
+# Fit the linear model with pairwise contrasts
+fit_contr <- contrasts.fit(fit_eb, contrast = contr)
+
+# Perform moderated t-tests
+fit_contr <- eBayes(fit_contr)
+
+# Perform multiple testing adjustment (e.g., Benjamini-Hochberg)
+fit_contr_adj <- decideTests(fit_contr, method = "BH")
+
+# Extract the specific genes for each group
+group1_specific_genes <- rownames(count_table_t)[fit_contr_adj[, 1] == 1]
+group2_specific_genes <- rownames(count_table_t)[fit_contr_adj[, 2] == 1]
+group3_specific_genes <- rownames(count_table_t)[fit_contr_adj[, 3] == 1]
+group4_specific_genes <- rownames(count_table_t)[fit_contr_adj[, 4] == 1]
+
+# Step 3: Filter the count table using the specific genes for each group
+
+# Generate a list of specific genes for each group
+specific_genes <- list(
+  group1 = group1_specific_genes,
+  group2 = group2_specific_genes,
+  group3 = group3_specific_genes,
+  group4 = group4_specific_genes
+)
+
+# Filter the count table for each group
+filtered_count_table <- lapply(specific_genes, function(genes) {
+  count_table[, c("Gene", genes)]
+})
+
+# Step 4: Plot PCA using the filtered count table and color code by group
+
+# Combine the filtered count tables
+filtered_count_table_combined <- Reduce(function(x, y) {
+  merge(x, y, by = "Gene", all = TRUE)
+}, filtered_count_table)
+
+# Remove rows with NA values
+filtered_count_table_combined <- filtered_count_table_combined[complete.cases(filtered_count_table_combined), ]
+
+# Select the count matrix for PCA
+count_matrix_pca <- filtered_count_table_combined[, -1]
+
+# Perform PCA
+pca_result <- prcomp(count_matrix_pca, scale. = TRUE)
+
+# Extract the PCA scores
+pca_scores <- as.data.frame(pca_result$x)
+
+# Add the group information from the annotation data
+pca_scores$group <- annotation_data$group[match(rownames(pca_scores), annotation_data$id)]
+
+# Plot PCA with color coded by group
+fviz_pca_ind(pca_result, col.ind = pca_scores$group)
+```
+
+Make sure to replace the file paths "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual paths to your files.
+
+Note: This code assumes that the column names in the count table and the row names in the annotation data match the sample IDs.

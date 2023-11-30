@@ -1,0 +1,33 @@
+prompt:
+We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. 
+Read the tables count number of rows and columns for each.
+
+response:
+To solve this task, we will use the R programming language and the `data.table` package.
+
+First, we need to read the two datasets and count the number of rows and columns for each.
+
+```
+# Load the data.table package
+library(data.table)
+
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met_data <- fread("metRmOlWithDbgapIdHeader.txt")
+
+# Count the number of rows and columns for the met_data table
+nrows_met <- nrow(met_data) # number of rows
+ncols_met <- ncol(met_data) # number of columns
+
+# Read the "subjects.txt" file
+subjects_data <- fread("subjects.txt")
+
+# Count the number of rows and columns for the subjects_data table
+nrows_subj <- nrow(subjects_data) # number of rows
+ncols_subj <- ncol(subjects_data) # number of columns
+```
+
+This code will read the two datasets using the `fread` function from the `data.table` package. It will then count the number of rows and columns for each dataset using the `nrow` and `ncol` functions.
+
+The variables `nrows_met` and `ncols_met` will store the number of rows and columns for the `met_data` table, while `nrows_subj` and `ncols_subj` will store the number of rows and columns for the `subjects_data` table.
+
+Note: Make sure to replace the file names in the `fread` function with the correct file paths or names in your system.

@@ -1,0 +1,55 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To filter genes based on their variability and retain the top 1000 most variable genes, we can follow these steps:
+
+1. Read the gene expression data from the file "leukemiaExp.txt" and store it in a data frame.
+2. Calculate the variance for each gene across all samples.
+3. Sort the genes based on their variability (variance) in descending order.
+4. Select the top 1000 genes with the highest variability.
+5. Create a subset of the data frame using the selected genes.
+6. Plot a heatmap with clustering based on this subset of genes.
+7. Plot PCA for the samples.
+
+Here's the step-by-step code to perform these tasks:
+
+```
+# Step 1: Read the gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Step 2: Calculate the variance for each gene
+gene_variability <- apply(gene_data[, -1], 1, var)
+
+# Step 3: Sort the genes based on variability
+sorted_genes <- gene_data[order(gene_variability, decreasing = TRUE), ]
+
+# Step 4: Select top 1000 genes with the highest variability
+top_genes <- sorted_genes[1:1000, ]
+
+# Step 5: Create a subset of the data frame with selected genes
+subset_data <- top_genes[, -1]
+
+# Step 6: Plot a heatmap with clustering
+heatmap(as.matrix(subset_data), scale = "row", Colv = NA)
+
+# Step 7: Plot PCA for the samples
+library(ggplot2)
+library(ggrepel)
+library(prcomp)
+
+# Perform PCA
+pca <- prcomp(subset_data)
+
+# Extract PC scores and sample names
+pca_scores <- data.frame(Sample = rownames(subset_data), pca$x)
+
+# Plot PCA
+ggplot(pca_scores, aes(x = PC1, y = PC2, label = Sample)) +
+  geom_point() +
+  geom_text_repel() +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
+```
+
+Note: Make sure to install and load the required packages for running the code. In this case, we used `ggplot2`, `ggrepel`, and `prcomp` packages for plotting and performing PCA.

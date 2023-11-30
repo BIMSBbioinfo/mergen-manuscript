@@ -1,0 +1,51 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To complete this task, we will follow the steps below:
+
+1. Read the count table and annotation data.
+2. Perform statistical tests to find genes specific for each group.
+3. Subset the count table using the group-specific genes.
+4. Plot PCA using the subsetted count table and color code PCA by the group variable.
+
+Here is the code to accomplish these tasks:
+
+```
+# Load required libraries
+library(DESeq2)
+library(ggplot2)
+library(pcaExplorer)
+
+# Set the working directory to the location of the files
+setwd("/path/to/files")
+
+# Step 1: Read the count table and annotation data
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1, sep = "\t")
+annotation <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1, sep = "\t")
+
+# Convert the count table to a matrix
+count_matrix <- as.matrix(count_table)
+
+# Step 2: Perform statistical tests to find genes specific for each group
+dds <- DESeqDataSetFromMatrix(countData = count_matrix, colData = annotation, design = ~group)
+dds <- DESeq(dds)
+results <- results(dds)
+
+# Step 3: Subset the count table using the group-specific genes
+group_specific_genes <- rownames(results)[results$padj < 0.05]
+subset_count_table <- count_table[group_specific_genes, ]
+
+# Step 4: Plot PCA using the subsetted count table and color code PCA by the group variable
+pca_data <- prcomp(t(subset_count_table))
+annotation$group <- as.factor(annotation$group)
+class_color <- data.frame(class = levels(annotation$group)) # Create a dataframe with class and color information
+pca_plot <- plotPCA(pca_data, phenoData = annotation, col = "group", colDataShape = class_color)
+
+# Show the PCA plot
+print(pca_plot)
+```
+
+Please ensure to update the file paths in the `setwd()` function to the actual location of your files.
+
+This code will perform the statistical tests to find group-specific genes using DESeq2, subset the count table based on the significant genes, and plot the PCA with color-coded groups.

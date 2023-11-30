@@ -1,0 +1,96 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+response:
+To solve the task, we will follow these steps:
+
+1. Read the count table and annotation data.
+2. Transpose the count table to have samples as rows and genes as columns.
+3. Filter the genes specific to each group using statistical tests.
+4. Perform PCA on the filtered genes and visualize the results.
+
+Here's the code to complete the task:
+
+```
+# Step 1: Read the count table and annotation data
+
+# Install required packages
+ # for reading Excel files
+
+# Load required packages
+library(readxl)
+library(dplyr)
+library(ggplot2)
+library(matrixStats)
+library(edgeR)
+library(pcaMethods)
+
+# Read the count table from the Excel file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data from the TSV file
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+
+# Step 2: Transpose the count table
+count_table <- as.data.frame(t(count_table))
+colnames(count_table) <- c("Gene", colnames(count_table)[-1]) # Rename the first column to "Gene"
+
+# Step 3: Filter genes specific to each group using statistical tests
+
+# Extract the group variable from the annotation data
+groups <- annotation_data$group
+
+# Apply statistical tests (e.g., differential expression analysis) to identify group-specific genes
+specific_genes <- matrix(nrow = length(unique(groups)), ncol = 0, dimnames = list(unique(groups), NULL))
+
+for (group in unique(groups)) {
+  # Subset the count table and annotation data for the current group
+  group_count_table <- count_table[, c("Gene", colnames(count_table)[groups == group])]
+  group_annotation <- annotation_data[annotation_data$group == group, ]
+  
+  # Use a statistical test (e.g., edgeR) to identify group-specific genes
+  counts <- as.matrix(group_count_table[, -1])
+  design <- model.matrix(~1, data = group_annotation) # Assuming no other variables are needed
+  y <- DGEList(counts = counts, group = group_annotation$group)
+  y <- calcNormFactors(y)
+  y <- estimateDisp(y, design)
+  fit <- glmFit(y, design)
+  lrt <- glmLRT(fit)
+  
+  # FDR-adjusted p-value threshold for identifying significant genes
+  fdr_threshold <- 0.05
+  
+  # Extract the gene names of significantly differentially expressed genes
+  specific_genes_group <- rownames(lrt$table)[lrt$table$FDR < fdr_threshold]
+  
+  # Add the group-specific genes to the result matrix
+  specific_genes[group, ] <- specific_genes_group
+}
+
+# Step 4: Perform PCA on the group-specific genes and visualize the results
+
+# Filter the count table to include only the group-specific genes
+count_table_filtered <- count_table[count_table$Gene %in% specific_genes, ]
+
+# Perform PCA using the filtered count table
+counts_filtered <- as.matrix(count_table_filtered[, -1])
+counts_filtered_scaled <- log2(counts_filtered + 1) # Apply logarithmic transformation and scaling if necessary
+pca_result <- pca(counts_filtered_scaled, nPcs = 2) # Select the number of principal components to include
+
+# Add the group variable to the PCA result data frame
+pca_result <- data.frame(pca_result, group = groups)
+  
+# Plot PCA with color-coded groups
+ggplot(pca_result, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "Group") +
+  theme_minimal()
+```
+
+Please make sure to install the required packages using `install.packages()` if not already installed. Also, update the file paths in the code to match the location of your actual files.
+
+Note that this code assumes you have a specific statistical test in mind (e.g., edgeR) to identify group-specific genes. You may need to modify the code accordingly if you prefer a different approach or statistical test.
+
+Additionally, this code performs PCA on the filtered count table using only the first two principal components for simplicity. You can adjust the `nPcs` parameter in the `pca()` function if you want to include more principal components.
+
+Finally, the code uses the `ggplot2` package to create a scatter plot of the PCA results, with each point colored according to the "group" variable from the annotation data. Feel free to modify the plot aesthetics according to your preferences.

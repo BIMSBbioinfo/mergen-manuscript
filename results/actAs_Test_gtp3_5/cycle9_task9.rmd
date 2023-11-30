@@ -1,0 +1,49 @@
+prompt:
+I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
+
+response:
+To complete this task, we will first load the gene expression data from the "leukemiaExp.txt" file and perform the necessary data processing steps. We will then filter the genes based on their variability and select the top 1000 most variable genes. Finally, we will plot a heatmap with clustering for these genes and also visualize the samples using PCA.
+
+Here is the code to accomplish these tasks:
+
+```
+# Load required libraries
+library(gplots)
+library(pheatmap)
+library(ggplot2)
+library(reshape2)
+library(PCAtools)
+
+# Set the file path for the gene expression data
+file_path <- "leukemiaExp.txt"
+
+# Read the gene expression data into a data frame
+gene_data <- read.delim(file_path, sep = "\t", header = TRUE, row.names = 1)
+
+# Calculate variance across each gene
+variance <- apply(gene_data, 1, var)
+
+# Sort the genes based on their variance in descending order
+sorted_genes <- names(variance)[order(-variance)]
+
+# Select the top 1000 most variable genes
+top_variable_genes <- sorted_genes[1:1000]
+
+# Subset the gene data to retain only the top variable genes
+filtered_data <- gene_data[top_variable_genes, ]
+
+# Generate a heatmap with clustering for the variable genes
+heatmap_data <- as.matrix(filtered_data)  # Convert filtered data to matrix
+heatmap_colors <- colorRampPalette(c("blue", "white", "red"))(n = 100)  # Define heatmap colors
+pheatmap(heatmap_data, color = heatmap_colors)
+
+# Perform PCA on the sample data
+sample_pca <- prcomp(t(gene_data))  # Transpose gene_data to have samples as rows
+plotPCA(sample_pca, metadata = NULL)  # Plot PCA for samples
+```
+
+Make sure to replace "leukemiaExp.txt" with the actual file path to your gene expression data file.
+
+This code will load the gene expression data, calculate the variance of each gene, filter the genes to retain the top 1000 most variable ones, and then plot a heatmap with clustering for these genes. It will also perform PCA on the sample data and plot the results.
+
+Note: Please ensure you have the required libraries installed before running the code. You can install them using the `install.packages()` function if needed.

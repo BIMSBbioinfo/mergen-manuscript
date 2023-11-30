@@ -1,0 +1,118 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+response:
+To accomplish this task, we will need to perform the following steps:
+
+1. Read the count table and annotation data into R.
+2. Normalize the count table.
+3. Perform PCA using the normalized counts.
+4. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
+
+Let's start by reading the count table and annotation data into R. We can use the `read_excel` function from the "readxl" package to read the count table and the `read.delim` function to read the annotation data. Assuming the count table file is in the same directory as the script and named "Supplementary_Table_1_exp.xlsx" and the annotation file is named "SRP021193.colData.tsv", the code would look like this:
+
+```
+# Load required packages
+library(readxl)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+```
+
+Next, we need to normalize the count table. There are several methods available for count normalization in RNA-seq data, such as TPM (Transcripts Per Million), RPKM (Reads Per Kilobase Million), or DESeq2 normalization. For this example, let's use TPM normalization. We can achieve this by dividing each count by the total count per sample and multiplying by 1 million.
+
+```
+# Calculate total counts per sample
+total_counts <- colSums(count_table[, -1]) # Exclude the first column (gene names)
+
+# Normalize counts using TPM
+normalized_counts <- t(t(count_table[, -1]) / total_counts) * 1e6
+```
+
+Now that we have the normalized counts, we can perform PCA using the `prcomp` function in R. PCA is a dimensionality reduction technique that helps visualize the variability in the data.
+
+```
+# Perform PCA on the normalized counts
+pca <- prcomp(normalized_counts)
+
+# Extract the scores (coordinates) for the samples in the PCA plot
+pca_scores <- pca$x
+```
+
+Finally, let's create the two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection". We can use the `ggplot2` package for this task.
+
+```
+# Load required packages
+library(ggplot2)
+
+# Add annotation data to the PCA scores
+pca_scores$group <- annotation_data$group
+pca_scores$LibrarySelection <- annotation_data$LibrarySelection
+
+# PCA plot color-coded by "group"
+pca_plot_group <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot - Color-coded by Group")
+
+# PCA plot color-coded by "LibrarySelection"
+pca_plot_libsel <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot - Color-coded by Library Selection")
+
+# Display the PCA plots
+pca_plot_group
+pca_plot_libsel
+```
+
+This code will generate two separate PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
+
+I hope this helps! Let me know if you have any further questions.
+
+Full code:
+
+```
+# Load required packages
+library(readxl)
+library(ggplot2)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+
+# Calculate total counts per sample
+total_counts <- colSums(count_table[, -1]) # Exclude the first column (gene names)
+
+# Normalize counts using TPM
+normalized_counts <- t(t(count_table[, -1]) / total_counts) * 1e6
+
+# Perform PCA on the normalized counts
+pca <- prcomp(normalized_counts)
+
+# Extract the scores (coordinates) for the samples in the PCA plot
+pca_scores <- pca$x
+
+# Add annotation data to the PCA scores
+pca_scores$group <- annotation_data$group
+pca_scores$LibrarySelection <- annotation_data$LibrarySelection
+
+# PCA plot color-coded by "group"
+pca_plot_group <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot - Color-coded by Group")
+
+# PCA plot color-coded by "LibrarySelection"
+pca_plot_libsel <- ggplot(pca_scores, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot - Color-coded by Library Selection")
+
+# Display the PCA plots
+pca_plot_group
+pca_plot_libsel
+```
+
+Please note that this code assumes that you have the necessary packages (`readxl`, `ggplot2`) installed in your R environment. If not, you can install them using the `install.packages` function.
