@@ -1,0 +1,54 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+I apologize for that. It seems some of your gene names are duplicated. The issue is that rownames in R must be unique. Here, we will use the make.names function to assure that rownames are unique.
+
+```
+# Required Libraries
+library(readxl)    # Import .xlsx file
+library(DESeq2)    # Differential gene expression
+library(ggplot2)   # Plotting
+
+# Import matrices
+count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+rownames(count_data) <- make.names(count_data$Genes, unique = TRUE)
+count_data$Genes <- NULL
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
+
+# Create DESeq object
+dds <- DESeqDataSetFromMatrix(countData = count_data, colData = annotation_data, design= ~ group)
+
+# Run DESeq function
+dds <- DESeq(dds)
+
+# Retrieve the result
+res <- results(dds)
+
+# Extract significant DE genes
+sig_genes <- res[which(res$padj < 0.05), ]
+
+# Subset original count data by these specific genes
+new_count_data <- count_data[rownames(count_data) %in% rownames(sig_genes), ]
+
+# Perform rlog transformation
+rld <- rlog(dds, blind = FALSE)
+
+# PCA
+plotPCA(rld, intgroup = "group")
+```
+
+In this code, `make.names(count_data$Genes, unique = TRUE)` will make sure the gene names are unique by appending '.#'' to the end of duplicate names where '#' is an incremental number.

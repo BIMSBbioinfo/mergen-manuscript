@@ -1,0 +1,50 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+You can use the readxl, tidyverse, and ggplot2 libraries in R to accomplish this. Make sure to set the correct working directory before running the following code.
+
+The script below reads the excel file containing the count table and the .tsv file containing the annotation data. The 'merge' function is used to merge data frames by 'diagnosis' column which matches the proper sample column of gene expression data. It creates a new data frame, which sets the stage for creating the boxplot. The ggplot function creates the boxplot, which is colored by the 'group' variable in the annotation data.
+
+Here is the script:
+
+```
+# Load required libraries
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+
+# Read the excel file
+exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the .tsv file
+annot_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+
+# Transform the expression data from wide to long format
+exp_data_long <- gather(exp_data, diagnosis, expression, -Genes)
+
+# Merge annotation and expression data by diagnosis column
+merged_data <- merge(exp_data_long, annot_data, by.x = "diagnosis", by.y = "diagnosis")
+
+# Plot boxplots for gene expression values per sample and color code boxplots based on group variable
+ggplot(merged_data, aes(x = diagnosis, y = expression, fill = group)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+Please make sure that the `merged_data` dataframe contains the merged data from the expression and annotation information. Also, replace `group` in `fill = group` with the actual column name in your annotation data that you want to group the boxplots by.
+
+This initial ggplot call creates a boxplot. The 'aes' function specifies that the x-axis should be the diagnosis, the y-axis should be the expression, and the fill of the boxplot should be based on the group. The 'geom_boxplot' function creates the boxplot. The 'theme' call specifies that the x-axis text should be rotated by 45 degrees.

@@ -1,0 +1,74 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+Apologies for the confusion earlier. The error suggests that an incorrect object is being passed to the `plotPCA` function. We actually need to calculate variance stabilizing transformed data using `vst` function for PCA plot. Here's the correct code:
+
+```
+# load necessary packages
+library(DESeq2)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+
+# read the count data
+countdata <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = T)
+
+# check and handle duplicate row names
+countdata$Genes <- make.unique(as.character(countdata$Genes))
+
+# set rownames
+rownames(countdata) <- countdata$Genes
+countdata$Genes <- NULL
+
+# read the annotation data
+coldata <- read.delim("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+
+# ensure the order of samples matches between two data frames
+countdata <- countdata[, rownames(coldata)]
+
+# define the DESeq2 dataset
+dds <- DESeqDataSetFromMatrix(countData = countdata, colData = coldata, design = ~ group)
+
+# normalize and transform the data
+dds <- DESeq(dds)
+dds <- vst(dds)
+
+# perform statistical testing for each group
+resList <- lapply(levels(coldata$group), function(g){
+  res <- results(dds, contrast = c("group", g, "other group name"))
+  return(res)
+})
+
+# list of differentially expressed genes for each group
+degList <- lapply(resList, function(x){ rownames(x)[which(x$padj < 0.05)] })
+
+# plot PCA only using group-specific genes
+plotPCA <- function (dds, intgroup = "group", ntop = 500, returnData = FALSE) {
+  data <- plotPCA(dds, intgroup = intgroup, ntop = ntop, returnData = TRUE)
+  percentVar <- round(100 * attr(data, "percentVar"))
+  rv <- ggplot(data, aes(PC1, PC2, color = dds$group)) +
+    geom_point(size = 3) +
+    xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+    ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+    coord_fixed()
+  if (returnData)
+    return(rv)
+  print(rv)
+}
+plotPCA(dds, intgroup = "group")
+```
+As before, replace "other group name" with the appropriate group name from your study. The code calculates group-specific genes, carries out variance stabilization transformation, and plots a PCA plot colored by "group". Please ensure the appropriate packages installed for this script.

@@ -1,0 +1,50 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+I apologize for misunderstanding your requirement. If there are duplicate gene names in your count data, assigning them as row names will throw an error, as row names must be unique. To resolve this, we can create a new column for gene names and handle duplicates by appending a suffix to make them unique. Here's the revised code:
+
+```
+#install and load necessary libraries
+if (!require("readxl")) 
+if (!require("tidyverse")) 
+library(readxl)
+library(tidyverse)
+
+#load count data and annotation data
+expr_data <- read_excel("Supplementary_Table_1_exp.xlsx") 
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+
+#process data to make gene names unique
+expr_data <- expr_data %>%
+  mutate(Genes = make.names(Genes, unique = TRUE))
+
+#convert expr_data to long format
+expr_data_long <- expr_data %>%
+  gather(key = "diagnosis", value = "gene_expression", -Genes)
+
+# merge the data
+merged_data <- merge(expr_data_long, annotation_data, by = "diagnosis")
+
+# plot boxplot
+ggplot(merged_data, aes(x=diagnosis, y=gene_expression, fill=group)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  labs(title="Boxplot of gene expression values per sample", 
+       x="Sample", y="Gene Expression Value")
+```
+
+In the code above, `make.names()` is used to make the gene names unique by appending a suffix to the duplicated names. I hope this code helps.

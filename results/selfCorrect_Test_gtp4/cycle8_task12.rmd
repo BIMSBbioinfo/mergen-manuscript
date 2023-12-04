@@ -1,0 +1,38 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+Sure, here's some R code that reads the data using "readxl" and "read.delim" function respectively and then counts the number of rows and columns.
+
+Make sure the input files are in your working directory if you specify only the file names like what I did here. Alternatively, you can use the complete path to your file.
+
+```
+library(readxl)
+
+# Read the RNA-seq count table
+count_table <- read_excel('Supplementary_Table_1_exp.xlsx')
+
+# Print the number of rows and columns
+cat('The RNA-seq count table is', nrow(count_table), 'x', ncol(count_table), '\n')
+
+# Read the annotation data
+annotation <- read.delim('SRP021193.colData.tsv', header = TRUE, sep="\t")
+
+# Print the number of rows and columns
+cat('The annotation data is', nrow(annotation), 'x', ncol(annotation), '\n')
+```
+
+The above code makes use of `read_excel` function from `readxl` package and `read.delim` function from base R to read the Excel and TSV files respectively. It then uses `nrow` and `ncol` functions to count the number of rows and columns in each data set.

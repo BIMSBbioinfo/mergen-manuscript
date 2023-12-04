@@ -1,0 +1,33 @@
+prompt:
+I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+response:
+You would firstly need to install the 'readxl' package and load it to your environment. Then, you can use the read_excel() function to import the excel file to a data frame. Lastly, you can use the dim() function to get the number of rows (genes) and columns (samples). 
+
+Here is the R code to perform this:
+
+```
+# Installing the package (you only need to do this once)
+
+
+# Loading the package
+library(readxl)
+
+# Reading the excel file
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Getting the number of genes and samples
+num_genes <- dim(data)[1]
+num_samples <- dim(data)[2] - 1  # subtract 1 to exclude the column of gene names
+
+num_genes
+num_samples
+```

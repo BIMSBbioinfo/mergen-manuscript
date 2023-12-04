@@ -1,0 +1,83 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+Here is the R code for your task. You may need to install packages if not done already.
+
+First we load the DESeq2 and ggplot packages,  read in the count data and the sample annotation data, and create a DESeqDataSet from the count data. Then normalize the count data.
+For PCA plotting, we extract the rlog transformed values for plotting and make PCA plot. Colors of points in PCA plot are based on "group" and "LibrarySelection".
+
+Here is the R code:
+
+```
+# Install necessary packages 
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    
+BiocManager::install("DESeq2")
+
+
+
+
+# Load necessary packages
+library(DESeq2)
+library(ggplot2)
+library(readxl)
+library(tidyverse)
+
+# Read in the count data
+count_data <- read_excel('Supplementary_Table_1_exp.xlsx')
+
+# Read in the sample annotation data
+col_data <- read_delim('SRP021193.colData.tsv', delim = '\t')
+
+# Make sure that the sample names match 
+rownames(col_data) <- col_data$diagnosis
+all(colnames(count_data)[-1] %in% rownames(col_data))
+
+# Create a DESeqDataSet
+dds <- DESeqDataSetFromMatrix(countData = count_data[, -1], colData = col_data, design = ~ 1)
+
+# Normalize counts
+dds <- estimateSizeFactors(dds)
+norm_counts <- counts(dds, normalized=TRUE)
+
+# PCA plot
+# We are using rlog transformation for PCA plot which is better for making PCA plots since it does not over emphasize the very highly expressed genes for determining the direction of the PC's.
+rld <- rlog(dds)
+pcadata <- plotPCA(rld, intgroup = c("group", "LibrarySelection"), returnData = TRUE)
+percentVar <- round(100*attr(pcadata, "percentVar"))
+
+# Create PCA plots color coded by different factors.
+# PCA plot color code by Group.
+ggplot(pcadata, aes(PC1, PC2, color=group)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+  coord_fixed() +
+  ggtitle("PCA plot (Colored by Group)") +
+  theme_bw()
+
+# PCA plot color code by LibrarySelection.
+ggplot(pcadata, aes(PC1, PC2, color=LibrarySelection)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+  coord_fixed() +
+  ggtitle("PCA plot (Colored by LibrarySelection)") +
+  theme_bw()
+
+```
+You need to replace file paths with actual paths of the files in your local machine.

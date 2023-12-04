@@ -1,0 +1,65 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+Apologies for the confusion earlier. The error indicates that the sample order in the gene expression data (gene_data) does not match the sample order in the annotation data (sample_data). The names in both datasets need to match and also be in the same order for the analysis to work. Here is the corrected code. 
+
+In this corrected code, we'll re-order the columns in gene_data based on the row order in sample_data to ensure they are matched correctly:
+
+```
+# Import the required libraries
+library("DESeq2")
+library("readxl")
+library("readr")
+
+# Import gene expression data
+gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Import sample annotation data
+sample_data <- read_tsv("SRP021193.colData.tsv")
+
+# Create unique gene labels
+gene_data <- gene_data %>% mutate(Genes = make.names(Genes, unique = TRUE))
+
+# Set the row names of the gene_data as the 'Genes' column
+rownames(gene_data) <- gene_data$Genes
+
+# Remove the 'Genes' column
+gene_data$Genes <- NULL
+
+# Reorder the columns of gene_data to match the row order in sample_data
+gene_data <- gene_data[, rownames(sample_data)]
+
+# Build DESeqDataSet
+dds <- DESeqDataSetFromMatrix(countData = gene_data, colData = sample_data, design = ~ group)
+
+# Run DESeq
+dds <- DESeq(dds)
+
+# Get result
+res <- results(dds)
+
+# Handle NAs in p-adjust
+res <- na.omit(res)
+
+# Extract group-specific genes
+group_specific_genes <- res[res$padj < 0.05,]
+
+# Plot PCA for group-specific genes using DESeq2
+plotPCA(dds, intgroup = "group")
+```
+
+Please take note that for the right analysis, replace 'group' with actual group labels from your data. Also, make sure that after re-ordering you assert again if the column order of gene_data matches the row order of sample_data.

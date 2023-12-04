@@ -1,0 +1,46 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+In R, you will use the 'readxl' package to read the xlsx file and 'read.delim()' function to read tsv file. Here is the code to perform this task:
+
+```
+# Load necessary package
+  
+library(readxl)
+
+# Read the .xlsx file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
+
+# Check the dimension of this count table
+nrow_count_table <- nrow(count_table)
+ncol_count_table <- ncol(count_table)
+
+# Read the .tsv file
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep="\t")
+
+# Check the dimension of this annotation data
+nrow_annotation_data <- nrow(annotation_data)
+ncol_annotation_data <- ncol(annotation_data)
+
+## Output the number of rows and columns for each table
+nrow_count_table
+ncol_count_table
+nrow_annotation_data
+ncol_annotation_data
+```
+This R script reads in each of the two files, calculates number of rows and columns using the utility functions nrow() and ncol(), then prints out these values. You will need to replace the file paths with your actual file paths.
+

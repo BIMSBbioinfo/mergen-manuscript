@@ -1,0 +1,71 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+I apologize for the confusion. The error might be resulting because the annotation data does not match with count data.
+
+To ensure proper gene selection and calculation, let's first read the excel file and assign its first column as rownames. After reading the files, we will make sure column names of the count data and rownames of coldata data frame (representing samples) are in the same order.
+
+Here's the reworked code:
+
+```
+# load necessary packages
+library(DESeq2)
+library(readxl)
+library(dplyr)
+library(factoextra)
+
+# read count data from excel file
+count_data <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+
+# make sure gene names in 'Genes' column are unique
+count_data$Genes <- make.unique(as.character(count_data$Genes))
+
+# set 'Genes' column as rownames 
+rownames(count_data) <- count_data$Genes 
+count_data <- count_data[,-1] # remove the first column (genes)
+
+# read sample annotation data
+col_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+
+# make sure the sample order in count data and col data match
+correct_order <- match(col_data$diagnosis, colnames(count_data))
+count_data <- count_data[, correct_order]
+
+# ensure rownames of col data is sample names
+rownames(col_data) <- col_data$diagnosis
+
+# create DESeqDataSet
+dds <- DESeqDataSetFromMatrix(countData = count_data, colData = col_data, design = ~group)
+
+# run DESeq2 analysis
+dds <- DESeq(dds)
+res <- results(dds)
+
+# find genes that are specific to each group - use an absolute log2FoldChange cutoff of 2
+group_specific_genes <- rownames(res)[abs(res$log2FoldChange) > 2]
+
+# subset count data for those genes
+group_specific_count_data <- count_data[group_specific_genes, ]
+
+# perform PCA
+pca_res <- prcomp(t(group_specific_count_data))
+
+# create PCA plot, coloring by "group"
+fviz_pca_ind(pca_res, habillage = col_data$group, title = "PCA - group specific genes")
+```
+
+This code should be able to conduct differential expression analysis to identify group-specific genes and visualize them through PCA plot with groups color-coded.

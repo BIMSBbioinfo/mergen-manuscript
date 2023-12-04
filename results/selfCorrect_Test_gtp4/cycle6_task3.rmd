@@ -1,0 +1,32 @@
+prompt:
+I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+response:
+Here's the R code to load an Excel file and inspect its dimensions (number of samples and genes).
+
+First, you'll need the readxl package. If you haven't installed it yet, remember to do so with .
+
+```
+# Load the required package.
+library(readxl)
+
+# Load the data.
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Get the dimensions of the data.
+num_genes  <- nrow(data)                      # Number of genes.
+num_samples <- ncol(data) - 1                  # Number of samples.
+
+# Print the results.
+print(paste("This dataset has", num_genes, "genes and", num_samples, "samples."))
+```
+
+This code assumes that the first column of the dataframe contains the gene names and the rest of the columns have the expression data for each sample. The count of samples is thus the total number of columns minus one.

@@ -1,0 +1,75 @@
+prompt:
+I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
+
+here are first few lines of the file(s).
+
+Supplementary_Table_1_exp.xlsx:
+Genes	CASE_1	CASE_2	CASE_3	CASE_4	CASE_5	CASE_6	CTRL_1	CTRL_2	CTRL_3	CTRL_4	CTRL_5	CTRL_6
+TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	 0
+TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
+
+
+SRP021193.colData.tsv:
+diagnosis	group	LibrarySelection
+CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
+
+
+response:
+I apologize for the confusion; it seems an important line is missing to define `design` before glmFit is called. Here is the corrected R code. The error is because the variable `design` was not defined before being used in the glmFit function.
+
+```
+# load required libraries
+library(edgeR) 
+library(gplots)
+library(ggplot2)
+library(readxl)
+library(FactoMineR)
+library(factoextra)
+library(tidyverse)
+
+# read the count data and handle duplicates in gene names
+count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+duplicate <- duplicated(count_data$Genes)
+count_data$Genes[duplicate] <- 
+  paste(count_data$Genes[duplicate], "_dup_", 1:sum(duplicate), sep='')
+rownames(count_data) <- count_data$Genes
+count_data$Genes <- NULL
+
+# read the annotation data
+anno_data <- read.delim("SRP021193.colData.tsv", row.names = 1)
+
+# convert the count data and annotation data into a DGEList object and normalize it
+dge <- DGEList(counts = count_data, group = anno_data$group)
+dge <- calcNormFactors(dge)
+
+# estimate the common, trended, and tag-wise dispersion
+dge <- estimateDisp(dge)
+
+# Define design
+design <- model.matrix(~anno_data$group)
+
+# applying generalized linear model (GLM) likelihood ratio test
+fit <- glmFit(dge,design)
+lrt <- glmLRT(fit)
+
+# get the table
+gene <- topTags(lrt, n=nrow(dge))$table
+
+# select differentially expressed genes
+de.genes <- row.names(gene)[gene$FDR < 0.05]
+
+# Perform Principal Component Analysis on selected genes
+pcr <- prcomp(t(dge$counts[de.genes,,drop=FALSE]))
+
+# create a data frame to be used for plotting PCA
+df <- as.data.frame(pcr$x)
+df$group <- factor(anno_data$group)
+
+# Plotting PCA and color-code it by group variable
+ggplot(df, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 2, alpha = 0.8) +
+  theme_classic() +
+  labs(color = "Group")
+```
+
+In this script the `design` object is updated to correctly utilize the group labels from the annotation data. This design matrix is input to the `glmFit()` function utilized for the differential expression analysis.
