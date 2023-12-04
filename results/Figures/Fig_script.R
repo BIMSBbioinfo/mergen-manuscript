@@ -1,6 +1,6 @@
 
 direcs <- c("simpleTest_gtp3_5","selfCorrect_Test_gtp3_5",
-            "fileCont_Test_gtp3_5","CoT_Test_gtp3_5","actAs_Test_gtp3_5")
+            "fileCont_Test_gtp3_5","CoT_Test_gtp3_5","actAs_Test_gtp3_5", 'selfCorrect_Test_gtp4')
 
 for (i in direcs){
   assign(paste0(i,"_res"),read.table(paste0(i,"/results1_10.txt"),header=TRUE))
@@ -63,8 +63,10 @@ require(patchwork)
 # make more colors
 my.colors <-
   colorRampPalette(c('#272C63', '#4BBDD4', '#ACAEAD'))
-my.colors(7)
 
+
+my.other.colors <-
+  colorRampPalette(c('#f8e86b', '#890404'))
 
 # plot generation:
 # ---------------------------------------------------------------------------------------------------
@@ -74,10 +76,18 @@ simple <- matr_plot[matr_plot$experiment=="simple",]
 simple_CoT_actAs <- matr_plot[(matr_plot$experiment=="simple" | matr_plot$experiment=="CoT" |
                                  matr_plot$experiment=="actAs"),]
 simple_filecont <- matr_plot[(matr_plot$experiment=="simple" | matr_plot$experiment=="fileCont"), ]
+all <- matr_plot[(matr_plot$experiment!="selfCorrect_Test_gtp4"),]
+selfcorrect_gtp3vsgtp4 <- matr_plot[(matr_plot$experiment=="selfCorrect" | 
+                                     matr_plot$experiment=="selfCorrect_Test_gtp4"),]
+
+#setting nice names for this matrix
+selfcorrect_gtp3vsgtp4[selfcorrect_gtp3vsgtp4$experiment=="selfCorrect","experiment"] <- "GTP-3.5-turbo"                             
+selfcorrect_gtp3vsgtp4[selfcorrect_gtp3vsgtp4$experiment=="selfCorrect_Test_gtp4","experiment"] <- "GTP-4"
 
 
-my_subs <- list(simple,simple_CoT_actAs,simple_filecont,matr_plot)
-names <- c("simple","simple_CoT_actAs","simple_filecont", "all")
+
+my_subs <- list(simple,simple_CoT_actAs,simple_filecont,all,selfcorrect_gtp3vsgtp4)
+names <- c("simple","simple_CoT_actAs","simple_filecont", "all", "gtp3.5_vs_gtp4")
 
 
 
@@ -108,34 +118,38 @@ plot.save <- function(plot,
 
 
 
+library(ggbeeswarm)
 
-
-for (i in 1:4){
+for (i in 1:5){
   
   # get df:
   df <- as.data.frame(my_subs[i])
   
   # scatterplot error vs response length
   p1<-ggplot(df, aes(x=factor(error),color=factor(complexity_byhand),y=nchar)) +
-    geom_beeswarm()+
-    scale_colour_manual(values = my.colors(5),name="Complexity")+
+    facet_wrap(~experiment,scales='free',strip.position = "bottom")+
+    geom_beeswarm(size=3)+
+    scale_colour_manual(values = my.other.colors(5),name="Complexity")+
     xlab("Error")+
     ylab("Response length") +
     theme_minimal()+
-    theme(axis.text.x = element_text(angle = 60,hjust=1,size=12),
-          axis.text.y = element_text(angle = 60,hjust=1,size=12),
-          axis.title=element_text(size=18))+
-  facet_grid(~experiment,scales='free')
+    theme(axis.text.x = element_text(angle = 60,hjust=1,size=16),
+          axis.text.y = element_text(angle = 60,hjust=1,size=16),
+          axis.title=element_text(size=18),
+          strip.text = element_text(size = 16),
+          legend.title = element_text(size=14),
+          legend.text = element_text(size=12))
+  
   
   # save p1:
   nm <- names[i]
   filename <- paste0(nm,"_scatter")
-  ggsave(paste0(filename,".pdf"),width = 20, height = 20, units = "cm")
-  ggsave(paste0(filename,".png"),width = 20, height = 20, units = "cm")
+  ggsave(paste0("./Figures/",filename,".pdf"),width = 20, height = 20, units = "cm")
+  ggsave(paste0("./Figures/",filename,".png"),width = 20, height = 20, units = "cm")
   
   
-  resplot <- df
-  bp <- dplyr::group_by(resplot,experiment,complexity_byhand) %>% summarise(execution=1-sum(error)/length(error))
+  # prepare for barplot
+  bp <- dplyr::group_by(df,experiment,complexity_byhand) %>% summarise(execution=1-sum(error)/length(error))
   
   p2<-ggplot(bp, aes(x = complexity_byhand, y = execution,fill=experiment)) + 
     geom_bar(position="dodge", stat="identity")+
@@ -154,14 +168,16 @@ for (i in 1:4){
   p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
                              values = mycols)+
     theme_minimal()+
-    theme(axis.text.x = element_text(angle = 60,hjust=1,size=12),
-          axis.text.y = element_text(angle = 60,hjust=1,size=12),
-          axis.title=element_text(size=18))
+    theme(axis.text.x = element_text(angle = 60,hjust=1,size=16),
+          axis.text.y = element_text(angle = 60,hjust=1,size=16),
+          axis.title=element_text(size=18),
+          legend.title = element_text(size=14),
+          legend.text = element_text(size=12))
   
   # save p2:
   filename <- paste0(nm,"_bar")
-  ggsave(paste0(filename,".pdf"),width = 20, height = 20, units = "cm")
-  ggsave(paste0(filename,".png"),width = 20, height = 20, units = "cm")
+  ggsave(paste0("./Figures/",filename,".pdf"),width = 20, height = 20, units = "cm")
+  ggsave(paste0("./Figures/",filename,".png"),width = 20, height = 20, units = "cm")
   
   # nest together and save
   nested <- (p1 + theme(plot.tag = element_text(face = 'bold',size=20))|
@@ -172,8 +188,8 @@ for (i in 1:4){
   nested
   # save nested
   filename <- paste0(nm,"_nested")
-  plot.save(nested, width = 1600, height = 900, text.factor = 1,filename = paste0(filename,".pdf"))
-  plot.save(nested, width = 1600, height = 900, text.factor = 1,filename = paste0(filename,".png"))
+  plot.save(nested, width = 1600, height = 900, text.factor = 1,filename = paste0("./Figures/",filename,".pdf"))
+  plot.save(nested, width = 1600, height = 900, text.factor = 1,filename = paste0("./Figures/",filename,".png"))
   
 }
 
