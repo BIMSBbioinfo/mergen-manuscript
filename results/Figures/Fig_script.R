@@ -127,7 +127,7 @@ for (i in 1:5){
   
   # scatterplot error vs response length
   p1<-ggplot(df, aes(x=factor(error),color=factor(complexity_byhand),y=nchar)) +
-    facet_wrap(~experiment,scales='free',strip.position = "bottom")+
+    facet_wrap(~experiment,scales='fixed',strip.position = "bottom")+
     geom_beeswarm(size=3)+
     scale_colour_manual(values = my.other.colors(5),name="Complexity")+
     xlab("Error")+
@@ -137,8 +137,8 @@ for (i in 1:5){
           axis.text.y = element_text(angle = 60,hjust=1,size=16),
           axis.title=element_text(size=18),
           strip.text = element_text(size = 16),
-          legend.title = element_text(size=14),
-          legend.text = element_text(size=12))
+          legend.title = element_text(size=15),
+          legend.text = element_text(size=14))
   
   
   # save p1:
@@ -171,8 +171,8 @@ for (i in 1:5){
     theme(axis.text.x = element_text(angle = 60,hjust=1,size=16),
           axis.text.y = element_text(angle = 60,hjust=1,size=16),
           axis.title=element_text(size=18),
-          legend.title = element_text(size=14),
-          legend.text = element_text(size=12))
+          legend.title = element_text(size=15),
+          legend.text = element_text(size=14))
   
   # save p2:
   filename <- paste0(nm,"_bar")
