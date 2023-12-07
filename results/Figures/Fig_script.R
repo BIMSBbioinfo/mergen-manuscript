@@ -125,10 +125,16 @@ for (i in 1:5){
   # get df:
   df <- as.data.frame(my_subs[i])
   
+  if (names[i]=="all"){
+    point_size = 1
+  }else{
+    point_size = 3
+  }
+  
   # scatterplot error vs response length
   p1<-ggplot(df, aes(x=factor(error),color=factor(complexity_byhand),y=nchar)) +
     facet_wrap(~experiment,scales='fixed',strip.position = "bottom")+
-    geom_beeswarm(size=3)+
+    geom_beeswarm(size=point_size,cex=3)+
     scale_colour_manual(values = my.other.colors(5),name="Complexity")+
     xlab("Error")+
     ylab("Response length") +
