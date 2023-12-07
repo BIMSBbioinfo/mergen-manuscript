@@ -81,13 +81,13 @@ selfcorrect_gtp3vsgtp4 <- matr_plot[(matr_plot$experiment=="selfCorrect" |
                                      matr_plot$experiment=="selfCorrect_Test_gtp4"),]
 
 #setting nice names for this matrix
-selfcorrect_gtp3vsgtp4[selfcorrect_gtp3vsgtp4$experiment=="selfCorrect","experiment"] <- "GTP-3.5-turbo"                             
-selfcorrect_gtp3vsgtp4[selfcorrect_gtp3vsgtp4$experiment=="selfCorrect_Test_gtp4","experiment"] <- "GTP-4"
+selfcorrect_gtp3vsgtp4[selfcorrect_gtp3vsgtp4$experiment=="selfCorrect","experiment"] <- "GPT-3.5-turbo"                             
+selfcorrect_gtp3vsgtp4[selfcorrect_gtp3vsgtp4$experiment=="selfCorrect_Test_gtp4","experiment"] <- "GPT-4"
 
 
 
 my_subs <- list(simple,simple_CoT_actAs,simple_filecont,all,selfcorrect_gtp3vsgtp4)
-names <- c("simple","simple_CoT_actAs","simple_filecont", "all", "gtp3.5_vs_gtp4")
+names <- c("simple","simple_CoT_actAs","simple_filecont", "all", "gpt3.5_vs_gpt4")
 
 
 
@@ -164,8 +164,14 @@ for (i in 1:5){
     mycols = "#ACAEAD"
   }
   
+  
+  if (names[i] == "gpt3.5_vs_gpt4"){
+    legend_name = "LLM"
+  }else{
+    legend_name = "Selection Strategy"
+  }
 
-  p2<-p2  +scale_fill_manual(name = 'Selection Strategy',
+  p2<-p2  +scale_fill_manual(name = legend_name,
                              values = mycols)+
     theme_minimal()+
     theme(axis.text.x = element_text(angle = 60,hjust=1,size=16),
@@ -188,8 +194,8 @@ for (i in 1:5){
   nested
   # save nested
   filename <- paste0(nm,"_nested")
-  plot.save(nested, width = 1600, height = 900, text.factor = 1,filename = paste0("./Figures/",filename,".pdf"))
-  plot.save(nested, width = 1600, height = 900, text.factor = 1,filename = paste0("./Figures/",filename,".png"))
+  plot.save(nested, width = 1800, height = 900, text.factor = 1,filename = paste0("./Figures/",filename,".pdf"))
+  plot.save(nested, width = 1800, height = 900, text.factor = 1,filename = paste0("./Figures/",filename,".png"))
   
 }
 
