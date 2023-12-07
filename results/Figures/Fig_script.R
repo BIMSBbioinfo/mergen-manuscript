@@ -168,7 +168,7 @@ for (i in 1:5){
   if (names[i] == "gpt3.5_vs_gpt4"){
     legend_name = "LLM"
   }else{
-    legend_name = "Selection Strategy"
+    legend_name = "Prompt strategy"
   }
 
   p2<-p2  +scale_fill_manual(name = legend_name,
