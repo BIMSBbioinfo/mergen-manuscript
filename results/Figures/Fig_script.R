@@ -72,6 +72,8 @@ my.other.colors <-
 # ---------------------------------------------------------------------------------------------------
 # Submatrices
 
+
+
 simple <- matr_plot[matr_plot$experiment=="simple",]
 simple_CoT_actAs <- matr_plot[(matr_plot$experiment=="simple" | matr_plot$experiment=="CoT" |
                                  matr_plot$experiment=="actAs"),]
@@ -124,6 +126,10 @@ for (i in 1:5){
   
   # get df:
   df <- as.data.frame(my_subs[i])
+  df_yes_no <- df
+  
+  df_yes_no$error[df_yes_no$error==0]="yes"
+ df_yes_no$error[df_yes_no$error==1]="no"
   
   if (names[i]=="all"){
     point_size = 1
@@ -132,12 +138,13 @@ for (i in 1:5){
   }
   
   # scatterplot error vs response length
-  p1<-ggplot(df, aes(x=factor(error),color=factor(complexity_byhand),y=nchar)) +
-    facet_wrap(~experiment,scales='fixed',strip.position = "bottom")+
+  p1<-ggplot(df_yes_no, aes(x=factor(error),color=factor(complexity_byhand),y=nchar)) +
+    facet_wrap(~experiment,scales='free',strip.position = "bottom")+
     geom_beeswarm(size=point_size,cex=3)+
     scale_colour_manual(values = my.other.colors(5),name="Complexity")+
-    xlab("Error")+
+    xlab("Is executable?")+
     ylab("Response length") +
+    scale_y_continuous(limits= c(0,max(df_yes_no$nchar)))+
     theme_minimal()+
     theme(axis.text.x = element_text(angle = 60,hjust=1,size=16),
           axis.text.y = element_text(angle = 60,hjust=1,size=16),
