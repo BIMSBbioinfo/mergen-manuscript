@@ -3,21 +3,17 @@ I have the following gene expression data as an excel sheet,  "Supplementary_Tab
 
 response:
 ```
-# Load required libraries
+# Read the Excel file
 library(readxl)
-
-# Read the excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Check the dimensions of the data
-genes <- nrow(data) - 1 # Exclude the first row (gene names row)
-samples <- ncol(data) - 1 # Exclude the first column (gene names column)
+# Count the number of genes
+num_genes <- nrow(data) - 1
 
-# Print the number of genes and samples
-cat("Number of genes:", genes, "\n")
-cat("Number of samples:", samples, "\n")
+# Count the number of samples
+num_samples <- ncol(data) - 1
+
+# Print the results
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```
-Number of genes: [number of genes]
-Number of samples: [number of samples]
-
-Please note that you need to replace "[number of genes]" and "[number of samples]" in the output with the actual numbers obtained from running the code.

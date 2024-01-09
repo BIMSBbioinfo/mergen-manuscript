@@ -3,31 +3,30 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables and count the number of rows and columns in each, you can use the `read.table()` function in R. Here's the code to accomplish this task:
+To read the tables and count the number of rows and columns for each, we can use the `read.table()` function in R. Here's the code to accomplish this:
 
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the methylation data table
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Count the number of rows and columns in metRmOl
-num_rows_metRmOl <- nrow(metRmOl)
-num_cols_metRmOl <- ncol(metRmOl)
+# Read the subjects data table
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Print the results
-print(paste("Number of rows in metRmOl:", num_rows_metRmOl))
-print(paste("Number of columns in metRmOl:", num_cols_metRmOl))
+# Count number of rows and columns for methylation data
+num_rows_methylation <- nrow(methylation_data)
+num_cols_methylation <- ncol(methylation_data)
 
-
-# Read the "subjects.txt" file
-subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
-
-# Count the number of rows and columns in subjects
-num_rows_subjects <- nrow(subjects)
-num_cols_subjects <- ncol(subjects)
+# Count number of rows and columns for subjects data
+num_rows_subjects <- nrow(subjects_data)
+num_cols_subjects <- ncol(subjects_data)
 
 # Print the results
-print(paste("Number of rows in subjects:", num_rows_subjects))
-print(paste("Number of columns in subjects:", num_cols_subjects))
+print(paste("Number of rows in methylation data:", num_rows_methylation))
+print(paste("Number of columns in methylation data:", num_cols_methylation))
+print(paste("Number of rows in subjects data:", num_rows_subjects))
+print(paste("Number of columns in subjects data:", num_cols_subjects))
 ```
 
-Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths if they are located in a different directory.
+This code reads the methylation data table from the "metRmOlWithDbgapIdHeader.txt" file and the subjects data table from the "subjects.txt" file. It then counts the number of rows and columns for each table using the `nrow()` and `ncol()` functions. Finally, it prints the results using the `print()` function.
+
+Note: Make sure to provide the correct file paths for the input files in the `read.table()` function.

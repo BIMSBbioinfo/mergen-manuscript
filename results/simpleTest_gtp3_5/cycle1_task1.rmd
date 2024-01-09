@@ -8,10 +8,10 @@ data <- read.delim("subjects.txt", sep = "\t")
 
 # Get the number of rows and columns
 num_rows <- nrow(data)
-num_cols <- ncol(data)
+num_columns <- ncol(data)
 
-# Print the results
-print(paste("Number of rows:", num_rows))
-print(paste("Number of columns:", num_cols))
+# Print the number of rows and columns
+cat("Number of rows:", num_rows, "\n")
+cat("Number of columns:", num_columns, "\n")
 ```
-
+Please make sure to replace "subjects.txt" with the correct file path if the file is not in the current working directory.

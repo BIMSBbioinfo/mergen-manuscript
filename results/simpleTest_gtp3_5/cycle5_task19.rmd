@@ -5,44 +5,31 @@ response:
 ```
 # Load required libraries
 library(DESeq2)
-library(tidyverse)
-library(openxlsx)
+library(ggplot2)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, colNames = TRUE)
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
 
 # Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
-
-# Set row names as gene names
-rownames(count_table) <- count_table$Gene
-
-# Remove gene column
-count_table <- count_table[, -1]
-
-# Extract sample ids from annotation data
-sample_ids <- annotation_data$SAMPID
-
-# Subset count table and annotation data based on available samples
-count_table <- count_table[, sample_ids %in% colnames(count_table)]
-annotation_data <- annotation_data[sample_ids %in% colnames(count_table), ]
+anno_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
 
 # Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~1)
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = anno_data, design = ~ 1)
 
-# Perform normalization
-dds <- DESeq(dds)
+# Normalize counts
+dds_normalized <- counts(dds, normalized = TRUE)
 
-# Get normalized counts
-norm_counts <- counts(dds, normalized = TRUE)
+# Perform PCA using normalized counts
+pca_normalized <- prcomp(t(dds_normalized))
 
-# Calculate PCA
-pca_data <- prcomp(t(norm_counts))
+# Create PCA plot color coded by "group"
+pca_plot_group <- ggplot(data = anno_data, aes(x = pca_normalized$x[,1], y = pca_normalized$x[,2], color = group)) + geom_point() + labs(x = "PC1", y = "PC2")
 
-# Plot first PCA plot (color coded by "group")
-plot(pca_data$x[, c("group")], col = annotation_data$group, pch = 16, xlab = "PC1", ylab = "PC2", main = "PCA plot (group)")
+# Create PCA plot color coded by "LibrarySelection"
+pca_plot_lib <- ggplot(data = anno_data, aes(x = pca_normalized$x[,1], y = pca_normalized$x[,2], color = LibrarySelection)) + geom_point() + labs(x = "PC1", y = "PC2")
 
-# Plot second PCA plot (color coded by "LibrarySelection")
-plot(pca_data$x[, c("LibrarySelection")], col = annotation_data$LibrarySelection, pch = 16, xlab = "PC1", ylab = "PC2", main = "PCA plot (LibrarySelection)")
+# Print PCA plots
+print(pca_plot_group)
+print(pca_plot_lib)
 ```
-```
+Note: Replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file path/name for your system.

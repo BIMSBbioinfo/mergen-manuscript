@@ -4,34 +4,25 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 response:
 ```
 library(readxl)
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t", col_names = TRUE)
+# Read annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim="\t")
 
-# Transpose the count table to match the format of annotation data
-count_table <- count_table %>% 
-  t() %>% 
-  as.data.frame() %>% 
-  rownames_to_column(var = "gene")
+# Rename the first column of count table to "Gene"
+colnames(count_table)[1] <- "Gene"
 
-# Merge annotation data and gene expression tables
-merged_data <- merge(count_table, annotation_data, by.x = "gene", by.y = "row.names")
+# Merge count table and annotation data based on sample ids
+merged_data <- inner_join(count_table, annotation_data, by = c("Sample" = "sample_id"))
 
 # Plot boxplots for gene expression values per sample
-boxplot_expr <- merged_data %>% 
-  select(-gene, -group) %>% 
-  pivot_longer(cols = -sample) %>% 
-  ggplot(aes(x = sample, y = value, fill = group)) +
-  geom_boxplot() +
-  labs(x = "Sample", y = "Gene Expression Value") +
-  scale_fill_manual(values = c("red", "blue")) +
-  theme_minimal()
-
-# Print the boxplot
-print(boxplot_expr)
+ggplot(merged_data, aes(x=group, y=`Gene_name`)) + 
+  geom_boxplot() + 
+  labs(x = "Group", y = "Gene Expression") +
+  scale_fill_manual(values = c("red", "blue", "green", "orange"))  # Customize the colors based on group
 ```
 ```

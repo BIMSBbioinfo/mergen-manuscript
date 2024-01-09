@@ -3,27 +3,27 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required libraries
-library(dplyr)
+# Load necessary libraries
+library(tidyverse)
 library(readxl)
-library(ggplot2)
 
-# Read in the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read in the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Rename the first column of the annotation data to match the column names of the count table
-colnames(annotation_data)[1] <- colnames(count_table)[1]
+# Set column names for count table
+colnames(count_table) <- c("gene_names", colnames(count_table)[-1])
 
-# Merge the annotation data and count table
-merged_data <- merge(count_table, annotation_data, by = colnames(count_table)[1])
+# Merge count table and annotation data based on sample ids
+merged_data <- merge(count_table, annotation_data, by.x = "gene_names", by.y = "sample_ids")
 
-# Plot boxplots for gene expression values per sample
-ggplot(merged_data, aes(x = group, y = gene_name)) +
-  geom_boxplot(fill = "lightblue") +
-  labs(x = "Group", y = "Gene expression") +
+# Plot boxplots for gene expression values per sample, color-coded by group variable
+merged_data %>%
+  gather(sample, gene_expression, -gene_names, -group) %>%
+  ggplot(aes(x = sample, y = gene_expression, fill = group)) +
+  geom_boxplot() +
   theme_minimal()
 ```
-```
+Note: Replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file names and paths in your system.

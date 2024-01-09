@@ -2,91 +2,90 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To solve this task, we will use the R programming language and certain packages for data manipulation and visualization. Here are the steps to normalize the counts and create the two PCA plots:
+To complete this task, we will use the R programming language and several bioinformatics packages. Here is a step-by-step approach to normalize the counts, create two PCA plots, and color code them according to the "group" and "LibrarySelection" annotations.
 
-Step 1: Install and load the necessary packages.
+Step 1: Import the necessary packages
 ```
-  # for reading Excel files
-   # for data manipulation
-  # for count normalization
- # for plotting
- # for color palettes
+# Install the required packages if not already installed
 
+
+# Load the packages
 library(readxl)
-library(dplyr)
+library(limma)
+library(edgeR)
 library(DESeq2)
 library(ggplot2)
+library(pcaMethods)
 library(RColorBrewer)
 ```
 
-Step 2: Read the count table and annotation data.
+Step 2: Read the count table and annotation data
 ```
-count_file <- "Supplementary_Table_1_exp.xlsx"
-annotation_file <- "SRP021193.colData.tsv"
+# Read the count table from the Excel file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read count table
-count_table <- read_excel(count_file)
-
-# Read annotation data
-annotation_data <- read.delim(annotation_file, stringsAsFactors = FALSE)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", row.names = 1)
 ```
 
-Step 3: Prepare the data for DESeq2: extracting sample identifiers and converting count table to matrix.
+Step 3: Normalize the counts
+Since RNA-seq count data often has high variation, it is important to normalize the counts before performing downstream analyses. Here, we will use the TMM (trimmed mean of M-values) normalization method from the edgeR package.
+
 ```
-# Extract sample identifiers from annotation data
-sample_ids <- annotation_data$SampleID
+# Convert the count table to a matrix
+count_matrix <- as.matrix(count_table[, -1])
 
-# Set the row names of the count table as gene names
-rownames(count_table) <- count_table[,1]
+# Create a DGEList object for edgeR analysis
+dge <- DGEList(counts = count_matrix)
 
-# Convert count table to matrix
-count_mat <- as.matrix(count_table[, -1])
-```
-
-Step 4: Normalize the counts using DESeq2's median ratio method.
-```
-# Create DESeq2 dataset object
-dds <- DESeqDataSetFromMatrix(countData = count_mat, colData = annotation_data, design = ~ 1)
-
-# Normalize counts
-dds <- DESeq(dds)
-
-# Extract normalized counts
-normalized_counts <- counts(dds, normalized = TRUE)
+# Perform the TMM normalization
+dge <- calcNormFactors(dge, method = "TMM")
+normalized_counts <- cpm(dge)
 ```
 
-Step 5: Perform PCA on the normalized counts and create the first PCA plot (color coded by "group").
+Step 4: Perform PCA using normalized counts
+We will use the pcaMethods package to perform Principal Component Analysis (PCA) on the normalized counts.
+
 ```
-# Perform PCA on normalized counts
-pca_data <- prcomp(t(normalized_counts))
+# Create a pcaSet object for PCA analysis
+pca_set <- pcaSet(t(normalized_counts))
 
-# Create a dataframe for PCA plot
-pca_plot_data <- data.frame(PC1 = pca_data$x[,1], PC2 = pca_data$x[,2], group = annotation_data$group)
+# Perform PCA
+pca_result <- pca(pca_set, method = "svd")
 
-# Create PCA plot (color coded by "group")
-pca_plot_1 <- ggplot(pca_plot_data, aes(x = PC1, y = PC2, color = group)) +
+# Extract the PCA scores
+pca_scores <- pData(pca_result)$scores
+```
+
+Step 5: Create the first PCA plot with color coding by "group"
+```
+# Join the annotation data with the PCA scores
+pca_df <- cbind.data.frame(pca_scores, annotation_data)
+
+# Create the first PCA plot
+pca_plot_1 <- ggplot(pca_df, aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
-  labs(title = "PCA Plot (color coded by Group)")
+  labs(x = "PC1", y = "PC2", color = "Group") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")
 
-# Show the PCA plot
-print(pca_plot_1)
+# Display the first PCA plot
+pca_plot_1
 ```
 
-Step 6: Create the second PCA plot (color coded by "LibrarySelection").
+Step 6: Create the second PCA plot with color coding by "LibrarySelection"
 ```
-# Create a dataframe for PCA plot
-pca_plot_data2 <- data.frame(PC1 = pca_data$x[,1], PC2 = pca_data$x[,2], 
-                            LibrarySelection = annotation_data$LibrarySelection)
-
-# Create PCA plot (color coded by "LibrarySelection")
-pca_plot_2 <- ggplot(pca_plot_data2, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+# Create the second PCA plot
+pca_plot_2 <- ggplot(pca_df, aes(x = PC1, y = PC2, color = LibrarySelection)) +
   geom_point() +
-  labs(title = "PCA Plot (color coded by LibrarySelection)")
+  labs(x = "PC1", y = "PC2", color = "Library Selection") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set2")
 
-# Show the PCA plot
-print(pca_plot_2)
+# Display the second PCA plot
+pca_plot_2
 ```
 
-That's it! By following these steps, you will have normalized the counts and created two PCA plots, one color coded by "group" and the other color coded by "LibrarySelection" from the annotation data.
+That's it! By following these steps and running the provided R code, you should be able to normalize the counts, create two PCA plots, and color code them according to the "group" and "LibrarySelection" annotations.
 
-Please note that the code assumes the input files are in the same directory as the R script. You may need to modify the file paths if the files are located elsewhere.
+Note: Please make sure that the count table file "Supplementary_Table_1_exp.xlsx" and the annotation data file "SRP021193.colData.tsv" are in the same directory as the R script. Also, verify that the column names in the count table match the row names in the annotation data for correct merging.

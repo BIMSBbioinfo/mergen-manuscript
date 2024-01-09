@@ -4,31 +4,30 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Load the required libraries
+library(readr)
+library(dplyr)
 library(ggplot2)
 
-# Read the gene expression data
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Read the gene expression data from file
+gene_data <- read_delim("leukemiaExp.txt", delim = "\t")
 
-# Calculate the variance of the genes
-gene_variance <- apply(gene_data, 1, var)
+# Remove the first column containing gene names
+gene_data <- gene_data[-1]
 
-# Order the genes by their variance in descending order
-ordered_genes <- order(gene_variance, decreasing=TRUE)
+# Calculate the variability of each gene
+gene_data$variability <- apply(gene_data, 1, var)
+
+# Sort the genes based on their variability in descending order
+gene_data <- gene_data[order(-gene_data$variability), ]
 
 # Select the top 1000 most variable genes
-top_genes <- ordered_genes[1:1000]
+top_genes <- gene_data[1:1000, ]
 
-# Subset the gene expression data with the top genes
-top_gene_data <- gene_data[top_genes, ]
-
-# Take the transpose of the data for plotting
-top_gene_data <- t(top_gene_data)
-
-# Convert the data to a data frame for plotting
-df <- data.frame(x=top_gene_data[,1], y=top_gene_data[,2])
-
-# Create the scatterplot
-ggplot(df, aes(x=x, y=y)) + geom_point() + xlab("Gene 1") + ylab("Gene 2") + ggtitle("Scatterplot of the Two Most Variable Genes")
+# Create a scatterplot of the two most variable genes
+ggplot(top_genes, aes(x = top_genes[, 1], y = top_genes[, 2])) +
+  geom_point() +
+  xlab("Gene 1") +
+  ylab("Gene 2") +
+  ggtitle("Scatterplot of the Two Most Variable Genes")
 ```
-
-Note: Replace "leukemiaExp.txt" with the correct file path or name if necessary.
+```

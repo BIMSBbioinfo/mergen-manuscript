@@ -3,11 +3,19 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary packages
+# Install required packages if not installed
+
+
+
+
+
+
+# Load required libraries
 library(readxl)
-library(dplyr)
 library(limma)
 library(ggplot2)
+library(dplyr)
+library(tidyverse)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
@@ -15,49 +23,39 @@ count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 # Read annotation data
 annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Transpose the count table
-count_table_t <- t(count_table)
+# Extract group variable from annotation data
+groups <- annotation_data$group
 
-# Filter specific genes for each group using statistical tests
-group_specific_genes <- rownames(count_table_t) %>% 
-  apply(., 1, function(x) {
-    # Get counts for each gene across groups
-    counts <- count_table_t[x, ]
-    
-    # Perform statistical tests (e.g., ANOVA) to identify group-specific genes
-    p_values <- apply(counts, 2, function(y) {
-      model <- lm(y ~ annotation_data$group)
-      anova_res <- anova(model)
-      anova_res$`Pr(>F)`[1]
-    })
-    
-    # Adjust p-values for multiple testing using the Benjamini-Hochberg method
-    adj_p_values <- p.adjust(p_values, method = "BH")
-    
-    # Select genes with adjusted p-value less than 0.05
-    group_specific <- x[adj_p_values < 0.05]
-    
-    # Return the group-specific genes
-    group_specific
-  }) %>%
-  unlist()
+# Apply a statistical test to find group-specific genes
+group_specific_genes <- apply(count_table, 1, function(x) {
+  design <- model.matrix(~groups)
+  fit <- lmFit(counts(x), design)
+  contrasts <- makeContrasts(group2-group1, group3-group1, levels=design)
+  fit <- contrasts.fit(fit, contrasts)
+  fit <- eBayes(fit)
+  top_genes <- topTable(fit, coef=1, n=Inf)
+  group_specific_genes <- rownames(top_genes)[top_genes$adj.P.Val < 0.05]
+  return(group_specific_genes)
+})
 
-# Subset count table with group-specific genes
-count_table_specific <- count_table[, rownames(count_table) %in% group_specific_genes]
+# Combine all group-specific genes into a single vector
+group_specific_genes <- unlist(group_specific_genes)
 
-# Perform PCA using group-specific genes
-pca_res <- prcomp(count_table_specific, scale. = TRUE)
+# Subset count table to include only group-specific genes
+count_table_subset <- count_table[group_specific_genes,]
 
-# Extract PCA scores
-pca_scores <- as.data.frame(pca_res$x)
+# Perform PCA on the count table subset
+pca_result <- prcomp(t(count_table_subset))
 
-# Add group information from annotation data
+# Extract PC scores
+pca_scores <- as.data.frame(pca_result$x)
+
+# Add group variable from annotation data to PCA scores
 pca_scores$group <- annotation_data$group
 
 # Plot PCA with color-coded groups
 ggplot(pca_scores, aes(PC1, PC2, color = group)) +
   geom_point() +
-  labs(x = "PC1", y = "PC2") +
-  theme_minimal()
+  labs(title = "PCA Plot", x = "PC1", y = "PC2")
 ```
-Note: Please make sure to adjust the file paths in the code to match the location of your count table and annotation data files.
+Note that you need to have the `readxl`, `limma`, `ggplot2`, `dplyr`, and `tidyverse` packages installed to run the code. You may also need to update the file paths to match the location of your data files.

@@ -3,32 +3,36 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read and count the number of rows and columns for each dataset, we can use the `read.table` function in R. Here's the code to achieve this:
+To read the tables and count the number of rows and columns for each, we can use the functions `read.table()` and `dim()`. The `read.table()` function is used to read tables from text files, and the `dim()` function returns the dimensions (number of rows and columns) of a matrix or data frame.
+
+First, we read the "metRmOlWithDbgapIdHeader.txt" file and count the number of rows and columns:
 
 ```
 # Read the "metRmOlWithDbgapIdHeader.txt" file
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Count the number of rows and columns in metRmOl
-num_rows_metRmOl <- nrow(metRmOl)
-num_cols_metRmOl <- ncol(metRmOl)
-
-# Print the number of rows and columns in metRmOl
-print(paste("Number of rows in metRmOl:", num_rows_metRmOl))
-print(paste("Number of columns in metRmOl:", num_cols_metRmOl))
-
-# Read the "subjects.txt" file
-subjects <- read.table("subjects.txt", header = TRUE)
-
-# Count the number of rows and columns in subjects
-num_rows_subjects <- nrow(subjects)
-num_cols_subjects <- ncol(subjects)
-
-# Print the number of rows and columns in subjects
-print(paste("Number of rows in subjects:", num_rows_subjects))
-print(paste("Number of columns in subjects:", num_cols_subjects))
+# Count the number of rows and columns
+num_rows_met <- dim(met_data)[1]
+num_cols_met <- dim(met_data)[2]
 ```
 
-Make sure to replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file paths or file names if they are in the same directory as your R script.
+Next, we read the "subjects.txt" file and count the number of rows and columns:
 
-Note: The code assumes that the files are in a tab-delimited format, with the first row as the column headers.
+```
+# Read the "subjects.txt" file
+subject_data <- read.table("subjects.txt", header = TRUE)
+
+# Count the number of rows and columns
+num_rows_subject <- dim(subject_data)[1]
+num_cols_subject <- dim(subject_data)[2]
+```
+
+Finally, we can print out the number of rows and columns for each dataset:
+
+```
+# Print the number of rows and columns for each dataset
+cat("Number of rows and columns in 'metRmOlWithDbgapIdHeader.txt':", num_rows_met, "rows,", num_cols_met, "columns\n")
+cat("Number of rows and columns in 'subjects.txt':", num_rows_subject, "rows,", num_cols_subject, "columns\n")
+```
+
+Note: Make sure to replace the file names and file paths in the `read.table()` function with the actual file names and paths in your system.

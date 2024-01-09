@@ -3,57 +3,45 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
+library(dplyr)
 library(readxl)
-library(DESeq2)
 library(ggplot2)
+library(ggrepel)
+library(pcaMethods)
 
 # Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
-# Transpose the count table to have samples as rows and genes as columns
-count_table <- t(count_table)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Remove rows with missing annotation data
-annotation_data <- annotation_data[!is.na(annotation_data$sample_ids), ]
+# Rename the columns of count table
+colnames(count_table) <- c("Genes", colnames(count_table)[-1])
 
-# Get the sample ids from the annotation data
-sample_ids <- annotation_data$sample_ids
+# Normalize counts
+normalized_counts <- normalize(count_table[,-1])
 
-# Subset the count table using the sample ids
-count_table <- count_table[sample_ids, ]
-
-# Create a DESeqDataSet object for normalization
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ Group + LibrarySelection)
-
-# Perform normalization using DESeq2
-dds <- DESeq(dds)
-
-# Get normalized counts
-normalized_counts <- counts(dds, normalized = TRUE)
+# Add sample annotation to normalized counts
+normalized_counts$Group <- annotation_data$group
+normalized_counts$LibrarySelection <- annotation_data$LibrarySelection
 
 # Perform PCA
-pca <- prcomp(t(normalized_counts))
+pca <- prcomp(t(normalized_counts[,-ncol(normalized_counts)]))
 
-# Plot PCA colored by "group"
-plot_data <- as.data.frame(pca$x)
-plot_data$group <- annotation_data$Group
-ggplot(plot_data, aes(x = PC1, y = PC2, color = group)) + 
-  geom_point() +
-  labs(title = "PCA Plot - Group",
-       x = "PC1",
-       y = "PC2")
+# Create color-coded PCA plot by "group"
+ggplot(data = normalized_counts, aes(x = pca$x[,1], y = pca$x[,2], color = Group)) +
+  geom_point(size = 3) +
+  labs(x = "PC1", y = "PC2", title = "PCA plot - Sample Groups") +
+  theme_minimal() +
+  theme(legend.position = "right")
 
-# Plot PCA colored by "LibrarySelection"
-plot_data$LibrarySelection <- annotation_data$LibrarySelection
-ggplot(plot_data, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
-  geom_point() +
-  labs(title = "PCA Plot - LibrarySelection",
-       x = "PC1",
-       y = "PC2")
+# Create color-coded PCA plot by "LibrarySelection"
+ggplot(data = normalized_counts, aes(x = pca$x[,1], y = pca$x[,2], color = LibrarySelection)) +
+  geom_point(size = 3) +
+  labs(x = "PC1", y = "PC2", title = "PCA plot - Library Selection") +
+  theme_minimal() +
+  theme(legend.position = "right")
+}
 ```
-```
+Note: Code assumes that the "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" files are in the working directory.

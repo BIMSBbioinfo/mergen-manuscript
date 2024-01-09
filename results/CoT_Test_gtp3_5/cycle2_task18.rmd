@@ -2,44 +2,67 @@ prompt:
 We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
 
 response:
-To find all CpGs associated with Age but not with sex or Race, we will perform the following steps:
+To find CpGs associated with Age but not with sex or Race, we will need to merge the two datasets based on the dbGap ID, filter for CpGs associated with Age, and then exclude those associated with sex or Race. Finally, we will display the top 20 CpGs.
 
-1. Load the data from the "metRmOlWithDbgapIdHeader.txt" file, which contains the CpG methylation values per CpG and per individual.
-2. Load the data from the "subjects.txt" file, which contains information on the individuals, including their Age, sex, and Race.
-3. Subset the CpG methylation data to include only the columns (individuals) with matching dbGap IDs in the subjects data.
-4. Calculate the correlation between the CpG methylation values and Age for each CpG.
-5. Filter out any CpGs that are also correlated with sex or Race.
-6. Sort the CpGs by their correlation coefficient with Age in descending order.
-7. Display the top 20 CpGs.
+Here's the step-by-step solution:
 
-Below is the code to accomplish these steps:
+1. Load the required libraries (assuming we have the dplyr library installed):
 
 ```
-# Step 1: Load CpG methylation data
-cpg_data <- read.table("metRmOlWithDbgapIdHeader.txt", header=TRUE, sep="\t")
-
-# Step 2: Load subjects data
-subjects_data <- read.table("subjects.txt", header=TRUE, sep="\t")
-
-# Step 3: Subset CpG methylation data to include only matching individuals
-matching_columns <- intersect(colnames(cpg_data)[-1], subjects_data$`dbGap ID`)
-selected_columns <- c("CpG_id", matching_columns)
-subset_cpg_data <- cpg_data[selected_columns]
-
-# Step 4: Calculate correlation between CpG methylation values and Age
-correlations <- apply(subset_cpg_data[, -1], 2, function(x) cor(x, subjects_data$Age))
-
-# Step 5: Filter CpGs not correlated with sex or Race
-sex_correlation <- cor(subjects_data$sex, subjects_data$Age)
-race_correlation <- cor(subjects_data$Race, subjects_data$Age)
-filtered_cpgs <- subset_cpg_data[, -1][abs(correlations) > abs(sex_correlation) | abs(correlations) > abs(race_correlation)]
-
-# Step 6: Sort CpGs by correlation coefficient with Age
-sorted_cpgs <- sort(correlations, decreasing=TRUE)
-
-# Step 7: Display top 20 CpGs
-top_cpgs <- head(sorted_cpgs, 20)
-print(top_cpgs)
+library(dplyr)
 ```
 
-Note: Make sure to update the file paths in the `read.table` function to match the actual file locations.
+2. Import the datasets:
+
+```
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
+subjects <- read.table("subjects.txt", header = TRUE)
+```
+
+3. Transpose the metRmOl dataset so that it has individuals as rows and CpGs as columns:
+
+```
+metRmOl <- t(metRmOl)
+```
+
+4. Rename the row names of the metRmOl dataset to match the dbGap ID in subjects dataset:
+
+```
+rownames(metRmOl) <- metRmOl[1, ]
+```
+
+5. Remove the first row from metRmOl dataset as it is now redundant:
+
+```
+metRmOl <- metRmOl[-1, ]
+```
+
+6. Merge the two datasets based on the dbGap ID:
+
+```
+merged_data <- merge(subjects, metRmOl, by.x = "dbGap ID", by.y = "row.names", all.x = TRUE)
+```
+
+7. Filter for CpGs associated with Age:
+
+```
+age_cpgs <- merged_data %>%
+  filter(!is.na(Age)) %>%
+  select(starts_with("cg"))
+```
+
+8. Exclude CpGs associated with sex or Race:
+
+```
+final_cpgs <- age_cpgs %>%
+  filter(is.na(sex) & is.na(Race))
+```
+
+9. Display the top 20 CpGs:
+
+```
+top_20_cpgs <- head(final_cpgs, 20)
+top_20_cpgs
+```
+
+And that's it! The code provided above will find all CpGs associated with Age but not with sex or Race and display the top 20 CpGs.

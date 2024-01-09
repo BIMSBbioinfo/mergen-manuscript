@@ -2,54 +2,47 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To complete this task, we will first load the gene expression data from the file "leukemiaExp.txt" and perform the necessary data preprocessing steps. Then, we will calculate and filter the most variable genes, cluster the samples using these genes, and extract the cluster-specific genes for each cluster.
+To complete this task, we will follow these steps:
 
-Here is the code to accomplish these tasks:
+1. Read the gene expression data from the file "leukemiaExp.txt".
+2. Filter genes based on their variability.
+3. Select the top 1000 most variable genes.
+4. Cluster the samples based on the selected genes.
+5. Extract cluster-specific genes for each cluster.
+
+Here's the code to accomplish these steps:
 
 ```
-# Load required libraries
-library(ggplot2)
-library(dplyr)
-library(reshape2)
-library(cluster)
+# Step 1: Read the gene expression data
+gene_data <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Read the gene expression data from the file
-gene_exp <- read.delim("leukemiaExp.txt", header = TRUE, stringsAsFactors = FALSE)
+# Step 2: Filter genes based on their variability
+gene_variability <- apply(gene_data[, -1], 1, var)
 
-# Remove any rows with missing values (if applicable)
-gene_exp <- na.omit(gene_exp)
+# Step 3: Select the top 1000 most variable genes
+top_var_genes <- head(sort(gene_variability, decreasing = TRUE), 1000)
 
-# Extract gene names and expression values
-gene_names <- gene_exp$Gene
-expression_values <- as.matrix(gene_exp[, -1])
+# Step 4: Cluster the samples based on the selected genes
+gene_clusters <- kmeans(gene_data[top_var_genes, -1], centers = 3)
 
-# Calculate gene variability
-gene_variance <- apply(expression_values, 1, var)
-sorted_genes <- gene_names[order(gene_variance, decreasing = TRUE)]
+# Step 5: Extract cluster-specific genes for each cluster
+cluster_specific_genes <- lapply(1:max(gene_clusters$cluster), function(cluster) {
+  cluster_indices <- which(gene_clusters$cluster == cluster)
+  rownames(gene_data[top_var_genes, -1])[cluster_indices]
+})
 
-# Retain the most variable top 1000 genes
-top_var_genes <- sorted_genes[1:1000]
-gene_exp_filtered <- gene_exp[gene_exp$Gene %in% top_var_genes, ]
-
-# Cluster the samples based on gene expression
-expression_values_filtered <- as.matrix(gene_exp_filtered[, -1])
-cluster_result <- pam(expression_values_filtered, k = 3)  # Assuming 3 clusters
-
-# Extract cluster-specific genes for each cluster
-cluster_genes <- split(gene_exp_filtered, cluster_result$clustering)
-
-# Print number of genes in each cluster
-for (i in 1:length(cluster_genes)) {
-  cat("Number of genes in Cluster", i, ":", nrow(cluster_genes[[i]]), "\n")
-}
-
-# Show the first few rows of each cluster-specific gene list
-for (i in 1:length(cluster_genes)) {
-  cat("Cluster", i, ":", "\n")
-  print(head(cluster_genes[[i]]))
+# Print the cluster-specific genes for each cluster
+for (cluster in 1:length(cluster_specific_genes)) {
+  cat("Cluster", cluster, "specific genes:\n")
+  print(cluster_specific_genes[[cluster]])
 }
 ```
 
-Please note that the code assumes three clusters, but you can change the value of `k` in the `pam()` function to your desired number of clusters. Also, ensure that the file "leukemiaExp.txt" is located in your current working directory.
+Please note that this code assumes that you have already installed the required packages for clustering and reading the gene expression data. If you haven't installed these packages, you can install them using the following commands:
 
-This code will filter the genes based on their variability and retain the top 1000 most variable genes. It will then cluster the samples using these genes and extract cluster-specific genes for each cluster. The number of genes in each cluster will be printed, and the first few rows of each cluster-specific gene list will be displayed.
+```
+  # For kmeans function
+  # For read.delim function
+```
+
+Make sure to run these package installation commands before running the code.

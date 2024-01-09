@@ -3,19 +3,15 @@ I have the following gene expression data, "leukemiaExp.txt".The file is tab sep
 
 response:
 ```
-# Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Calculate the variance for each gene
-gene_var <- apply(gene_data[, -1], 1, var)
+# Calculate the variability of each gene
+variability <- apply(data, 1, sd)
 
-# Select the top 1000 genes with the highest variance
-top_var_genes <- head(sort(gene_var, decreasing = TRUE), 1000)
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(variability)[order(variability, decreasing=TRUE)]
 
-# Filter the gene expression data to retain only the top variable genes
-filtered_gene_data <- gene_data[gene_data$gene_name %in% names(top_var_genes), ]
-
-# Print the filtered gene expression data
-print(filtered_gene_data)
+# Filter the top 1000 genes with the highest variability
+filtered_genes <- sorted_genes[1:1000]
 ```
-Note: Make sure to replace "leukemiaExp.txt" with the actual file path or name/location of your gene expression data file. Also, adjust the number "1000" in the `head()` function to select a different number of top variable genes if desired.

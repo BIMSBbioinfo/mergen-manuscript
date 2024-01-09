@@ -3,26 +3,28 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables and count the number of rows and columns, we will use the `read.table()` function in R. Here is the code to perform this task:
+To read and analyze the datasets "metRmOlWithDbgapIdHeader.txt" and "subjects.txt", we can use the R programming language. We will use the `read.table()` function to read the files and the `dim()` function to count the number of rows and columns in each dataset. 
+
+Here is the code to accomplish this:
 
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the dataset "metRmOlWithDbgapIdHeader.txt"
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Count the number of rows and columns in the methylation data
-num_rows_methylation <- nrow(methylation_data)
-num_cols_methylation <- ncol(methylation_data)
+# Count the number of rows and columns in "metRmOlWithDbgapIdHeader.txt"
+met_rows <- dim(met_data)[1]
+met_cols <- dim(met_data)[2]
 
-# Read the "subjects.txt" file
+# Read the dataset "subjects.txt"
 subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Count the number of rows and columns in the subjects data
-num_rows_subjects <- nrow(subjects_data)
-num_cols_subjects <- ncol(subjects_data)
+# Count the number of rows and columns in "subjects.txt"
+subjects_rows <- dim(subjects_data)[1]
+subjects_cols <- dim(subjects_data)[2]
 
-# Print the number of rows and columns for each table
-print(paste("Number of rows and columns in methylation data:", num_rows_methylation, "rows,", num_cols_methylation, "columns"))
-print(paste("Number of rows and columns in subjects data:", num_rows_subjects, "rows,", num_cols_subjects, "columns"))
+# Print the number of rows and columns for each dataset
+cat("metRmOlWithDbgapIdHeader.txt has", met_rows, "rows and", met_cols, "columns\n")
+cat("subjects.txt has", subjects_rows, "rows and", subjects_cols, "columns\n")
 ```
 
-Note that you need to modify the file names ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") to match the actual file names in your directory.
+Make sure to replace the file paths `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual paths to the files on your computer. The code will read the datasets, count the number of rows and columns in each, and print the results.

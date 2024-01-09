@@ -4,16 +4,16 @@ I have the following gene expression data, "leukemiaExp.txt". Each row is a gene
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Check the dimensions of the data
-genes <- nrow(data)
-samples <- ncol(data)
+# Get the number of genes by counting the rows
+num_genes <- nrow(data)
+
+# Get the number of samples by counting the columns
+num_samples <- ncol(data)
 
 # Print the number of genes and samples
-genes
-samples
+num_genes
+num_samples
 ```
-The above code reads the gene expression data from the "leukemiaExp.txt" file using the `read.table()` function. It assumes that the file is tab-separated and has a header row. 
-
-We then use the `nrow()` and `ncol()` functions to determine the number of genes and samples in the dataset, respectively. Finally, we print the results to obtain the number of genes and samples in the dataset.
+```

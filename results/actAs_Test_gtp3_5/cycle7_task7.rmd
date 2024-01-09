@@ -2,32 +2,31 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data. Create a boxplot of the columns
 
 response:
-To complete this task, we will follow these steps:
-1. Load the gene expression data from the "leukemiaExp.txt" file.
-2. Check the number of samples and if it is more than 500, randomly sample 500 samples.
-3. Create a boxplot of the columns.
+To complete this task, we can follow these steps:
+1. Read the gene expression data from the text file using the `read.table()` function.
+2. Check the number of columns in the data.
+3. If the number of columns is greater than 500, randomly sample 500 columns.
+4. Create a boxplot of the sampled columns using the `boxplot()` function.
 
-Here is the code to accomplish the task:
+Here's the code to accomplish the task:
 
 ```
-# Load the required libraries
-library(ggplot2)
+# Step 1: Read the gene expression data from the text file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Read the gene expression data from the file
-gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Step 2: Check the number of columns
+num_columns <- ncol(data)
 
-# Check the number of samples
-num_samples <- ncol(gene_exp)
-
-# If there are more than 500 samples, randomly sample 500 samples
-if(num_samples > 500) {
-  set.seed(1)  # Set seed for reproducibility
-  sampled_columns <- sample(1:num_samples, 500)
-  gene_exp <- gene_exp[, sampled_columns]
+# Step 3: If the number of columns is greater than 500, randomly sample 500 columns
+if (num_columns > 500) {
+  sampled_columns <- sample(1:num_columns, 500)
+  data <- data[, sampled_columns]
 }
 
-# Create a boxplot of the columns
-boxplot(gene_exp, names = colnames(gene_exp), ylab = "Gene Expression", xlab = "Samples")
+# Step 4: Create a boxplot of the sampled columns
+boxplot(data, main = "Gene Expression Data",
+        xlab = "Samples", ylab = "Expression",
+        col = "lightblue", border = "black")
 ```
 
-Make sure to replace "leukemiaExp.txt" with the actual file name if it's different in your case.
+Make sure to replace "leukemiaExp.txt" with the actual file name and path if it's located in a different directory.

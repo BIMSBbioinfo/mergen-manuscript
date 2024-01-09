@@ -3,26 +3,31 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read and analyze the datasets, we will use the `read.table()` function in R. Here's the code to read the datasets and count the number of rows and columns for each:
+To read the tables and count the number of rows and columns in each table, we can use the `read.table()` function in R. 
+
+Here is the code to achieve this:
 
 ```
-# Read the CpG methylation dataset
-cpg_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Count the number of rows and columns in the met_table
+num_rows_met <- nrow(met_table)
+num_cols_met <- ncol(met_table)
 
-# Count the number of rows and columns in the CpG methylation dataset
-num_rows_cpg <- nrow(cpg_data)
-num_cols_cpg <- ncol(cpg_data)
+# Read the "subjects.txt" file
+subjects_table <- read.table("subjects.txt", header = TRUE)
+# Count the number of rows and columns in the subjects_table
+num_rows_subjects <- nrow(subjects_table)
+num_cols_subjects <- ncol(subjects_table)
 
-# Read the subjects dataset
-subjects_data <- read.table("subjects.txt", header = TRUE)
+# Print the number of rows and columns for each table
+cat("Number of rows in met_table:", num_rows_met, "\n")
+cat("Number of columns in met_table:", num_cols_met, "\n")
 
-# Count the number of rows and columns in the subjects dataset
-num_rows_subjects <- nrow(subjects_data)
-num_cols_subjects <- ncol(subjects_data)
+cat("Number of rows in subjects_table:", num_rows_subjects, "\n")
+cat("Number of columns in subjects_table:", num_cols_subjects, "\n")
 ```
 
-In the code above, we use the `read.table()` function to read the datasets. We set `header = TRUE` to indicate that the first row contains the column names. For the CpG methylation dataset, we also set `row.names = 1` to use the first column as row names.
+Make sure to replace the file names ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") with the actual file names and provide the correct file path if the files are not in the current working directory.
 
-After reading the datasets, we use the `nrow()` function to count the number of rows and the `ncol()` function to count the number of columns for each dataset. The results are stored in the variables `num_rows_cpg`, `num_cols_cpg`, `num_rows_subjects`, and `num_cols_subjects`.
-
-You can access these variables to obtain the number of rows and columns for each dataset.
+This code will read the tables from the files, count the number of rows and columns using the `nrow()` and `ncol()` functions, and then print the number of rows and columns for each table using the `cat()` function.

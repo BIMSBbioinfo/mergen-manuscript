@@ -2,48 +2,65 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete the given task, we will need to install and load some relevant packages, read the count table and annotation data, normalize the counts, and generate two PCA plots. Here's the code that accomplishes these tasks:
+To complete this task, we will use the following steps:
+
+1. Read the count table and annotation data into R.
+2. Normalize the counts using the appropriate method.
+3. Perform principal component analysis (PCA) on the normalized counts.
+4. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection" in the annotation data.
+
+Here is the code to accomplish these tasks:
 
 ```
-# Install and load required packages
-
-
-
-
-
-
-library(readxl)
-library(dplyr)
-library(tidyverse)
-library(ggplot2)
-library(factoextra)
+# Step 1: Read the count table and annotation data
+library(openxlsx) # Required for reading Excel files
 
 # Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, colNames = TRUE)
 
 # Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", check.names = FALSE)
 
-# Normalize counts
-normalized_counts <- count_table %>%
-  rownames_to_column(var = "genes") %>%
-  pivot_longer(cols = -genes, names_to = "sample_ids") %>%
-  left_join(annotation_data, by = c("sample_ids" = "sample_ids")) %>%
-  group_by(genes) %>%
-  mutate(normalized_count = value/sum(value)) %>%
-  ungroup()
+# Step 2: Normalize counts
+# Here, we will use the TMM (trimmed mean of M-values) method from the edgeR package
+library(edgeR) # Required for normalization
 
-# Generate PCA plot - color coded by "group"
-pca_plot_group <- prcomp(select(normalized_counts, -genes, -sample_ids, -LibrarySelection), scale = TRUE)
-plot_group <- fviz_pca_ind(pca_plot_group, geom.ind = "point", col.ind = annotation_data$group)
+# Convert the count table to DGEList object
+counts <- DGEList(counts = count_table[, -1], genes = count_table[, 1])
 
-# Generate PCA plot - color coded by "LibrarySelection"
-pca_plot_library_selection <- prcomp(select(normalized_counts, -genes, -sample_ids, -group), scale = TRUE)
-plot_library_selection <- fviz_pca_ind(pca_plot_library_selection, geom.ind = "point", col.ind = annotation_data$LibrarySelection)
+# Normalize the counts using the TMM method
+counts <- calcNormFactors(counts)
 
-# View the PCA plots
+# Step 3: Perform PCA on the normalized counts
+# We will use the prcomp() function in R to perform PCA
+pca <- prcomp(t(counts$counts))
+
+# Step 4: Create PCA plots
+library(ggplot2) # Required for plotting
+
+# Add annotation data to the PCA results
+pca_data <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], group = annotation_data$group, 
+                       LibrarySelection = annotation_data$LibrarySelection)
+
+# Create plot color-coded by "group"
+plot_group <- ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("red", "blue", "green")) +
+  labs(title = "PCA plot: Samples color-coded by 'group'",
+       x = "PC1", y = "PC2")
+
+# Create plot color-coded by "LibrarySelection"
+plot_library <- ggplot(pca_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point(size = 3) +
+  scale_color_manual(values = c("orange", "purple")) +
+  labs(title = "PCA plot: Samples color-coded by 'LibrarySelection'",
+       x = "PC1", y = "PC2")
+
+# Show the plots
 plot_group
-plot_library_selection
+plot_library
 ```
 
-Please note that you might need to modify the code based on the specific structure and format of your count table and annotation data files.
+Please note that in order to run this code, you need to have the necessary R packages (`openxlsx`, `edgeR`, and `ggplot2`) installed. You can install them using the `install.packages()` function if you don't have them already installed.
+
+Also, ensure that the file paths provided in the code match the actual locations of the count table and annotation data on your system.

@@ -4,35 +4,39 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
 
-# Calculate the variance for each gene
-variance <- apply(data[, -1], 1, var)
+# Calculate the variability of each gene
+gene_variability <- apply(gene_data, 1, var)
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- names(sort(variance, decreasing = TRUE))
+# Order the genes based on their variability in descending order
+var_order <- order(gene_variability, decreasing = TRUE)
 
 # Select the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000]
+top_genes <- row.names(gene_data[var_order[1:1000], ])
 
-# Filter the data to retain only the top variable genes
-filtered_data <- data[c("Gene", top_genes)]
+# Subset the gene expression data to only include the top variable genes
+gene_data_filtered <- gene_data[top_genes, ]
 
-# Perform hierarchical clustering on the samples
-hc <- hclust(dist(filtered_data[, -1]))
-clusters <- cutree(hc, k = 5)  # Assuming you want 5 clusters
+# Compute sample clusters
+sample_clusters <- kmeans(t(gene_data_filtered), centers = 5)  # Assuming 5 clusters, you can change the number as needed
 
-# Extract cluster specific genes for each cluster
-cluster_specific_genes <- lapply(unique(clusters), function(cluster) {
-  cluster_genes <- filtered_data$Gene[clusters == cluster]
-  cluster_data <- filtered_data[clusters == cluster, ]
-  cluster_var <- apply(cluster_data[, -1], 1, var)
-  cluster_sorted_genes <- names(sort(cluster_var, decreasing = TRUE))
-  cluster_specific_genes <- cluster_sorted_genes[1:10]  # Assuming you want top 10 specific genes
-  return(data.frame(Cluster = cluster, Genes = cluster_genes, Specific_Genes = cluster_specific_genes))
-})
+# Get cluster assignments for each sample
+sample_cluster_assignment <- sample_clusters$cluster
 
-# Combine the cluster specific genes into a single data frame
-cluster_specific_genes_df <- do.call(rbind, cluster_specific_genes)
+# Create an empty list for cluster specific genes
+cluster_specific_genes <- list()
+
+# Loop through each cluster and extract the cluster specific genes
+for (i in 1:max(sample_cluster_assignment)) {
+  cluster_genes <- row.names(gene_data_filtered[sample_cluster_assignment == i, ])
+  cluster_specific_genes[[i]] <- cluster_genes
+}
+
+# Print the cluster specific genes
+for (i in 1:max(sample_cluster_assignment)) {
+  print(paste("Cluster", i))
+  print(cluster_specific_genes[[i]])
+}
 ```
-Note: Replace "leukemiaExp.txt" with the actual path to the file containing the gene expression data. Adjust the parameters according to your specific requirements, such as the number of clusters and the number of specific genes per cluster.
+Note: Make sure to replace "leukemiaExp.txt" with the actual file path to your gene expression data. Also, adjust the number of centers in the kmeans function according to the desired number of clusters.

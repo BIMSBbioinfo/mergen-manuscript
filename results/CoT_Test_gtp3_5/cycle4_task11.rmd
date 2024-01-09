@@ -3,31 +3,36 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables and count the number of rows and columns for each, we can use the `read.table()` function in R to read the tables and the `dim()` function to count the number of rows and columns. Here is the code to achieve this:
+To read and analyze the datasets, we can use the `read.table()` function in R. 
+
+Here's the code to read the "metRmOlWithDbgapIdHeader.txt" file and count the number of rows and columns:
 
 ```
-# Read the first table
-met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Count the number of rows and columns for the first table
-met_rows <- dim(met_table)[1]
-met_cols <- dim(met_table)[2]
+# Count the number of rows and columns
+num_rows_met <- nrow(met_data)
+num_cols_met <- ncol(met_data)
 
-# Read the second table
-subject_table <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
-
-# Count the number of rows and columns for the second table
-subject_rows <- dim(subject_table)[1]
-subject_cols <- dim(subject_table)[2]
-
-# Print the number of rows and columns for each table
-cat("Number of rows and columns for the first table (met_table):", "\n")
-cat("Rows:", met_rows, "\n")
-cat("Columns:", met_cols, "\n")
-
-cat("Number of rows and columns for the second table (subject_table):", "\n")
-cat("Rows:", subject_rows, "\n")
-cat("Columns:", subject_cols, "\n")
+# Print the results
+print(paste("Number of rows in met_data:", num_rows_met))
+print(paste("Number of columns in met_data:", num_cols_met))
 ```
 
-This code will read the two tables and then use the `dim()` function to count the number of rows and columns for each table. The results will be printed to the console.
+Similarly, here's the code to read the "subjects.txt" file and count the number of rows and columns:
+
+```
+# Read the "subjects.txt" file
+subject_data <- read.table("subjects.txt", header = TRUE)
+
+# Count the number of rows and columns
+num_rows_subject <- nrow(subject_data)
+num_cols_subject <- ncol(subject_data)
+
+# Print the results
+print(paste("Number of rows in subject_data:", num_rows_subject))
+print(paste("Number of columns in subject_data:", num_cols_subject))
+```
+
+Note: Make sure that both files are in the current working directory or provide the full path to the files in the `read.table()` function.

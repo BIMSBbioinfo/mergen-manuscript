@@ -3,23 +3,22 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required libraries
+# Load required packages
 library(readxl)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-# Get number of rows and columns in count table
-count_rows <- nrow(count_table)
-count_cols <- ncol(count_table)
+n_genes <- nrow(count_table)
+n_samples <- ncol(count_table) - 1
 
 # Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
-# Get number of rows and columns in annotation data
-annotation_rows <- nrow(annotation_data)
-annotation_cols <- ncol(annotation_data)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
+n_annot_rows <- nrow(annotation_data)
+n_annot_cols <- ncol(annotation_data)
 
-# Print the number of rows and columns for count table and annotation data
-print(paste("Count table has", count_rows, "rows and", count_cols, "columns."))
-print(paste("Annotation data has", annotation_rows, "rows and", annotation_cols, "columns."))
+# Print results
+cat("Number of rows in count table:", n_genes, "\n")
+cat("Number of columns in count table:", n_samples, "\n")
+cat("Number of rows in annotation data:", n_annot_rows, "\n")
+cat("Number of columns in annotation data:", n_annot_cols, "\n")
 ```
-

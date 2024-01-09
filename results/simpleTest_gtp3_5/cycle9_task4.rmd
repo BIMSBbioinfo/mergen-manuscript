@@ -6,12 +6,14 @@ response:
 # Read the count table
 count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Get the number of genes and samples
+# Get the number of genes
 num_genes <- nrow(count_table)
+
+# Get the number of samples
 num_samples <- ncol(count_table) - 2
 
 # Print the number of genes and samples
 cat("Number of genes:", num_genes, "\n")
 cat("Number of samples:", num_samples, "\n")
-
 ```
+Note: This assumes that the gene names are present in the first column, and the gene length is present in the last column of the count table. You may need to adjust the column indices (-2) based on the actual structure of your count table.

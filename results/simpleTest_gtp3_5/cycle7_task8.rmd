@@ -3,23 +3,23 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-expr_data <- read.delim("leukemiaExp.txt", sep="\t")
+# Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Remove the first column (gene names)
-expr_data <- expr_data[, -1]
+# Calculate the variance of each gene and sort them in descending order
+gene_variances <- apply(data, 1, var)
+sorted_variances <- sort(gene_variances, decreasing=TRUE)
 
-# Calculate the variability of each gene
-variance <- apply(expr_data, 1, var)
+# Get the top 1000 most variable genes
+top_var_genes <- names(sorted_variances)[1:1000]
 
-# Sort the genes based on their variability
-sorted_genes <- order(variance, decreasing=TRUE)
+# Subset the data to keep only the top variable genes
+filtered_data <- data[top_var_genes, ]
 
-# Select the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000]
+# Extract the expression values of the two most variable genes
+gene_1 <- filtered_data[1, ]
+gene_2 <- filtered_data[2, ]
 
-# Create a scatterplot of the two most variable genes
-plot(expr_data[top_genes[1], ], expr_data[top_genes[2], ], 
-     xlab="Gene 1", ylab="Gene 2", main="Scatterplot of Two Most Variable Genes")
-```
+# Create a scatterplot of the expression values
+plot(gene_1, gene_2, xlab="Gene 1", ylab="Gene 2", main="Scatterplot of Two Most Variable Genes")
 ```

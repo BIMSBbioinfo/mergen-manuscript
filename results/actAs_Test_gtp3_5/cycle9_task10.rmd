@@ -2,52 +2,45 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To accomplish this task, we can follow these steps:
+To complete this task, we can use the following steps:
 
-1. Read the gene expression data from the file "leukemiaExp.txt".
-2. Filter the genes based on their variability.
-3. Select the top 1000 most variable genes.
-4. Cluster the samples using hierarchical clustering.
-5. Extract cluster-specific genes for each cluster.
+1. Read the gene expression data from the "leukemiaExp.txt" file into a data frame.
+2. Calculate the variability of each gene based on the standard deviation of its expression values across samples.
+3. Sort the genes based on their variability in descending order.
+4. Select the top 1000 most variable genes.
+5. Perform clustering analysis on the selected genes to cluster the samples.
+6. Extract the cluster-specific genes for each cluster.
 
-Here's the code to perform these tasks:
+Here is the code to accomplish these steps:
 
 ```
-# Step 1: Read the gene expression data from file
-gene_exp_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Step 1: Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Step 2: Filter genes based on variability
-gene_variability <- apply(gene_exp_data[, -1], 1, var)
+# Step 2: Calculate the variability of each gene
+gene_variability <- apply(data[, -1], 1, sd)
 
-# Step 3: Select top 1000 most variable genes
-top_variable_genes <- names(sort(gene_variability, decreasing = TRUE)[1:1000])
+# Step 3: Sort the genes based on their variability in descending order
+sorted_genes <- data[order(gene_variability, decreasing = TRUE), ]
 
-# Step 4: Perform hierarchical clustering on samples
-sample_dist <- dist(t(gene_exp_data[top_variable_genes, -1]))  # calculate sample distances
-sample_clusters <- hclust(sample_dist)  # perform hierarchical clustering
+# Step 4: Select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
 
-# Step 5: Extract cluster-specific genes for each cluster
-num_clusters <- 5  # choose the desired number of clusters
+# Step 5: Perform clustering analysis on the selected genes
+library("pheatmap")  # This package provides heatmap visualization
+distance_matrix <- dist(t(top_1000_genes[, -1]))  # Calculate the distance matrix
+cluster_result <- hclust(distance_matrix)  # Perform hierarchical clustering
 
-# Cut the clustering dendrogram into distinct clusters
-sample_cluster_assignments <- cutree(sample_clusters, k = num_clusters)
+# Step 6: Extract the cluster-specific genes for each cluster
+num_clusters <- 3  # Assuming you want 3 clusters
+cut_clusters <- cutree(cluster_result, k = num_clusters)  # Assign samples to clusters
+cluster_genes <- lapply(split(top_1000_genes[, -1], cut_clusters), row.names)
 
-# Create a list to store cluster-specific genes
-cluster_specific_genes <- vector("list", num_clusters)
-
-# Iterate over each cluster and extract cluster-specific genes
-for (i in 1:num_clusters) {
-  cluster_samples <- which(sample_cluster_assignments == i)
-  cluster_expression <- gene_exp_data[top_variable_genes, cluster_samples]
-  mean_expression <- apply(cluster_expression, 1, mean)
-  cluster_specific_genes[[i]] <- names(which(mean_expression > 0))  # select genes with mean expression > 0
-}
-
-# Print the cluster-specific genes for each cluster
+# Print the cluster-specific genes
 for (i in 1:num_clusters) {
   cat("Cluster", i, "specific genes:\n")
-  cat(cluster_specific_genes[[i]], "\n\n")
+  print(cluster_genes[[i]])
 }
 ```
 
-Make sure to replace "leukemiaExp.txt" with the actual file path of your gene expression data. You may also need to adjust the number of clusters (`num_clusters`) based on your data and requirements.
+Please note that in this code, I assumed the number of clusters to be 3. You can change the value of `num_clusters` variable according to your requirement. Additionally, you may need to install the `pheatmap` package using the command `` if it is not already installed.

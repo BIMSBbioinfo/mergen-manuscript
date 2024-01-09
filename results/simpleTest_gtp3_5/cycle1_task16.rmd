@@ -3,30 +3,38 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(tidyverse)
+# Load required packages
 library(readxl)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
+# Read annotation data
 annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Transpose the count table to have genes as columns
-count_table <- count_table %>%
-  pivot_longer(cols = -1, names_to = "Sample", values_to = "Expression")
+# Transpose and rename annotation data
+annotation_data <- annotation_data %>%
+  t() %>%
+  as.data.frame() %>%
+  setNames(annotation_data$sample_id)
 
 # Merge annotation data and count table
-merged_data <- count_table %>%
-  left_join(annotation_data, by = c("Sample" = "sample_id"))
+merged_data <- merge(count_table, annotation_data, by = "row.names")
+
+# Remove row.names column
+merged_data <- merged_data %>% select(-Row.names)
+
+# Convert data to long format
+long_data <- merged_data %>%
+  gather(key = "Sample", value = "GeneExpression", -group)
 
 # Plot boxplots
-ggplot(merged_data, aes(x = Group, y = Expression, fill = Group)) +
+ggplot(long_data, aes(x = Sample, y = GeneExpression, fill = group)) +
   geom_boxplot() +
-  xlab("Group") +
-  ylab("Gene Expression") +
-  ggtitle("Gene Expression Boxplots by Group") +
-  theme_minimal()
+  scale_fill_manual(values = c("red", "blue")) +
+  theme_bw()
 ```
-
+```

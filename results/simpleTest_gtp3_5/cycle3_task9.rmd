@@ -3,34 +3,36 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Calculate the variability for each gene
-gene_variability <- apply(gene_exp, 1, var)
+# Calculate the variance of each gene
+variances <- apply(data, 1, var)
+
+# Order genes based on their variance
+ordered_genes <- names(variances)[order(variances, decreasing=TRUE)]
 
 # Select the top 1000 most variable genes
-top_var_genes <- names(head(sort(gene_variability, decreasing = TRUE), 1000))
+selected_genes <- ordered_genes[1:1000]
 
-# Filter the gene expression data to retain only the top variable genes
-filtered_gene_exp <- gene_exp[top_var_genes, ]
+# Filter the data to retain only the selected genes
+filtered_data <- data[selected_genes, ]
 
-# Compute the distance matrix based on the gene expression data
-dist_mat <- dist(filtered_gene_exp)
+# Calculate the distance matrix using euclidean distance
+distance_matrix <- dist(filtered_data)
 
-# Perform hierarchical clustering based on the distance matrix
-heatmap_order <- hclust(dist_mat)$order
+# Perform hierarchical clustering on the distance matrix
+hc <- hclust(distance_matrix)
 
-# Generate the heatmap plot
-heatmap(filtered_gene_exp[heatmap_order, ], scale = "row", 
-        Colv = NA, main = "Heatmap of Gene Expression")
+# Create a heatmap with clustering
+heatmap(filtered_data, col=heat.colors(256), scale="row",
+        main="Gene Expression Heatmap")
 
-# Perform principal component analysis (PCA) on the gene expression data
-pca_result <- prcomp(t(filtered_gene_exp))
+# Perform PCA on the filtered data
+pca <- prcomp(filtered_data)
 
-# Generate the PCA plot
-plot(pca_result$x[,1], pca_result$x[,2], 
-     main = "PCA Plot of Gene Expression", xlab = "PC1", ylab = "PC2")
-
+# Plot the PCA
+plot(pca$x, col=as.numeric(as.factor(colnames(filtered_data))),
+     pch=16, xlab="PC1", ylab="PC2", main="PCA Plot")
 ```
-Note: Make sure to replace "leukemiaExp.txt" with the actual path to your gene expression data file.
+

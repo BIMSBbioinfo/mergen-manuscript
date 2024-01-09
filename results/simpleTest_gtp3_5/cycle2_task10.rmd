@@ -6,39 +6,31 @@ response:
 # Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column (gene names)
-data <- data[, -1]
-
-# Calculate the variance of each gene
-variances <- apply(data, 1, var)
+# Calculate the variance for each gene
+variance <- apply(data[,-1], 1, var)
 
 # Sort the genes based on their variance in descending order
-sorted_genes <- sort(variances, decreasing = TRUE)
+sorted_genes <- data[order(-variance), ]
 
 # Select the top 1000 most variable genes
-top_genes <- names(sorted_genes)[1:1000]
+top_1000_genes <- sorted_genes[1:1000, ]
 
-# Create a matrix with only the selected top genes
-selected_data <- data[top_genes, ]
-
-# Cluster the samples using hierarchical clustering
-diss_matrix <- dist(selected_data)
-hc <- hclust(diss_matrix)
-clusters <- cutree(hc, k = 5)  # Assuming we want 5 clusters
+# Cluster the samples based on the expression levels of the selected genes
+dist_matrix <- dist(t(top_1000_genes[, -1]))
+sample_clusters <- hclust(dist_matrix)
+clusters <- cutree(sample_clusters, k = 5)  # Assuming 5 clusters, you can change this as required
 
 # Extract cluster specific genes for each cluster
 cluster_specific_genes <- list()
-for (i in 1:max(clusters)) {
+for (i in unique(clusters)) {
   cluster_samples <- which(clusters == i)
-  cluster_data <- selected_data[, cluster_samples]
-  cluster_variances <- apply(cluster_data, 1, var)
-  cluster_sorted_genes <- sort(cluster_variances, decreasing = TRUE)
-  cluster_specific_genes[[i]] <- names(cluster_sorted_genes)[1:100]  # Assuming we want top 100 specific genes per cluster
+  cluster_expression <- top_1000_genes[, cluster_samples]
+  cluster_specific_genes[[i]] <- cluster_expression$gene
 }
 
-# Output the cluster specific genes
-for (i in 1:max(clusters)) {
-  cat("Cluster", i, "specific genes:", cluster_specific_genes[[i]], "\n")
+# Print the cluster specific genes
+for (i in unique(clusters)) {
+  cat("Cluster", i, ":", cluster_specific_genes[[i]], "\n")
 }
 ```
-Note: This code assumes that the number of samples is larger than the number of genes. If the number of genes is larger than the number of samples, you may need to transpose the data before applying the code.
+Note: This code assumes that the column names in the gene expression file are not included in the data itself, hence the use of `[, -1]` when calculating the variance and clustering the samples. If your data includes column names in the first row, you can remove the `[, -1]` part in those lines.

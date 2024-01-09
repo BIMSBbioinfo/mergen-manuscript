@@ -4,17 +4,16 @@ I have the following count table for an RNA-seq experiment, "SRP021193.raw_count
 response:
 ```
 # Read the count table
-count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t", row.names = 1)
 
 # Get the number of genes
 num_genes <- nrow(count_table)
 
 # Get the number of samples
-num_samples <- ncol(count_table) - 2
+num_samples <- ncol(count_table) - 2  
 
-# Print the number of genes and samples
-print(paste0("Number of genes: ", num_genes))
-print(paste0("Number of samples: ", num_samples))
+# Display the number of genes and samples
+num_genes
+num_samples
 ```
-
-This code assumes that the count table file "SRP021193.raw_counts.tsv" is located in the current working directory. Adjust the file path if necessary.
+The dataset has **num_genes** genes and **num_samples** samples.

@@ -3,18 +3,18 @@ I have the following gene expression data as an excel sheet,  "Supplementary_Tab
 
 response:
 ```
-# Load the required library
+# Load required library
 library(readxl)
 
 # Read the excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Get the number of genes and samples
-num_genes <- nrow(data) - 1  # Subtract 1 to exclude the header row
-num_samples <- ncol(data) - 1  # Subtract 1 to exclude the gene names column
+# Count the number of genes and samples
+num_genes <- nrow(data) - 1 # Subtracting 1 because the first row contains gene names
+num_samples <- ncol(data) - 1 # Subtracting 1 because the first column contains gene names
 
-# Print the number of genes and samples
-cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples, "\n")
+# Print the results
+num_genes
+num_samples
 ```
-Note: Make sure to replace "Supplementary_Table_1_exp.xlsx" with the actual path to your excel file.
+```

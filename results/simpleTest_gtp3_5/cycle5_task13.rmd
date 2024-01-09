@@ -3,23 +3,25 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(dplyr)
-library(readxl)
+# Load required libraries
+library(openxlsx)
 
-# Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1, colNames = FALSE)
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Merge annotation data and count table
-merged_data <- inner_join(annotation_data, count_table, by = c("sample_id" = "Gene"))
+# Rename the first column of the annotation data to "Sample"
+colnames(annotation_data)[1] <- "Sample"
 
-# Calculate number of columns
+# Merge annotation data and count table by matching sample names
+merged_data <- merge(annotation_data, count_table, by.x = "Sample", by.y = 0, all.x = TRUE)
+
+# Calculate the number of columns
 num_columns <- ncol(merged_data)
+num_columns
+```
+```
 
-# Print the number of columns
-print(num_columns)
-```
-```
+Note: Make sure to replace the file paths with the actual paths to your files.

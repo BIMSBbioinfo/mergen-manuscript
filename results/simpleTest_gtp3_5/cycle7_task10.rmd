@@ -4,44 +4,35 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Extract gene names
-gene_names <- data[, 1]
+# Calculate the variability of each gene
+gene_variability <- apply(gene_exp[, -1], 1, var)
 
-# Remove the gene names column from the data
-data <- data[, -1]
+# Sort the genes based on their variability in descending order
+sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
 
-# Calculate the variability of genes
-variability <- apply(data, 1, var)
+# Retain the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000, ]
 
-# Order genes based on their variability in descending order
-sorted_genes <- sort(variability, decreasing = TRUE)
+# Perform clustering on the samples using the remaining genes
+sample_clusters <- hclust(dist(t(top_genes[-1])))
 
-# Select the top 1000 most variable genes
-top_var_genes <- sorted_genes[1:1000]
+# Cut the dendrogram into 3 clusters
+clusters <- cutree(sample_clusters, k = 3)
 
-# Filter the data for the top variable genes
-filtered_data <- data[which(gene_names %in% names(top_var_genes)), ]
+# Create a list to store the cluster specific genes
+cluster_genes <- list()
 
-# Cluster samples
-cluster_results <- kmeans(filtered_data, centers = 5)
-
-# Extract cluster labels
-cluster_labels <- cluster_results$cluster
-
-# Create a list to store cluster-specific genes
-cluster_specific_genes <- vector("list", 5)
-
-# Iterate through each cluster and extract cluster-specific genes
-for (i in 1:5) {
-  cluster_specific_genes[[i]] <- gene_names[which(cluster_labels == i)]
+# Extract cluster specific genes for each cluster
+for (i in 1:max(clusters)) {
+  cluster_genes[[i]] <- top_genes[clusters == i, ]
 }
 
-# Print the cluster-specific genes for each cluster
-for (i in 1:5) {
-  cat("\nCluster", i, "specific genes:")
-  cat(paste(cluster_specific_genes[[i]], collapse = ", "))
+# Print the cluster specific genes for each cluster
+for (i in 1:max(clusters)) {
+  cat("Cluster", i, "specific genes:\n")
+  print(cluster_genes[[i]][[1]])
 }
 ```
-
+Note: Please make sure to replace "leukemiaExp.txt" with the correct file path/name in the `read.table` function.

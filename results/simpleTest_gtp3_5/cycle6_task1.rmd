@@ -4,9 +4,9 @@ I have a tab separated file called "subjects.txt". Read it and tell me how many 
 response:
 ```
 # Read the file
-data <- read.delim("subjects.txt", sep="\t")
+data <- read.table("subjects.txt", sep="\t")
 
-# Count the number of rows and columns
+# Get the number of rows and columns
 num_rows <- nrow(data)
 num_cols <- ncol(data)
 
@@ -14,4 +14,5 @@ num_cols <- ncol(data)
 num_rows
 num_cols
 ```
-```
+
+Note: Replace "subjects.txt" with the actual file path of your "subjects.txt" file.

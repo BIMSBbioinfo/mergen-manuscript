@@ -3,21 +3,26 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load the gene expression data
-gene_exp <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+# Read the data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance of each gene
-gene_variance <- apply(gene_exp[, -1], 1, var)
+# Remove the first column containing gene names
+data <- data[ ,2:ncol(data)]
 
-# Sort the genes based on variance
-sorted_genes <- gene_exp[order(gene_variance, decreasing = TRUE), ]
+# Calculate the variance for each gene
+variances <- apply(data, 1, var)
 
-# Filter the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000, ]
+# Sort the variances in descending order
+sorted_variances <- sort(variances, decreasing = TRUE)
+
+# Select the top 1000 genes with highest variance
+top_genes <- names(sorted_variances)[1:1000]
+
+# Remove the genes that are not in the top 1000 from the data
+filtered_data <- data[top_genes, ]
 
 # Create a scatterplot of the two most variable genes
-plot(top_1000_genes$Gene_Name, top_1000_genes[, 2], col = "blue", pch = 16, xlab = "Gene", ylab = "Expression")
-points(top_1000_genes$Gene_Name, top_1000_genes[, 3], col = "red", pch = 16)
-legend("topleft", legend = c("Sample 1", "Sample 2"), col = c("blue", "red"), pch = 16)
+most_variable_genes <- head(top_genes, 2)
+plot(filtered_data[most_variable_genes[1], ], filtered_data[most_variable_genes[2], ], 
+     xlab = most_variable_genes[1], ylab = most_variable_genes[2], main = "Scatterplot of two most variable genes")
 ```
-Note: In the code above, replace "leukemiaExp.txt" with the actual file path of your gene expression data file. Also, adjust the column indices in the scatterplot code according to your data structure, where column 2 represents the first sample and column 3 represents the second sample.

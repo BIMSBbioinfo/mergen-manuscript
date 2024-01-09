@@ -3,32 +3,23 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Install required packages
-
-
-
 # Load required libraries
 library(readxl)
-library(dplyr)
 
 # Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Get the number of rows and columns
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
 
-# Get the number of rows and columns in count table
-num_rows_count_table <- nrow(count_table)
-num_cols_count_table <- ncol(count_table)
+# Read the annotation table
+annotation_table <- read.delim("SRP021193.colData.tsv")
+# Get the number of rows and columns
+annotation_rows <- nrow(annotation_table)
+annotation_cols <- ncol(annotation_table)
 
-# Read the annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
-
-# Get the number of rows and columns in annotation data
-num_rows_annotation_data <- nrow(annotation_data)
-num_cols_annotation_data <- ncol(annotation_data)
-
-# Print the number of rows and columns for count table and annotation data
-cat("Number of rows in count table: ", num_rows_count_table, "\n")
-cat("Number of columns in count table: ", num_cols_count_table, "\n")
-cat("Number of rows in annotation data: ", num_rows_annotation_data, "\n")
-cat("Number of columns in annotation data: ", num_cols_annotation_data, "\n")
+# Print the number of rows and columns for each table
+cat("Count Table: Number of rows =", count_rows, ", Number of columns =", count_cols, "\n")
+cat("Annotation Table: Number of rows =", annotation_rows, ", Number of columns =", annotation_cols)
 ```
 ```

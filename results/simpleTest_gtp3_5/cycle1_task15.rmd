@@ -3,21 +3,28 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the data from "metRmOlWithDbgapIdHeader.txt" into a data frame
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
 
-# Read the "subjects.txt" file
+# Read the data from "subjects.txt" into a data frame
 subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Merge the two datasets based on dbGap ID
-merged_data <- merge(met_data, subjects_data, by.x = "DBGapId", by.y = "dbGap ID")
+# Rename the second column of subjects_data to "dbGapId"
+colnames(subjects_data)[2] <- "dbGapId"
 
-# Get the two oldest subjects
-oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
+# Merge the two data frames based on dbGapId column
+merged_data <- merge(met_data, subjects_data, by = "dbGapId")
 
-# Scatter plot of CpG methylation values for the two oldest subjects
-plot(oldest_subjects$CpG_id, oldest_subjects[, 2:ncol(oldest_subjects)],
-     xlab = "CpG ID", ylab = "Methylation Value", main = "Scatter plot of CpG Methylation")
-legend("bottomright", legend = oldest_subjects$DBGapId, fill = 1:2)
+# Convert the Age column to numeric (in case it is read as a factor)
+merged_data$Age <- as.numeric(as.character(merged_data$Age))
+
+# Sort the data frame by Age column in descending order
+merged_data <- merged_data[order(-merged_data$Age), ]
+
+# Create a new data frame containing only the two oldest subjects
+oldest_subjects <- merged_data[1:2, ]
+
+# Plot a scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects[, -1], main = "Scatter Plot of CpG Methylation", xlab = "CpG Id", ylab = "Methylation Value")
 ```
-
+```

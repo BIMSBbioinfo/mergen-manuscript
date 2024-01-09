@@ -4,39 +4,40 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 response:
 ```
 # Load necessary libraries
+library(readxl)
 library(DESeq2)
 library(ggplot2)
-library(dplyr)
 
-# Read count table
-counts <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Create DESeq2 object
-dds <- DESeqDataSetFromMatrix(countData = counts,
-                              colData = annotation,
-                              design = ~ 1)
+# Extract the sample IDs from the annotation data
+sample_ids <- annotation_data[,1]
 
-# Normalize counts using DESeq2
+# Set the sample IDs as column names in the count table
+colnames(count_table) <- sample_ids
+
+# Create a DESeqDataSet object for normalization
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~1)
+
+# Perform the normalization using DESeq2
 dds <- DESeq(dds)
 
-# Get normalized counts
+# Obtain normalized counts
 normalized_counts <- counts(dds, normalized = TRUE)
 
-# Make PCA plot color coded by "group"
-pca_group <- prcomp(t(normalized_counts))
-pca_df_group <- data.frame(pca_group$x, Group = annotation$group)
-ggplot(pca_df_group, aes(x = PC1, y = PC2, color = Group)) + 
-  geom_point() +
-  labs(title = "PCA Plot (Color Coded by Group)")
+# Perform PCA on the normalized counts
+pca_data <- prcomp(t(normalized_counts))
 
-# Make PCA plot color coded by "LibrarySelection"
-pca_library <- prcomp(t(normalized_counts))
-pca_df_library <- data.frame(pca_library$x, LibrarySelection = annotation$LibrarySelection)
-ggplot(pca_df_library, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
-  geom_point() +
-  labs(title = "PCA Plot (Color Coded by LibrarySelection)")
-}
+# Create PCA plot color coded by "group"
+plot(pca_data$x[,1:2], col = annotation_data$group, pch = 16, xlab = "PC1", ylab = "PC2")
+
+# Create PCA plot color coded by "LibrarySelection"
+plot(pca_data$x[,1:2], col = annotation_data$LibrarySelection, pch = 16, xlab = "PC1", ylab = "PC2")
 ```
+Note: Replace the file paths "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths on your system.

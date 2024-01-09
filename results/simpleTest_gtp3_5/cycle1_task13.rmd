@@ -5,24 +5,21 @@ response:
 ```
 # Load required libraries
 library(readxl)
-library(tidyr)
+library(dplyr)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Rename first column of annotation data as "SampleID"
-colnames(annotation_data)[1] <- "SampleID"
-
-# Merge annotation data and gene expression table
-merged_data <- merge(annotation_data, count_table, by.x = "SampleID", by.y = 0, all.x = TRUE)
+# Merge annotation data and count table
+merged_data <- left_join(annotation_data, count_table, by = "SampleID")
 
 # Calculate number of columns
 num_columns <- ncol(merged_data)
 
 # Print the number of columns
-num_columns
+print(num_columns)
 ```
-
+```

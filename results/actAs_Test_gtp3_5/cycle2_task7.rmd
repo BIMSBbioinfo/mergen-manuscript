@@ -2,48 +2,31 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data. Create a boxplot of the columns
 
 response:
-To complete this task, you can use the R programming language and its libraries for data manipulation and visualization. Here's the code to accomplish the task:
+To complete this task, we will follow these steps:
+
+1. Read the gene expression data from the file "leukemiaExp.txt".
+2. Check if the number of columns (samples) is greater than 500.
+3. If so, randomly sample 500 samples and create a subset of the data.
+4. Create a boxplot of the columns in the dataset.
+
+Here is the code to accomplish these tasks:
 
 ```
-# Load required libraries
-library(readr)
-library(ggplot2)
+# Step 1: Read the gene expression data from the file
+data <- read.delim("leukemiaExp.txt", sep="\t")
 
-# Set the path to the gene expression data file
-file_path <- "leukemiaExp.txt"
+# Step 2: Check the number of columns (samples)
+num_samples <- ncol(data)
 
-# Read the gene expression data from the file
-gene_exp_data <- read_tsv(file_path)
-
-# Check the number of columns (samples)
-num_samples <- ncol(gene_exp_data)
-
-# Define the maximum number of samples allowed
-max_samples <- 500
-
-# If the number of samples is greater than max_samples, randomly sample the columns
-if (num_samples > max_samples) {
-  # Set the seed for reproducibility
-  set.seed(123)
-  
-  # Randomly select max_samples column indices
-  sampled_indices <- sample(1:num_samples, max_samples)
-  
-  # Create the subset of the data using the sampled indices
-  gene_exp_data <- gene_exp_data[, sampled_indices]
+# Step 3: If more than 500 columns, create a subset by randomly sampling 500 columns
+if (num_samples > 500) {
+  set.seed(123)  # Set a seed for reproducibility
+  subset_columns <- sample(1:num_samples, 500)
+  data <- data[, subset_columns]
 }
 
-# Convert the data frame to long format for boxplot plotting
-gene_exp_long <- tidyr::gather(gene_exp_data, sample_column, expression, -1)
-
-# Create the boxplot of the columns (samples)
-boxplot_plot <- ggplot(gene_exp_long, aes(x = sample_column, y = expression)) +
-  geom_boxplot() +
-  labs(x = "Samples", y = "Gene Expression") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
-
-# Display the boxplot
-print(boxplot_plot)
+# Step 4: Create a boxplot of the columns
+boxplot(data, main="Gene Expression Data - Boxplot", xlab="Samples", ylab="Expression Level")
 ```
 
-Make sure to replace "leukemiaExp.txt" with the actual path to your gene expression data file. The code first reads the data from the file, then checks if there are more than 500 samples. If so, it randomly samples 500 samples and creates a subset of the data. Finally, it converts the data frame to long format for boxplot plotting and creates the boxplot of the columns (samples).
+The code above reads the gene expression data from the file "leukemiaExp.txt" using the `read.delim` function with tab as the separator. It then checks the number of columns and if more than 500, randomly samples 500 columns using the `sample` function. Finally, it creates a boxplot of the columns in the dataset using the `boxplot` function, with appropriate titles for the plot.

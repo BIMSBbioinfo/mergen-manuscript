@@ -6,18 +6,18 @@ response:
 # Load necessary libraries
 library(readxl)
 
-# Read the count table and annotation data
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Count number of rows and columns for each table
-count_rows <- nrow(count_table)
-count_columns <- ncol(count_table)
-annotation_rows <- nrow(annotation_data)
-annotation_columns <- ncol(annotation_data)
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-count_rows
-count_columns
-annotation_rows
-annotation_columns
+# Print number of rows and columns for count table
+cat("Number of rows in count table:", nrow(count_table), "\n")
+cat("Number of columns in count table:", ncol(count_table), "\n")
+
+# Print number of rows and columns for annotation data
+cat("Number of rows in annotation data:", nrow(annotation_data), "\n")
+cat("Number of columns in annotation data:", ncol(annotation_data), "\n")
 ```
+

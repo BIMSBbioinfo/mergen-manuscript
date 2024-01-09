@@ -2,53 +2,97 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To accomplish this task, we will use the following steps:
+To solve this task, we need to follow these steps:
 
-1. Read the count table from "Supplementary_Table_1_exp.xlsx" into a data frame.
-2. Read the annotation data from "SRP021193.colData.tsv" into another data frame.
-3. Normalize the counts using a suitable method.
-4. Perform principal component analysis (PCA) on the normalized counts.
-5. Plot the PCA results, color-coded by the "group" and "LibrarySelection" variables.
+1. Read and load the count table and annotation data
+2. Normalize the count table
+3. Perform PCA on the normalized count table
+4. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection"
 
-Before proceeding, make sure you have the necessary libraries installed. The `readxl`, `dplyr`, `tidyverse`, and `ggplot2` libraries are needed for this task. If you don't have them, you can install them using the following code:
-
-```
-
-
-
+Let's start by reading and loading the count table and annotation data.
 
 ```
+# Load required libraries
+library(dplyr)
+library(readxl)
 
-Now let's get started with the code:
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+
+# Check the data
+head(count_table)
+head(annotation_data)
+```
+
+Next, we will normalize the count table using a suitable method. For simplicity, let's use the "TMM" (trimmed means of M-values) method from the `edgeR` package.
 
 ```
-# Step 1: Read the count table
-count_table <- readxl::read_excel("Supplementary_Table_1_exp.xlsx")
+# Load required libraries
+library(edgeR)
 
-# Step 2: Read the annotation data
-annotation_data <- readr::read_tsv("SRP021193.colData.tsv")
+# Extract count matrix from the count table
+counts <- count_table[, -1]
 
-# Step 3: Normalize the counts
-# You can choose a suitable normalization method here depending on your data and goals.
-# For example, you can use the DESeq2 package for normalization using the following code:
-# 
-# library(DESeq2)
-# count_table_normalized <- counts(count_table) # assuming count_table is a DESeqDataSet object
+# Normalize count table using TMM method
+normalized_counts <- calcNormFactors(counts, method = "TMM")
 
-# Step 4: Perform PCA on the normalized counts
-# For simplicity, let's use the prcomp function from the stats package for PCA:
-pca <- prcomp(count_table_normalized)
+# Convert normalized counts back to a data frame
+normalized_counts_df <- as.data.frame(normalized_counts)
 
-# Step 5: Plot the PCA results
-# Color-coded by "group"
-ggplot(pca$x, aes(x = PC1, y = PC2, color = annotation_data$group)) +
+# Add the gene names back to the normalized counts data frame
+normalized_counts_df$Gene <- count_table$Gene
+
+# Check the normalized counts
+head(normalized_counts_df)
+```
+
+Now that we have the normalized counts, we can perform PCA analysis on the count table. We will use the `prcomp()` function from the base R package.
+
+```
+# Perform PCA on the normalized count table
+pca <- prcomp(normalized_counts_df[, -ncol(normalized_counts_df)], scale. = TRUE)
+
+# Extract the scores from the PCA output
+pca_scores <- as.data.frame(pca$x)
+
+# Add the sample ids from the annotation data to the PCA scores
+pca_scores$Sample <- rownames(normalized_counts_df)
+
+# Check the PCA scores
+head(pca_scores)
+```
+
+Finally, we can create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection". We will use the `ggplot2` package for visualization.
+
+```
+# Load required library
+library(ggplot2)
+
+# Join the annotation data with the PCA scores based on the sample ids
+pca_scores_annotated <- left_join(pca_scores, annotation_data, by = c("Sample" = "sample_id"))
+
+# Plot PCA color-coded by "group"
+pca_plot_group <- ggplot(pca_scores_annotated, aes(PC1, PC2, color = group)) +
   geom_point() +
-  labs(title = "PCA plot: Samples color coded by group")
+  labs(x = "PC1", y = "PC2", title = "PCA plot (Color-coded by Group)")
 
-# Color-coded by "LibrarySelection"
-ggplot(pca$x, aes(x = PC1, y = PC2, color = annotation_data$LibrarySelection)) +
+# Plot PCA color-coded by "LibrarySelection"
+pca_plot_library_selection <- ggplot(pca_scores_annotated, aes(PC1, PC2, color = LibrarySelection)) +
   geom_point() +
-  labs(title = "PCA plot: Samples color coded by LibrarySelection")
+  labs(x = "PC1", y = "PC2", title = "PCA plot (Color-coded by LibrarySelection)")
+
+# Display the plots
+print(pca_plot_group)
+print(pca_plot_library_selection)
 ```
 
-Please note that the above code assumes you have normalized the counts using a specific method. You may need to adapt the code based on the normalization method you choose, or any specific packages you want to use for normalization.
+And that's it! We have now normalized the counts, performed PCA, and created two PCA plots color-coded by "group" and "LibrarySelection". You can further customize the plots as per your requirements.
+
+Please note that you might need to install the required R packages (`readxl`, `edgeR`, and `ggplot2`) if you haven't already done so. You can install them using the `install.packages()` function.
+
+```
+
+```

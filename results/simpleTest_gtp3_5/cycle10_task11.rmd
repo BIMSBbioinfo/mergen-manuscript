@@ -5,17 +5,21 @@ Read the tables count number of rows and columns for each.
 response:
 ```
 # Read the "metRmOlWithDbgapIdHeader.txt" file
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep="\t")
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+
+# Get the number of rows and columns in met_data
+met_rows <- nrow(met_data)
+met_cols <- ncol(met_data)
 
 # Read the "subjects.txt" file
-subject_data <- read.table("subjects.txt", header = TRUE)
+subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Count number of rows and columns in the "met_data" table
-num_rows_met <- nrow(met_data)
-num_cols_met <- ncol(met_data)
+# Get the number of rows and columns in subjects_data
+subjects_rows <- nrow(subjects_data)
+subjects_cols <- ncol(subjects_data)
 
-# Count number of rows and columns in the "subject_data" table
-num_rows_subject <- nrow(subject_data)
-num_cols_subject <- ncol(subject_data)
+# Print the number of rows and columns for each dataset
+print(paste("Number of rows and columns in met_data:", met_rows, "rows,", met_cols, "columns."))
+print(paste("Number of rows and columns in subjects_data:", subjects_rows, "rows,", subjects_cols, "columns."))
 ```
-Note: Replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths if they are not in the current working directory.
+

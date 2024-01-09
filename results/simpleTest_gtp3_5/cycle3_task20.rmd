@@ -3,48 +3,40 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(readxl)
 library(DESeq2)
-library(ggplot2)
-library(viridis)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+# Read count data
+count_data <- read.table("Supplementary_Table_1_exp.xlsx", header=TRUE, row.names=1, sep="\t")
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+annotation_data <- read.table("SRP021193.colData.tsv", header=TRUE, row.names=1, sep="\t")
 
-# Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table[, -1], 
-                              colData = annotation_data,
-                              design = ~ group)
+# Set up the DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_data, colData = annotation_data, design = ~ group)
 
-# Perform differential expression analysis
+# Perform statistical tests
 dds <- DESeq(dds)
 
-# Get differential expression results
-res <- results(dds)
+# Extract gene-specific p-values
+gene_pvalues <- results(dds)$pvalue
 
-# Adjust p-values for multiple testing
-res <- lfcShrink(dds)
+# Perform multiple testing correction (e.g., Benjamini-Hochberg)
+gene_padj <- p.adjust(gene_pvalues)
 
-# Get group specific genes
-group_specific_genes <- as.data.frame(res$padj < 0.05)
+# Get genes specific for each group
+group_specific_genes <- list()
+for (group_value in unique(annotation_data$group)) {
+  group_genes <- rownames(annotation_data)[annotation_data$group == group_value]
+  group_specific_genes[[group_value]] <- group_genes[gene_padj[group_genes] < 0.05]
+}
 
-# Plot PCA using group specific genes
-group_specific_counts <- count_table[group_specific_genes[,1], -1]
-group_specific_annotation <- annotation_data[rownames(group_specific_counts), ]
-group_pca <- prcomp(t(group_specific_counts))
-group_pca_df <- as.data.frame(group_pca$x)
+# Extract count data for group-specific genes
+group_specific_count_data <- count_data[group_specific_genes, ]
 
-# Add group information to PCA dataframe
-group_pca_df$group <- group_specific_annotation$group
+# Run PCA on group-specific genes
+pca_data <- prcomp(t(group_specific_count_data))
 
 # Plot PCA
-ggplot(group_pca_df, aes(x = PC1, y = PC2, color = group)) +
-  geom_point() +
-  scale_color_manual(values = viridis(length(unique(group_specific_annotation$group)))) +
-  labs(title = "PCA using Group Specific Genes", x = "PC1", y = "PC2")
+plot(pca_data$x, col = annotation_data$group, pch = 16, xlab = "PC1", ylab = "PC2")
 ```
 ```

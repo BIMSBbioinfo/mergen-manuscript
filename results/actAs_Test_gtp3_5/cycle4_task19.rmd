@@ -2,56 +2,75 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, we will use the following steps:
+To complete this task, we will need to load the count table and the annotation data, normalize the counts, and then create two PCA plots color-coded by different variables from the annotation data. We can achieve this using the R programming language and some commonly used bioinformatics packages.
 
-1. Read the count table and annotation data.
-2. Normalize the count data.
-3. Perform PCA analysis and create plots.
+Here's how we can approach this task:
 
-Let's start by reading the data:
-
+1. Install and load the required packages:
 ```
-# Load required libraries
+
+
+
+
+
+
+library(readxl)
+library(DESeq2)
 library(tidyverse)
-library(openxlsx)
-library(pcaMethods)
-
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
-
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+library(pheatmap)
+library(RColorBrewer)
+library(ggplot2)
 ```
 
-Next, we will normalize the count data. There are several methods available for normalization, we will use the "TMM" method from the `edgeR` package:
-
+2. Load the count table and annotation data:
 ```
-# Extract the count values from the count table
-count_data <- as.matrix(count_table[, -1])
-
-# Perform normalization using TMM method
-norm_count_data <- calcNormFactors(count_data)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 ```
 
-Now, let's perform PCA analysis and create the plots:
-
+3. Normalize the counts using DESeq2:
 ```
-# Transpose the normalized count data
-norm_count_data_t <- t(norm_count_data)
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
+                              colData = annotation_data,
+                              design = ~ 1)
 
-# Add sample information to the normalized count data
-norm_count_data_annotated <- cbind(norm_count_data_t, annotation_data)
-
-# Perform PCA analysis using prcomp function
-pca <- prcomp(norm_count_data_t)
-
-# Create first PCA plot color-coded by "group" in annotation data
-plot(pca$x[, 1:2], col = annotation_data$group, pch = 16)
-
-# Create second PCA plot color-coded by "LibrarySelection" in annotation data
-plot(pca$x[, 1:2], col = annotation_data$LibrarySelection, pch = 16)
+# Perform size factor estimation and normalization
+dds <- estimateSizeFactors(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
 ```
 
-This code will normalize the counts, perform PCA analysis, and create two PCA plots. The first plot will be color-coded by the "group" in the annotation data, and the second plot will be color-coded by "LibrarySelection" in the annotation data.
+4. Perform PCA analysis and create the first PCA plot color-coded by "group":
+```
+# Perform PCA analysis on normalized counts
+pca_data <- prcomp(t(normalized_counts))
 
-Note: Make sure to install the required libraries (`tidyverse`, `openxlsx`, `pcaMethods`, `edgeR`) before running the code.
+# Create PCA plot color-coded by "group"
+group_colors <- brewer.pal(length(unique(annotation_data$group)), "Set1")
+pca_plot_group <- ggplot(data = data.frame(pca_data$x, group = annotation_data$group),
+                         aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  scale_color_manual(values = group_colors) +
+  labs(title = "PCA Plot (Color-coded by Group)")
+```
+
+5. Create the second PCA plot color-coded by "LibrarySelection":
+```
+# Create PCA plot color-coded by "LibrarySelection"
+library_colors <- brewer.pal(length(unique(annotation_data$LibrarySelection)), "Set2")
+pca_plot_library <- ggplot(data = data.frame(pca_data$x, library = annotation_data$LibrarySelection),
+                           aes(x = PC1, y = PC2, color = library)) +
+  geom_point() +
+  scale_color_manual(values = library_colors) +
+  labs(title = "PCA Plot (Color-coded by LibrarySelection)")
+```
+
+6. Display both PCA plots:
+```
+pca_plot_group
+pca_plot_library
+```
+
+That's it! You should now have the normalized counts and two PCA plots color-coded by different variables from the annotation data.
+
+Note: Make sure to adjust the file names and sheet number in the code according to your actual files.

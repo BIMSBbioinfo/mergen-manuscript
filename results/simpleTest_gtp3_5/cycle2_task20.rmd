@@ -3,56 +3,56 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(DESeq2)
-library(tidyverse)
+# Load required libraries
 library(readxl)
+library(DESeq2)
+library(dplyr)
+library(ggplot2)
 
 # Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Assign the row names of the count table as gene names
-rownames(count_table) <- count_table[,1]
+# Set column names of count table to be gene names
+colnames(count_table) <- count_table[,1]
+count_table <- count_table[,-1]
 
-# Remove the first column (gene names) from the count table
-count_table <- count_table[, -1]
+# Set row names of annotation data to be sample ids
+rownames(annotation_data) <- annotation_data[,1]
+annotation_data <- annotation_data[,-1]
 
-# Transpose the count table to have samples as rows and genes as columns
-count_table <- t(count_table)
+# Run statistical tests to find group-specific genes
+# Assuming "group" is the column name containing the different groups in the annotation data
+groups <- unique(annotation_data$group)
+group_specific_genes <- list()
+for (group in groups) {
+  group_samples <- annotation_data[annotation_data$group == group, rownames(count_table)]
+  group_samples <- intersect(group_samples, colnames(count_table))
+  group_data <- count_table[, group_samples]
+  dds <- DESeqDataSetFromMatrix(countData = group_data,
+                                colData = annotation_data,
+                                design = ~ group)
+  dds <- DESeq(dds)
+  res <- results(dds, contrast = c("group", group, "Control"))
+  group_specific_genes[[group]] <- rownames(res)[which(res$padj < 0.05)]
+}
 
-# Create a DESeq2 object
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
+# Extract PCA-specific count table
+pca_specific_count_table <- count_table[group_specific_genes[[1]],]
 
-# Perform differential expression analysis
-dds <- DESeq(dds)
+# Run PCA on the specific count table
+pca <- prcomp(t(pca_specific_count_table))
 
-# Extract the results table
-results <- results(dds)
+# Extract group information from annotation data
+group_colors <- annotation_data$group
 
-# Subset genes specific for each group
-group_specific_genes <- lapply(levels(annotation_data$group), function(group) {
-  group_results <- results[annotation_data$group == group, ]
-  group_specific_genes <- subset(group_results, padj <= 0.05 & abs(log2FoldChange) >= 1)
-  return(group_specific_genes$gene_id)
-})
-
-# Combine all group-specific genes
-all_specific_genes <- unique(unlist(group_specific_genes))
-
-# Filter expression data for group-specific genes
-expression_specific <- assay(dds)[all_specific_genes, ]
-
-# Perform PCA on the filtered expression data
-pca <- prcomp(t(expression_specific))
-
-# Extract the sample metadata
-sample_metadata <- annotation_data[, c(1, "group")]
-
-# Plot PCA with color coded by group variable
-plot(pca$x[, c(1,2)], col = sample_metadata$group)
-
+# Plot PCA with color coding by group variable
+ggplot(data = NULL, aes(x = pca$x[,1], y = pca$x[,2])) +
+  geom_point(col = group_colors) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot of group-specific genes")
 ```
-Note: Make sure to install the necessary libraries (`DESeq2`, `tidyverse`, `readxl`) before running the code. The count table and annotation data files should be in the same directory as the R script.
+Please note that for running the statistical tests, you might need to modify the design formula of DESeq2 (`design = ~ group`) to match the actual column name in your annotation data that contains the group information.

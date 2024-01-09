@@ -2,120 +2,124 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, I will assume that R and the necessary packages, such as `readxl`, `tidyverse`, `DESeq2`, and `ggplot2`, are already installed. 
+To complete this task, you will need to install and load the necessary packages in R: `readxl`, `DESeq2`, `tidyverse`, `factoextra`, `pcaMethods`, and `ggplot2`. Please make sure you have these packages installed before proceeding.
 
-First, I will load the count table and annotation data into R.
+Let's begin by importing the count table and annotation data.
 
 ```
-library(readxl)
-library(tidyverse)
+# Install required packages
 
-# Load count table
+
+# Load required packages
+library(readxl)
+library(DESeq2)
+library(tidyverse)
+library(factoextra)
+library(pcaMethods)
+library(ggplot2)
+
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Load annotation data
+# Read the annotation data
 annotation_data <- read_tsv("SRP021193.colData.tsv")
 ```
 
-Next, I will normalize the counts using the DESeq2 package.
+Now that we have the count table and annotation data, let's perform the normalization using DESeq2. We will assume the column containing group information is named "group" and the column containing the library selection information is named "LibrarySelection".
 
 ```
-library(DESeq2)
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1], colData = annotation_data, design = ~ 1)
 
-# Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ 1) 
-
-# Perform normalization
+# Perform normalization using DESeq2
 dds <- DESeq(dds)
 
 # Get normalized counts
 normalized_counts <- counts(dds, normalized = TRUE)
 ```
 
-Now, I will create the first PCA plot color coded by the "group" variable.
+Next, we can create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
 
 ```
-library(ggplot2)
+# Perform PCA based on "group" annotation
+pca_group <- prcomp(t(log2(normalized_counts + 1)))
+pca_group_data <- data.frame(PC1 = pca_group$x[, 1], PC2 = pca_group$x[, 2], group = annotation_data$group)
 
-# Perform PCA
-pca <- prcomp(t(normalized_counts))
+# Plot PCA (group)
+plot_group <- ggplot(pca_group_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot - Group", x = "PC1", y = "PC2")
 
-# Create PCA plot
-pca_plot_group <- ggplot(data = as.data.frame(pca$x),
-                         aes(x = PC1, y = PC2, color = annotation_data$group)) +
-  geom_point(size = 3) +
-  labs(title = "PCA Plot - Samples colored by Group",
-       x = "PC1", y = "PC2") +
-  theme_minimal()
+# Perform PCA based on "LibrarySelection" annotation
+pca_library <- prcomp(t(log2(normalized_counts + 1)))
+pca_library_data <- data.frame(PC1 = pca_library$x[, 1], PC2 = pca_library$x[, 2], LibrarySelection = annotation_data$LibrarySelection)
 
-# Display PCA plot
-print(pca_plot_group)
+# Plot PCA (LibrarySelection)
+plot_library <- ggplot(pca_library_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot - LibrarySelection", x = "PC1", y = "PC2")
 ```
 
-Finally, I will create the second PCA plot color coded by the "LibrarySelection" variable.
+Finally, we can display the PCA plots.
 
 ```
-# Create PCA plot
-pca_plot_library <- ggplot(data = as.data.frame(pca$x),
-                           aes(x = PC1, y = PC2, color = annotation_data$LibrarySelection)) +
-  geom_point(size = 3) +
-  labs(title = "PCA Plot - Samples colored by Library Selection",
-       x = "PC1", y = "PC2") +
-  theme_minimal()
-
-# Display PCA plot
-print(pca_plot_library)
+# Display PCA plots
+print(plot_group)
+print(plot_library)
 ```
 
-Here is the complete code block:
+The `plot_group` variable contains the PCA plot color-coded by "group", and the `plot_library` variable contains the PCA plot color-coded by "LibrarySelection". You can customize the plots as per your requirements and save them as desired.
+
+Complete Code:
 
 ```
+# Install required packages
+
+
+# Load required packages
 library(readxl)
-library(tidyverse)
 library(DESeq2)
+library(tidyverse)
+library(factoextra)
+library(pcaMethods)
 library(ggplot2)
 
-# Load count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Load annotation data
+# Read the annotation data
 annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ 1) 
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1], colData = annotation_data, design = ~ 1)
 
-# Perform normalization
+# Perform normalization using DESeq2
 dds <- DESeq(dds)
 
 # Get normalized counts
 normalized_counts <- counts(dds, normalized = TRUE)
 
-# Perform PCA
-pca <- prcomp(t(normalized_counts))
+# Perform PCA based on "group" annotation
+pca_group <- prcomp(t(log2(normalized_counts + 1)))
+pca_group_data <- data.frame(PC1 = pca_group$x[, 1], PC2 = pca_group$x[, 2], group = annotation_data$group)
 
-# Create PCA plot (colored by group)
-pca_plot_group <- ggplot(data = as.data.frame(pca$x),
-                         aes(x = PC1, y = PC2, color = annotation_data$group)) +
-  geom_point(size = 3) +
-  labs(title = "PCA Plot - Samples colored by Group",
-       x = "PC1", y = "PC2") +
-  theme_minimal()
+# Plot PCA (group)
+plot_group <- ggplot(pca_group_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot - Group", x = "PC1", y = "PC2")
 
-# Create PCA plot (colored by LibrarySelection)
-pca_plot_library <- ggplot(data = as.data.frame(pca$x),
-                           aes(x = PC1, y = PC2, color = annotation_data$LibrarySelection)) +
-  geom_point(size = 3) +
-  labs(title = "PCA Plot - Samples colored by Library Selection",
-       x = "PC1", y = "PC2") +
-  theme_minimal()
+# Perform PCA based on "LibrarySelection" annotation
+pca_library <- prcomp(t(log2(normalized_counts + 1)))
+pca_library_data <- data.frame(PC1 = pca_library$x[, 1], PC2 = pca_library$x[, 2], LibrarySelection = annotation_data$LibrarySelection)
+
+# Plot PCA (LibrarySelection)
+plot_library <- ggplot(pca_library_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot - LibrarySelection", x = "PC1", y = "PC2")
 
 # Display PCA plots
-print(pca_plot_group)
-print(pca_plot_library)
+print(plot_group)
+print(plot_library)
 ```
 
-Note: Please make sure to adjust the file paths in the code according to the location of your data files.
+Please note that you need to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths of your files.

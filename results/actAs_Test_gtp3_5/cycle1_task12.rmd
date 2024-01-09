@@ -2,25 +2,35 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
 
 response:
-To read the count table and annotation data in R, we can use the `read.xlsx()` and `read.delim()` functions, respectively. Here's the code to accomplish this task:
+To read the count table and annotation data, we can use the `read_excel` function from the `readxl` package in R for reading the Excel file and `read.table` function for reading the tab-separated values (tsv) file. Let's start by installing and loading the necessary packages:
 
 ```
-# Load required libraries
+
 library(readxl)
-
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
-num_rows_count_table <- nrow(count_table)
-num_columns_count_table <- ncol(count_table)
-
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
-num_rows_annotation_data <- nrow(annotation_data)
-num_columns_annotation_data <- ncol(annotation_data)
-
-# Print the number of rows and columns for each table
-cat("Count Table: ", num_rows_count_table, "rows and", num_columns_count_table, "columns\n")
-cat("Annotation Data: ", num_rows_annotation_data, "rows and", num_columns_annotation_data, "columns\n")
 ```
 
-Make sure to replace the file paths `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual path to your count table and annotation data files, respectively.
+Now, let's read the count table and annotation data:
+
+```
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+```
+
+To count the number of rows and columns for each table, we can use the `nrow` and `ncol` functions. Let's calculate them for both tables:
+
+```
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
+
+annotation_rows <- nrow(annotation_data)
+annotation_cols <- ncol(annotation_data)
+```
+
+Finally, we can print the results:
+
+```
+print(paste("Count table has", count_rows, "rows and", count_cols, "columns."))
+print(paste("Annotation data has", annotation_rows, "rows and", annotation_cols, "columns."))
+```
+
+This will provide the count of rows and columns for each table.

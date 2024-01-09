@@ -3,26 +3,24 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-leukemia_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+# Load the necessary libraries
+library(ggplot2)
 
-# Exclude the gene names from the data
-expression_data <- leukemia_data[, -1]
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep ="\t")
 
 # Calculate the variance of each gene
-gene_variances <- apply(expression_data, 1, var)
+variance <- apply(data[, -1], 1, var)
 
 # Sort the genes based on their variance in descending order
-sorted_genes <- order(gene_variances, decreasing = TRUE)
+sorted_genes <- data[order(variance, decreasing = TRUE), ]
 
-# Retain the top 1000 most variable genes
-most_variable_genes <- expression_data[sorted_genes[1:1000], ]
-
-# Extract the expression values of the two most variable genes
-gene1_expression <- most_variable_genes[1, ]
-gene2_expression <- most_variable_genes[2, ]
+# Select the top 1000 most variable genes
+top_genes <- head(sorted_genes, 1000)
 
 # Create a scatterplot of the two most variable genes
-plot(gene1_expression, gene2_expression, xlab = "Gene 1 Expression", ylab = "Gene 2 Expression",
-     main = "Scatterplot of the Two Most Variable Genes")
+ggplot(top_genes, aes(x = top_genes$gene_name, y = top_genes$sample1_name)) +
+  geom_point() +
+  labs(x = "Gene Name", y = "Expression Level")
 ```
+

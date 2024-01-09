@@ -3,27 +3,34 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-library(tidyverse)
-library(readxl)
-library(DESeq2)
+# Read the count table
+count_table <- read.csv("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t")
 
-# Read in count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
 
-# Read in annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Set the row names of the count table to be the gene names
+rownames(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
 
-# Extract sample names
-sample_names <- colnames(count_table)[-1]
+# Normalize counts using the edgeR package
+library(edgeR)
+counts <- DGEList(counts = count_table)
+norm_counts <- calcNormFactors(counts)
 
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = as.matrix(count_table[,-1]), colData = annotation_data, design = ~1)
-rld <- rlogTransformation(dds)
+# Perform PCA on the normalized counts
+pca_data <- prcomp(t(counts(log(norm_counts))))
+pca_scores <- pca_data$x
 
-# Create PCA plot color coded by "group"
-plotPCA(rld, intgroup = "group")
+# Create a plot of the PCA scores, color coded by "group"
+library(ggplot2)
+ggplot(data = annotation_data, aes(x = pca_scores[,1], y = pca_scores[,2], color = group)) + 
+  geom_point() + 
+  labs(title = "PCA plot (Color coded by 'group')")
 
-# Create PCA plot color coded by "LibrarySelection"
-plotPCA(rld, intgroup = "LibrarySelection")
+# Create a plot of the PCA scores, color coded by "LibrarySelection"
+ggplot(data = annotation_data, aes(x = pca_scores[,1], y = pca_scores[,2], color = LibrarySelection)) + 
+  geom_point() + 
+  labs(title = "PCA plot (Color coded by 'LibrarySelection')")
 ```
-```
+Note: This code assumes that the count table file is in a tab-separated format and the annotation data file is in a comma-separated format. Adjust the `sep` parameter in the `read.csv` and `read.delim` functions if your files are in a different format.

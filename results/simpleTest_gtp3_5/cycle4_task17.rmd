@@ -3,38 +3,33 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the methylation data
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+# Load libraries
+library(readr)
+library(caret)
+library(randomForest)
 
-# Read the subjects data
+# Read the datasets
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
 subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Rename the first column of methylation data to "CpG_id"
-colnames(methylation_data)[1] <- "CpG_id"
+# Set the column names of the methylation_data dataframe to the values in the first row
+colnames(methylation_data) <- methylation_data[1, ]
+# Remove the first row
+methylation_data <- methylation_data[-1, ]
 
-# Transpose the methylation data to have individuals as rows and CpG sites as columns
-methylation_data_transposed <- t(methylation_data)
+# Merge the methylation_data and subjects_data dataframes based on the DBGapId column
+merged_data <- merge(methylation_data, subjects_data, by.x = "DBGapId", by.y = "dbGap ID")
 
-# Get the common individuals between the two datasets
-common_individuals <- intersect(colnames(methylation_data_transposed), subjects_data$dbGap.ID)
+# Convert the Age column to numeric
+merged_data$Age <- as.numeric(as.character(merged_data$Age))
 
-# Subset the methylation data and subjects data with common individuals
-methylation_data_subset <- methylation_data_transposed[, common_individuals]
-subjects_data_subset <- subjects_data[subjects_data$dbGap.ID %in% common_individuals, ]
-
-# Create a data frame with Age and methylation values
-combined_data <- data.frame(Age = subjects_data_subset$Age, methylation_data_subset)
-
-# Split the data into training and testing sets
+# Set the seed for reproducibility
 set.seed(123)
-train_indices <- sample(1:nrow(combined_data), nrow(combined_data) * 0.7)
-train_data <- combined_data[train_indices, ]
-test_data <- combined_data[-train_indices, ]
 
-# Build a linear regression model to predict Age from methylation values
-model <- lm(Age ~ ., data = train_data)
+# Train the predictive model using random forest
+model <- randomForest(Age ~ ., data = merged_data)
 
 # Display the most important variables for the predictive model
-summary(model)
+varImpPlot(model)
 ```
-
+```

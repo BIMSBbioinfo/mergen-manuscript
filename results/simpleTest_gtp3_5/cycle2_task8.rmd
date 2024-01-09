@@ -3,24 +3,32 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load the data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data
+data <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
 
-# Calculate the variance of each gene
-variance <- apply(data[, -1], 1, var)
+# Calculate variability for each gene
+variability <- apply(data, 1, var)
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- sort(variance, decreasing = TRUE)
+# Sort the genes based on variability
+sorted_genes <- names(variability)[order(variability, decreasing = TRUE)]
 
-# Select the top 1000 most variable genes
-top_genes <- names(sorted_genes)[1:1000]
+# Get the top 1000 most variable genes
+top_genes <- head(sorted_genes, 1000)
 
-# Subset the data to only include the top variable genes
-filtered_data <- data[c("gene_name", top_genes)]
+# Select the expression data for the top 1000 genes
+top_data <- data[top_genes, ]
 
-# Create a scatter plot of the two most variable genes
-plot(filtered_data[, 2], filtered_data[, 3], 
-     xlab = "Gene 1", ylab = "Gene 2", 
-     main = "Scatterplot of Most Variable Genes")
+# Calculate variability for each gene again in the selected data
+variability_top_genes <- apply(top_data, 1, var)
+
+# Sort the top genes based on the new variability measure
+sorted_top_genes <- names(variability_top_genes)[order(variability_top_genes, decreasing = TRUE)]
+
+# Select the two most variable genes
+two_most_variable_genes <- head(sorted_top_genes, 2)
+
+# Create a scatterplot of the two most variable genes
+plot(top_data[two_most_variable_genes[1], ], top_data[two_most_variable_genes[2], ],
+     xlab = two_most_variable_genes[1], ylab = two_most_variable_genes[2])
 ```
-Note: Replace "gene_name" in the code with the actual name of the column containing the gene names in your data.
+Note: Make sure to replace "leukemiaExp.txt" with the actual file path if it's in a different directory. Also, check that your data has the correct structure and format before running the code.

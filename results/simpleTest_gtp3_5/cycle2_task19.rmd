@@ -3,39 +3,35 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(DESeq2)
-library(ggplot2)
+# Load required packages
+library(Seurat)
+library(readxl)
 
 # Read count table
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1, sep = "\t")
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1, sep = "\t")
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Create DESeq2 dataset
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ 1)
+# Set row names of count table to gene names
+rownames(count_table) <- count_table[,1]
 
-# Perform normalization
-dds <- estimateSizeFactors(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Remove the first column from count table
+count_table <- count_table[,-1]
 
-# Perform PCA with coloring by "group"
-pca_group <- prcomp(t(normalized_counts))
-groups <- as.factor(dds$group)
-pca_plot_group <- ggplot(data.frame(pca_group$x), aes(x = PC1, y = PC2, color = groups)) + 
-  geom_point() + 
-  labs(title = "PCA Plot (Color coded by Group)")
+# Normalize counts
+normalized_counts <- NormalizeData(count_table)
 
-# Perform PCA with coloring by "LibrarySelection"
-pca_library <- prcomp(t(normalized_counts))
-library_selection <- as.factor(dds$LibrarySelection)
-pca_plot_library <- ggplot(data.frame(pca_library$x), aes(x = PC1, y = PC2, color = library_selection)) + 
-  geom_point() + 
-  labs(title = "PCA Plot (Color coded by LibrarySelection)")
+# Create a Seurat object
+seurat_obj <- CreateSeuratObject(counts = normalized_counts, meta.data = annotation_data)
 
-# Output PCA plots
-print(pca_plot_group)
-print(pca_plot_library)
+# Run PCA
+seurat_obj <- RunPCA(seurat_obj)
+
+# Plot PCA by "group"
+PCAPlot(seurat_obj, group.by = "group")
+
+# Plot PCA by "LibrarySelection"
+PCAPlot(seurat_obj, group.by = "LibrarySelection")
 ```
-Note: Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths.
+```

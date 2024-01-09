@@ -3,17 +3,17 @@ I have the following gene expression data, "leukemiaExp.txt". Each row is a gene
 
 response:
 ```
-# Read the data from the file
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read the data file
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Count the number of genes
-num_genes <- nrow(gene_data)
+# Find the number of genes
+num_genes <- nrow(data)
 
-# Count the number of samples
-num_samples <- ncol(gene_data) - 1   # Subtract 1 for the gene names column
+# Find the number of samples
+num_samples <- ncol(data)
 
 # Print the results
 print(paste("Number of genes:", num_genes))
 print(paste("Number of samples:", num_samples))
 ```
-The dataset has X genes and X samples, where X is the actual number of genes and samples in the dataset.
+

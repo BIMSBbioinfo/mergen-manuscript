@@ -3,31 +3,26 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To solve this task, we will use the R programming language and the `data.table` package.
+To read the tables and count the number of rows and columns for each, we can use the read.table() function in R to read the data tables from the files, and then use the nrow() and ncol() functions to count the number of rows and columns for each table, respectively.
 
-First, we need to read the two datasets and count the number of rows and columns for each.
+Assuming the "metRmOlWithDbgapIdHeader.txt" file is tab-delimited and contains the CpG methylation values per CpG and individual as mentioned, and the "subjects.txt" file is also tab-delimited and contains information on the individuals, including the Age column, you can use the following code:
 
 ```
-# Load the data.table package
-library(data.table)
+# Read the tables
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-met_data <- fread("metRmOlWithDbgapIdHeader.txt")
+# Count number of rows and columns for each table
+metRmOl_rows <- nrow(metRmOl)
+metRmOl_cols <- ncol(metRmOl)
+subjects_rows <- nrow(subjects)
+subjects_cols <- ncol(subjects)
 
-# Count the number of rows and columns for the met_data table
-nrows_met <- nrow(met_data) # number of rows
-ncols_met <- ncol(met_data) # number of columns
-
-# Read the "subjects.txt" file
-subjects_data <- fread("subjects.txt")
-
-# Count the number of rows and columns for the subjects_data table
-nrows_subj <- nrow(subjects_data) # number of rows
-ncols_subj <- ncol(subjects_data) # number of columns
+# Output the results
+cat("Number of rows and columns in metRmOlWithDbgapIdHeader.txt:", metRmOl_rows, "rows,", metRmOl_cols, "columns\n")
+cat("Number of rows and columns in subjects.txt:", subjects_rows, "rows,", subjects_cols, "columns\n")
 ```
 
-This code will read the two datasets using the `fread` function from the `data.table` package. It will then count the number of rows and columns for each dataset using the `nrow` and `ncol` functions.
+Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths in your system.
 
-The variables `nrows_met` and `ncols_met` will store the number of rows and columns for the `met_data` table, while `nrows_subj` and `ncols_subj` will store the number of rows and columns for the `subjects_data` table.
-
-Note: Make sure to replace the file names in the `fread` function with the correct file paths or names in your system.
+After running this code, you will see the number of rows and columns for each table printed in the console.

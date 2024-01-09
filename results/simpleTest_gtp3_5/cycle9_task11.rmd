@@ -4,24 +4,25 @@ Read the tables count number of rows and columns for each.
 
 response:
 ```
-# Read the first dataset
-data1 <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
 
-# Count number of rows and columns for data1
-num_rows_data1 <- nrow(data1)
-num_cols_data1 <- ncol(data1)
+# Read the "subjects.txt" file
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Read the second dataset
-data2 <- read.table("subjects.txt", header = TRUE)
+# Count the number of rows and columns for each table
+num_rows_met <- nrow(met)
+num_cols_met <- ncol(met)
 
-# Count number of rows and columns for data2
-num_rows_data2 <- nrow(data2)
-num_cols_data2 <- ncol(data2)
+num_rows_subjects <- nrow(subjects)
+num_cols_subjects <- ncol(subjects)
 
-# Print the number of rows and columns for each dataset
-num_rows_data1
-num_cols_data1
-num_rows_data2
-num_cols_data2
-```
+# Print the results
+cat("Number of rows and columns in 'metRmOlWithDbgapIdHeader.txt':", "\n")
+cat("Rows:", num_rows_met, "\n")
+cat("Columns:", num_cols_met, "\n")
+
+cat("Number of rows and columns in 'subjects.txt':", "\n")
+cat("Rows:", num_rows_subjects, "\n")
+cat("Columns:", num_cols_subjects, "\n")
 ```

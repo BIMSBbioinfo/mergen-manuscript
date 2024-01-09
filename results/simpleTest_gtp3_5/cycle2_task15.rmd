@@ -3,18 +3,24 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the methylation data from the file "metRmOlWithDbgapIdHeader.txt"
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, skip = 1)
+# Read the first dataset
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Read the subjects data from the file "subjects.txt"
+# Read the second dataset
 subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Merge the two datasets using dbGapId information
-merged_data <- merge(methylation_data, subjects_data, by.x = "dbGap ID", by.y = "dbGapId")
+# Merge the two datasets based on dbGap ID
+merged_data <- merge(met_data, subjects_data, by.x = "dbGap ID", by.y = "dbGap ID")
 
-# Get the two oldest subjects
-oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
+# Sort the merged data by Age in descending order
+sorted_data <- merged_data[order(-merged_data$Age), ]
 
-# Plot a scatter plot of CpG methylation values for the two oldest subjects
-plot(oldest_subjects$CpG_id, oldest_subjects$Methylation, pch = 16, xlab = "CpG_id", ylab = "Methylation")
+# Create a scatter plot of CpG methylation values for the two oldest subjects
+plot(sorted_data$CpG_id, sorted_data[, -(1:2)], pch = 20, cex = 1, 
+     col = ifelse(sorted_data$Age == max(sorted_data$Age), "red", "black"),
+     xlab = "CpG_id", ylab = "Methylation Value")
+
+legend("bottomright", legend = c("Oldest Subjects", "Other Subjects"), 
+       col = c("red", "black"), pch = 20)
 ```
+

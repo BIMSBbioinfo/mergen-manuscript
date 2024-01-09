@@ -3,36 +3,36 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance of each gene
-gene_var <- apply(gene_data[, -1], 1, var)
+# Calculate the variability of each gene
+variances <- apply(data[, -1], 1, var)
 
-# Sort the genes based on variance in decreasing order
-sorted_genes <- gene_data[order(gene_var, decreasing=TRUE), ]
+# Sort the genes based on their variability in descending order
+sorted_genes <- data[order(variances, decreasing = TRUE), ]
 
-# Filter the top 1000 most variable genes
-filtered_genes <- sorted_genes[1:1000, ]
+# Get the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
 
-# Perform clustering on the samples using the filtered genes
-sample_clusters <- hclust(dist(t(filtered_genes[, -1])))
+# Perform clustering on the samples using the top 1000 genes
+library(dendextend)
+library(heatmaply)
 
-# Determine the clusters
-clusters <- cutree(sample_clusters, k=3)
+clusters <- hclust(dist(t(top_1000_genes[-1, ])))
+cluster_labels <- cutree(clusters, k = 4) # Assuming 4 clusters
 
-# Extract the cluster specific genes for each cluster
-cluster_genes <- list()
-for (i in 1:max(clusters)) {
-  cluster_samples <- which(clusters == i)
-  cluster_genes[[i]] <- filtered_genes[, c(1, cluster_samples + 1)]
-}
+# Extract cluster specific genes for each cluster
+cluster_specific_genes <- lapply(unique(cluster_labels), function(cluster) {
+  cluster_genes <- top_1000_genes[-1, ][cluster_labels == cluster, ]
+  cluster_genes
+})
 
 # Print the cluster specific genes for each cluster
-for (i in 1:length(cluster_genes)) {
-  cat("Cluster", i, ":\n")
-  print(cluster_genes[[i]])
+for (i in 1:length(cluster_specific_genes)) {
+  cat("Cluster", i, " specific genes:\n")
+  print(cluster_specific_genes[[i]][, 1])
   cat("\n")
 }
 ```
-Note: In this example, I have assumed that we want to cluster the samples into 3 clusters. You can change the value of `k` in the `cutree` function to the desired number of clusters. Additionally, you can modify the code to change the number of top variable genes to retain.
+Note: The code assumes that you have already installed and loaded the `dendextend` and `heatmaply` packages for clustering and heatmap visualization.

@@ -2,39 +2,96 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
 
 response:
-To complete this task, we will use R programming language and several packages including `read.table`, `stats`, `pheatmap`, and `ggplot2`.
+To complete this task, you can use the R programming language and the `dplyr`, `pheatmap`, and `ggplot2` packages. Follow these steps:
 
-Here's the code to accomplish the task:
+1. Read the gene expression data from the "leukemiaExp.txt" file into a data frame in R. Assuming that the file is in the same directory as your script, you can use the following code:
 
 ```
 # Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
-
-# Compute the variance of each gene
-gene_var <- apply(data, 1, var)
-
-# Sort and select the top 1000 most variable genes
-top_genes <- names(sort(gene_var, decreasing = TRUE))[1:1000]
-
-# Filter the data to retain only the top 1000 genes
-filtered_data <- data[top_genes, ]
-
-# Plot the heatmap with clustering
-library(pheatmap)
-pheatmap(filtered_data, cluster_rows = TRUE, cluster_cols = TRUE)
-
-# Compute PCA for samples
-pca <- prcomp(t(filtered_data))
-
-# Plot PCA
-library(ggplot2)
-percent_variance <- (pca$sdev^2 / sum(pca$sdev^2)) * 100
-pca_data <- data.frame(Samples = colnames(filtered_data), 
-                       PC1 = pca$x[, 1], PC2 = pca$x[, 2],
-                       Variance = percent_variance)
-ggplot(pca_data, aes(x = PC1, y = PC2, color = Variance)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2", color = "Variance (%)")
+gene_exp_data <- read.delim("leukemiaExp.txt", sep = "\t")
 ```
 
-Make sure to replace `"leukemiaExp.txt"` with the correct file path or name that contains the gene expression data.
+2. Calculate the variability of each gene by calculating the standard deviation across all samples. Add a new column to the data frame to store the gene variability:
+
+```
+# Calculate gene variability
+gene_exp_data <- gene_exp_data %>%
+  mutate(variability = apply(.[,-1], 1, sd))
+```
+
+3. Sort the data frame by gene variability in descending order and select the top 1000 genes with the highest variability:
+
+```
+# Select top 1000 variable genes
+top_variable_genes <- gene_exp_data %>%
+  arrange(desc(variability)) %>%
+  head(1000)
+```
+
+4. Create a heatmap plot of the selected variable genes with clustering. You can use the `pheatmap` function from the `pheatmap` package for this:
+
+```
+library(pheatmap)
+
+# Extract the gene expression values for the selected genes
+top_variable_genes_expr <- top_variable_genes[, -1]
+
+# Plot heatmap with clustering
+pheatmap(top_variable_genes_expr, clustering_distance_rows = "euclidean", show_rownames = FALSE)
+```
+
+This will plot a heatmap with the clustering of the top 1000 variable genes.
+
+5. Plot a PCA (Principal Component Analysis) plot for the samples using the selected variable genes. You can use the `prcomp` function from the `stats` package to perform PCA and the `ggplot2` package to create the plot:
+
+```
+library(ggplot2)
+library(stats)
+
+# Perform PCA on the gene expression values for the selected genes
+pca <- prcomp(t(top_variable_genes_expr))
+
+# Create a data frame with PCA results
+pca_data <- as.data.frame(pca$x[, 1:2])  # Select the first two principal components
+pca_data$Sample <- colnames(top_variable_genes_expr)
+
+# Plot PCA
+ggplot(pca_data, aes(PC1, PC2, color = Sample)) +
+  geom_point() +
+  theme_minimal()
+```
+
+This will create a PCA plot with the samples colored by their names.
+
+You can put all the code together into a single code block like this:
+
+```
+# Read the gene expression data
+gene_exp_data <- read.delim("leukemiaExp.txt", sep = "\t")
+
+# Calculate gene variability
+gene_exp_data <- gene_exp_data %>%
+  mutate(variability = apply(.[,-1], 1, sd))
+
+# Select top 1000 variable genes
+top_variable_genes <- gene_exp_data %>%
+  arrange(desc(variability)) %>%
+  head(1000)
+
+# Plot heatmap with clustering
+pheatmap(top_variable_genes[, -1], clustering_distance_rows = "euclidean", show_rownames = FALSE)
+
+# Perform PCA on the gene expression values for the selected genes
+pca <- prcomp(t(top_variable_genes[, -1]))
+
+# Create a data frame with PCA results
+pca_data <- as.data.frame(pca$x[, 1:2])  # Select the first two principal components
+pca_data$Sample <- colnames(top_variable_genes[, -1])
+
+# Plot PCA
+ggplot(pca_data, aes(PC1, PC2, color = Sample)) +
+  geom_point() +
+  theme_minimal()
+```
+
+Make sure to have the necessary packages (`dplyr`, `pheatmap`, `ggplot2`, and `stats`) installed in R before running the code.

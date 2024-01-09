@@ -2,45 +2,47 @@ prompt:
 We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Read the data and merge them into a single table using dbGapId information. Plot a scatter plot of CpG methylation values for the two oldest subjects in the samples.
 
 response:
-To solve this task, we'll need to use the R programming language and some popular bioinformatics libraries, such as `tidyverse` and `ggplot2`. Here's a step-by-step approach to merge the datasets and create a scatter plot:
+To solve this task, we will follow these steps:
+1. Read the "metRmOlWithDbgapIdHeader.txt" file, which contains the CpG methylation values per CpG and per individual.
+2. Read the "subjects.txt" file, which contains information on the individuals, including the age.
+3. Merge the two datasets based on the dbGap ID column.
+4. Filter the merged dataset to include only the two oldest subjects.
+5. Plot a scatter plot of CpG methylation values for the two oldest subjects.
 
-Step 1: Load necessary libraries and read the datasets into R.
+Let's start by reading the two files and loading them into data frames in R.
 
-```
-# Load required libraries
-library(tidyverse)
-library(ggplot2)
-
-# Read the datasets
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subjects <- read.table("subjects.txt", header = TRUE)
-```
-
-Step 2: Merge the datasets based on the matching dbGap ID.
+Here's the code to read and merge the datasets:
 
 ```
-# Merge datasets based on dbGap ID
-merged_data <- merge(metRmOl, subjects, by.x = "dbGap ID", by.y = "dbGap ID")
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+met_df <- read.table("metRmOlWithDbgapIdHeader.txt", header=TRUE, row.names=1)
+
+# Read the "subjects.txt" file
+subjects_df <- read.table("subjects.txt", header=TRUE)
+
+# Merge the two datasets based on dbGap ID
+merged_df <- merge(met_df, subjects_df, by.x="dbGap ID", by.y="DBGapId")
 ```
 
-Step 3: Filter out the two oldest subjects.
+Now, we can filter the merged dataset to include only the two oldest subjects:
 
 ```
-# Filter for the two oldest subjects
-oldest_subjects <- merged_data %>% 
-  arrange(desc(Age)) %>% 
-  head(2)
+# Sort the merged dataset by age in descending order
+sorted_df <- merged_df[order(merged_df$Age, decreasing=TRUE), ]
+
+# Select the two oldest subjects
+oldest_subjects_df <- sorted_df[1:2, ]
 ```
 
-Step 4: Create a scatter plot of CpG methylation values for the two oldest subjects.
+Finally, we can plot a scatter plot of CpG methylation values for the two oldest subjects:
 
 ```
-# Create scatter plot
-ggplot(oldest_subjects, aes(x = CpG_id, y = methylation)) +
-  geom_point() +
-  labs(title = "Scatter plot of CpG methylation values for the two oldest subjects",
-       x = "CpG ID", y = "Methylation level") +
-  theme_minimal()
+# Plot scatter plot
+plot(oldest_subjects_df$CpG_id, oldest_subjects_df$"Subject A", col="blue", xlab="CpG ID", ylab="Methylation Value")
+points(oldest_subjects_df$CpG_id, oldest_subjects_df$"Subject B", col="red")
+legend("topright", c("Subject A", "Subject B"), col=c("blue", "red"), pch=1)
 ```
 
-And that's it! The final scatter plot will show the CpG methylation values for the two oldest subjects in the samples.
+Please note that the code assumes that the columns representing the CpG methylation values in the "metRmOlWithDbgapIdHeader.txt" file are named as "Subject A", "Subject B", and so on. Adjust the column names accordingly if they are different in your dataset.
+
+Let me know if you need further assistance!

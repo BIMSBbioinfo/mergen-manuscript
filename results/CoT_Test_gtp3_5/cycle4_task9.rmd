@@ -4,54 +4,45 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 To filter genes based on their variability and retain the top 1000 most variable genes, we can follow these steps:
 
-Step 1: Reading the gene expression data
-First, we need to read the gene expression data from the "leukemiaExp.txt" file into R. We can use the `read.table()` function to do this.
+1. Read the gene expression data from the "leukemiaExp.txt" file.
+2. Transpose the data so that each row represents a sample and each column represents a gene.
+3. Calculate the variance for each gene across all samples.
+4. Sort the genes based on their variance in descending order.
+5. Select the top 1000 genes with the highest variance.
+6. Create a subset of the gene expression data using the selected genes.
+7. Plot a heatmap with clustering using the subset of gene expression data.
+8. Perform PCA (Principal Component Analysis) on the sample data.
+9. Plot the PCA results.
+
+Here is the code to accomplish this:
 
 ```
-expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Step 1: Read the gene expression data from the file
+gene_expression <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Step 2: Transpose the data
+gene_expression <- t(gene_expression)
+
+# Step 3: Calculate variance for each gene
+gene_variances <- apply(gene_expression, 2, var)
+
+# Step 4: Sort the genes based on variance
+sorted_genes <- sort(gene_variances, decreasing = TRUE)
+
+# Step 5: Select the top 1000 genes
+top_1000_genes <- names(sorted_genes)[1:1000]
+
+# Step 6: Create a subset of the gene expression data
+subset_gene_expression <- gene_expression[, top_1000_genes]
+
+# Step 7: Plot a heatmap with clustering
+heatmap(subset_gene_expression, Colv = NA, scale = "row")
+
+# Step 8: Perform PCA on the sample data
+pca_results <- prcomp(t(subset_gene_expression))
+
+# Step 9: Plot the PCA results
+plot(pca_results$x[,1], pca_results$x[,2], xlab = "PC1", ylab = "PC2")
 ```
 
-Step 2: Calculating gene variability
-Next, we will calculate the variability of each gene in the expression data. One common measure of gene variability is the coefficient of variation (CV). We can calculate the CV for each gene using the `apply()` function.
-
-```
-gene_cv <- apply(expression_data[, -1], 1, function(x) sd(x)/mean(x))
-```
-
-Step 3: Selecting the top 1000 most variable genes
-Now, we can select the top 1000 most variable genes based on their CV values. We can use the `order()` function to sort the CV values in descending order and select the top 1000 genes.
-
-```
-top_variable_genes <- expression_data[order(gene_cv, decreasing = TRUE), ][1:1000, ]
-```
-
-Step 4: Plotting a heatmap with clustering
-To plot a heatmap with clustering based on the selected variable genes, we can use the `heatmap()` function. We can pass the expression values of the selected genes to the function and specify the `Colv = NA` argument to disable column clustering.
-
-```
-heatmap(as.matrix(top_variable_genes[, -1]), Colv = NA)
-```
-
-Step 5: Plotting PCA for samples
-To plot a PCA for the samples using the selected variable genes, we can use the `prcomp()` function to perform Principal Component Analysis (PCA) on the gene expression data. We can then plot the first two principal components using the `biplot()` function.
-
-```
-pca <- prcomp(t(top_variable_genes[, -1]))
-biplot(pca)
-```
-
-These steps will filter genes based on their variability, retain the top 1000 most variable genes, plot a heatmap with clustering, and also plot PCA for the samples using R.
-
-Code:
-```
-expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
-
-gene_cv <- apply(expression_data[, -1], 1, function(x) sd(x)/mean(x))
-
-top_variable_genes <- expression_data[order(gene_cv, decreasing = TRUE), ][1:1000, ]
-
-heatmap(as.matrix(top_variable_genes[, -1]), Colv = NA)
-
-pca <- prcomp(t(top_variable_genes[, -1]))
-biplot(pca)
-```
+Make sure to replace "leukemiaExp.txt" with the actual path to your gene expression data file. This code will generate a heatmap with clustering for the top 1000 most variable genes and a PCA plot for the samples.

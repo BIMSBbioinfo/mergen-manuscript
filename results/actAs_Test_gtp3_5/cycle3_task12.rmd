@@ -2,36 +2,33 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
 
 response:
-To read the count table and annotation data in R, we can use the `read.xlsx()` function from the `readxl` package for the count table and the `read.table()` function for the annotation data. Here's the code to read the tables and count the number of rows and columns for each:
+To read the count table and annotation data in R, we can use the `read.xlsx()` function from the `openxlsx` package for reading the count table and the `read.delim()` function for reading the annotation data. 
+
+Here's the code to read and display the number of rows and columns for each table:
 
 ```
 # Load required libraries
-library(readxl)
+library(openxlsx)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
 
-# Count rows and columns in count table
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Get the number of rows and columns for each table
 count_rows <- nrow(count_table)
 count_cols <- ncol(count_table)
 
-# Print count table rows and columns
-cat("Count Table Rows:", count_rows, "\n")
-cat("Count Table Columns:", count_cols, "\n")
-
-
-# Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
-
-# Count rows and columns in annotation data
 annotation_rows <- nrow(annotation_data)
 annotation_cols <- ncol(annotation_data)
 
-# Print annotation data rows and columns
-cat("Annotation Data Rows:", annotation_rows, "\n")
-cat("Annotation Data Columns:", annotation_cols, "\n")
+# Print the number of rows and columns for each table
+print(paste("Count Table - Rows:", count_rows, "Columns:", count_cols))
+print(paste("Annotation Data - Rows:", annotation_rows, "Columns:", annotation_cols))
 ```
 
-Make sure to replace `"Supplementary_Table_1_exp.xlsx"` with the correct file path for your count table and `"SRP021193.colData.tsv"` with the correct file path for your annotation data.
+Make sure to replace the file paths in `read.xlsx()` and `read.delim()` with the actual file paths to the count table and annotation data files.
 
-The code above will read the count table from the specified Excel file using `read.xlsx()`, count the number of rows and columns in the count table using `nrow()` and `ncol()`, and then print the results. Similarly, the code will read the annotation data from the specified tab-delimited file using `read.table()`, count the number of rows and columns in the annotation data using `nrow()` and `ncol()`, and then print the results.
+Output:
+```Please note that you need to have the `openxlsx` package installed in order to use `read.xlsx()`. You can install it by running `` before running the above code.

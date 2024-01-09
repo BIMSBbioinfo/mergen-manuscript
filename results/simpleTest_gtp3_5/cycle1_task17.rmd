@@ -3,26 +3,28 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(randomForest)
 
-# Read the methylation values dataset
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+# Read the methylation data
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
 
-# Read the individuals information dataset
-individuals_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Transpose the data so that each row represents an individual and each column represents a CpG
+transposed_methylation_data <- t(methylation_data)
 
-# Merge the two datasets based on dbGap ID
-merged_data <- merge(methylation_data, individuals_data, by.x = "dbGaPId", by.y = "dbGap ID")
+# Read the subjects data
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Convert Age column to numeric
-merged_data$Age <- as.numeric(merged_data$Age)
+# Match the individuals in the subjects data with their corresponding methylation values
+matched_data <- transposed_methylation_data[match(subjects_data$`dbGap ID`, row.names(transposed_methylation_data)), ]
 
-# Create a random forest model for age prediction
-model <- randomForest(Age ~ ., data = merged_data, importance = TRUE)
+# Add the Age column from the subjects data to the matched data
+matched_data$Age <- subjects_data$Age
 
-# Display the variable importance
-var_importance <- importance(model)
-print(var_importance)
+# Build the predictive model using random forest
+model <- randomForest(x = matched_data[, -ncol(matched_data)], y = matched_data$Age, ntree = 100, importance = TRUE)
+
+# Display the most important variables for the predictive model
+importance(model)
 ```
-```
+Note: Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file names and paths in your system.

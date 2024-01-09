@@ -3,36 +3,27 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load necessary libraries
-library(pheatmap)
-library(gplots)
-library(ggplot2)
-library(RColorBrewer)
-library(dplyr)
-library(factoextra)
-library(reshape2)
-
 # Read the gene expression data
-gene_exp <- read.delim("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Calculate the variability of each gene
-gene_variability <- apply(gene_exp, 1, var)
+# Calculate the variance of each gene
+gene_var <- apply(data, 1, var)
 
-# Get the top 1000 most variable genes
-top_var_genes <- names(sort(gene_variability, decreasing = TRUE))[1:1000]
+# Sort the genes based on their variance in descending order
+sorted_genes <- names(gene_var)[order(gene_var, decreasing=TRUE)]
 
-# Subset the gene expression data with the top variable genes
-gene_exp_filtered <- gene_exp[top_var_genes, ]
+# Select the top 1000 genes with the highest variance
+top_genes <- sorted_genes[1:1000]
 
-# Perform hierarchical clustering and plot heatmap
-heatmap_data <- t(scale(gene_exp_filtered))
-heatmap_cluster <- hclust(dist(heatmap_data))
-heatmap_colors <- colorRampPalette(brewer.pal(9, "RdBu"))(256)
-heatmap_cluster_ordered <- cutree(heatmap_cluster, k = length(unique(heatmap_cluster$order)))
-heatmap(plot(heatmap_cluster_ordered))
+# Filter the gene expression data to retain only the top 1000 genes
+filtered_data <- data[top_genes, ]
 
-# Perform PCA and plot
-pca_data <- prcomp(t(gene_exp_filtered))
-fviz_pca_biplot(pca_data)
+# Perform clustering and plot the heatmap
+library(gplots)
+heatmap.2(filtered_data, trace="none", dendrogram="both", main="Gene Expression Heatmap")
+
+# Perform PCA and plot the result
+pca_result <- prcomp(filtered_data, scale=TRUE)
+plot(pca_result$x, main="PCA Plot for Gene Expression Data")
 ```
-
+Note: Make sure to load the necessary libraries before running the code.

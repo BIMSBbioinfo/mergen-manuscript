@@ -4,21 +4,18 @@ Read the data and merge them into a single table using dbGapId information, retu
 
 response:
 ```
-# Read the two datasets
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
-subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the data from the files
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt")
+subjects <- read.table("subjects.txt")
 
-# Set the dbGap ID column as row names in metRmOl dataset
-rownames(metRmOl) <- metRmOl[1, ]
+# Set the column names of metRmOl using the first row
+colnames(metRmOl) <- metRmOl[1, ]
+# Remove the first row
 metRmOl <- metRmOl[-1, ]
 
-# Merge the two datasets based on dbGap ID
-merged_data <- merge(metRmOl, subjects, by.x = "dbGap.ID", by.y = "dbGap.ID")
+# Merge the two tables using the dbGapId column
+merged_table <- merge(metRmOl, subjects, by.x = "dbGap.ID", by.y = "dbGap.ID")
 
-# Get the number of columns in the merged dataset
-num_columns <- ncol(merged_data)
-
-# Print the number of columns
-print(num_columns)
-```
+# Return the number of columns in the merged table
+ncol(merged_table)
 ```

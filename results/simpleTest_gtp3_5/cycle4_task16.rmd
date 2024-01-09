@@ -5,22 +5,31 @@ response:
 ```
 # Load required packages
 library(readxl)
-library(dplyr)
 library(ggplot2)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Merge annotation data and count table based on sample ids
-merged_data <- inner_join(annotation_data, count_table, by = "sample_id")
+# Set row names of count table to gene names
+rownames(count_table) <- count_table$Gene_names
+count_table <- count_table[,-1] # Remove original gene name column
 
-# Plot boxplots for gene expression values per sample
-ggplot(merged_data, aes(x = group, y = gene_expression_value)) + 
-  geom_boxplot() + 
-  scale_fill_manual(values = c("red", "blue")) # Color code boxplots based on "group" variable
+# Merge annotation data and count table
+merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = 1)
 
+# Convert numerical columns to numeric
+merged_data[,2:ncol(merged_data)] <- sapply(merged_data[,2:ncol(merged_data)], as.numeric)
+
+# Reshape the merged data for plotting
+melted_data <- reshape2::melt(merged_data, id.vars = "group", value.name = "gene_expression")
+
+# Plot boxplots
+ggplot(melted_data, aes(x = group, y = gene_expression, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Sample Group", y = "Gene Expression") +
+  scale_fill_manual(values = c("darkblue", "darkgreen", "darkred")) # Specify colors for boxplots
 ```
-Note: Replace "gene_expression_value" with the appropriate column name in the count table.
+```

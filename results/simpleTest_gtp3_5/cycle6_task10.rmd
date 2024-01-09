@@ -3,37 +3,34 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Load the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance for each gene
-variance <- apply(data, 1, var)
+# Calculate the variability for each gene
+variance <- apply(data[, -1], 1, var)
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- names(variance)[order(variance, decreasing=TRUE)]
+# Select the top 1000 most variable genes
+top_variable_genes <- head(sort(variance, decreasing = TRUE), 1000)
 
-# Select the top 1000 variable genes
-top_1000_genes <- sorted_genes[1:1000]
+# Subset the data to include only the top variable genes
+data_filtered <- data[c(which(rownames(data) %in% names(top_variable_genes))), ]
 
-# Filter the data to retain only the top 1000 variable genes
-filtered_data <- data[top_1000_genes, ]
+# Perform clustering on the filtered data
+clusters <- kmeans(data_filtered[, -1], centers = 5)
 
-# Perform sample clustering
-dist_matrix <- dist(t(filtered_data))
-hc <- hclust(dist_matrix)
-clusters <- cutree(hc, k=4)  # Change k value for desired number of clusters
+# Extract cluster specific genes for each cluster
+cluster_genes <- lapply(1:5, function(i) {
+  cluster_samples <- data_filtered[clusters$cluster == i, -1]
+  cluster_gene_variances <- apply(cluster_samples, 1, var)
+  top_cluster_genes <- head(sort(cluster_gene_variances, decreasing = TRUE), 100)
+  cluster_genes_names <- rownames(data_filtered)[which(rownames(data_filtered) %in% names(top_cluster_genes))]
+  return(cluster_genes_names)
+})
 
-# Extract cluster-specific genes for each cluster
-cluster_specific_genes <- list()
-for (i in unique(clusters)) {
-  cluster_genes <- top_1000_genes[clusters == i]
-  cluster_specific_genes[[paste0("Cluster", i)]] <- cluster_genes
-}
-
-# Print cluster-specific genes for each cluster
-for (i in unique(clusters)) {
+# Print the cluster specific genes for each cluster
+for (i in 1:length(cluster_genes)) {
   cat("Cluster", i, "specific genes:\n")
-  print(cluster_specific_genes[[paste0("Cluster", i)]])
+  cat(paste(cluster_genes[[i]], collapse = ", "), "\n\n")
 }
-
 ```
+Note: This code assumes that the first column of the "leukemiaExp.txt" file contains the gene names, and the remaining columns contain the expression values for different samples. Adjust the code accordingly if your data file structure is different. Additionally, this code uses k-means clustering with 5 clusters as an example; you can modify the `centers` parameter in the `kmeans()` function to change the number of clusters.

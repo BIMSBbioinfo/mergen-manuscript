@@ -4,31 +4,36 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 response:
 ```
 # Load required libraries
-library(dplyr)
+library(caret)
 library(randomForest)
 
-# Read the methylation data
-methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the datasets
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Read the subject data
-subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Transpose methylation_data so that individuals are in rows and CpGs in columns
+methylation_data <- t(methylation_data)
 
-# Set the column names of methylation data as the first row values
-names(methylation) <- methylation[1,]
-methylation <- methylation[-1,]
+# Rename the column names of methylation_data using the first row values
+colnames(methylation_data) <- methylation_data[1,]
 
-# Merge methylation and subject data based on dbGap ID column
-merged_data <- inner_join(methylation, subjects, by = c("BiosampleDbgapId" = "dbGap ID"))
+# Remove the first row from methylation_data
+methylation_data <- methylation_data[-1,]
 
-# Convert methylation values to numeric
-for (i in 2:length(methylation)) {
-  merged_data[, i] <- as.numeric(merged_data[, i])
-}
+# Merge the two datasets based on the matching dbGap ID and remove unnecessary columns
+merged_data <- merge(methylation_data, subjects_data, by.x = "dbGap ID", by.y = "dbGap.ID")
+merged_data <- merged_data[, !(names(merged_data) %in% c("dbGap ID", "CpG_id"))]
 
-# Train the random forest model
-model <- randomForest(Age ~ ., data = merged_data, ntree = 1000)
+# Split the data into training and testing sets
+set.seed(123)
+trainIndex <- createDataPartition(merged_data$Age, p = 0.8, list = FALSE)
+train_data <- merged_data[trainIndex,]
+test_data <- merged_data[-trainIndex,]
 
-# Display the importance of variables in the model
-varImpPlot(model)
+# Build the predictive model using random forest algorithm
+rf_model <- train(Age ~ ., data = train_data, method = "rf")
+
+# Display the important variables for the predictive model
+varImp(rf_model)
 ```
 

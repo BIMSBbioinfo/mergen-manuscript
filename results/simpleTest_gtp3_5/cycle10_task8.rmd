@@ -3,46 +3,19 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load required libraries
-library(ggplot2)
-library(data.table)
+# Read the gene expression data from the file
+gene_expression <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Read the gene expression data
-gene_exp <- fread("leukemiaExp.txt", sep = "\t")
+# Calculate the variance of each gene
+variance <- apply(gene_expression[, -1], 1, var)
 
-# Get the gene names from the first column
-gene_names <- gene_exp$V1
+# Sort the genes based on their variance in descending order
+sorted_genes <- gene_expression[order(variance, decreasing = TRUE), ]
 
-# Remove the first column (gene names) from the data frame
-gene_exp <- gene_exp[, -1]
-
-# Calculate the variance for each gene
-gene_var <- apply(gene_exp, 1, var)
-
-# Order the genes based on their variance in descending order
-ordered_genes <- gene_names[order(gene_var, decreasing = TRUE)]
-
-# Select the top 1000 genes with highest variance
-top_genes <- ordered_genes[1:1000]
-
-# Subset the gene expression data to include only the top genes
-top_gene_exp <- gene_exp[which(gene_names %in% top_genes), ]
-
-# Transpose the gene expression data so that each row represents a sample
-top_gene_exp <- t(top_gene_exp)
-
-# Convert the transposed data back to a data frame
-top_gene_exp <- data.frame(top_gene_exp)
-
-# Rename the column names as gene names
-colnames(top_gene_exp) <- top_genes
+# Select the top 1000 most variable genes
+top_var_genes <- sorted_genes[1:1000, ]
 
 # Create a scatterplot of the two most variable genes
-ggplot(top_gene_exp, aes(x = top_genes[1], y = top_genes[2])) +
-  geom_point() +
-  xlab("Gene 1") +
-  ylab("Gene 2") +
-  ggtitle("Scatterplot of Two Most Variable Genes")
-
-# End of code
+plot(top_var_genes[, 2], top_var_genes[, 3], xlab = "Gene1", ylab = "Gene2", main = "Scatterplot of the two most variable genes")
 ```
+Note: Replace "leukemiaExp.txt" with the actual path or filename of your gene expression data file.

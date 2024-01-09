@@ -3,22 +3,28 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the data from the file
+# Load the required package
+library(ggplot2)
+
+# Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check the number of columns
+# Check the number of samples
 num_samples <- ncol(data)
 
-# Check if there are more than 500 samples
+# If there are more than 500 samples
 if (num_samples > 500) {
   # Randomly sample 500 columns
-  sampled_data <- data[, sample(1:num_samples, 500)]
+  sampled_data <- data[, sample(2:num_samples, size = 500, replace = FALSE)]
 } else {
-  # If there are less than or equal to 500 samples, use the original data
-  sampled_data <- data
+  sampled_data <- data[, 2:num_samples]
 }
 
-# Create a boxplot of the sampled data
-boxplot(sampled_data, main = "Gene Expression Boxplot")
+# Create a boxplot of the sampled columns
+ggplot(data = sampled_data, aes(x = NULL, y = sampled_data)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of Gene Expression Data", x = "Samples")
 ```
-
+Note: 
+1. The assumption here is that the gene names are not needed for the boxplot.
+2. This code uses the `ggplot2` package for creating the boxplot.

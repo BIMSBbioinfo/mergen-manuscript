@@ -3,17 +3,17 @@ I have the following count table for an RNA-seq experiment, "SRP021193.raw_count
 
 response:
 ```
-# Load the data
-data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+# Read the count table
+count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Count the number of genes
-num_genes <- nrow(data)
+# Get the number of genes
+num_genes <- nrow(count_table)
 
-# Count the number of samples
-num_samples <- ncol(data) - 2
+# Get the number of samples
+num_samples <- ncol(count_table) - 2  # Exclude the first and last columns
 
-# Print the results
-num_genes
-num_samples
+# Print the result
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```
-The dataset has `num_genes` genes and `num_samples` samples.
+Note: Replace "SRP021193.raw_counts.tsv" with the actual file path if it is located in a different directory.

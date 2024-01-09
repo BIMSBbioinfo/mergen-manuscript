@@ -4,29 +4,31 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 response:
 To complete this task, we will follow these steps:
 
-1. Read the "metRmOlWithDbgapIdHeader.txt" file and store it in a data frame.
-2. Read the "subjects.txt" file and store it in a data frame.
-3. Merge the two data frames using the "dbGap ID" column.
-4. Filter the data frame to select the two oldest subjects.
-5. Plot a scatter plot of CpG methylation values for the selected subjects.
+1. Read the "metRmOlWithDbgapIdHeader.txt" table and store it as a data frame.
+2. Read the "subjects.txt" table and store it as a data frame.
+3. Merge the two data frames based on the dbGap ID column.
+4. Subset the merged data frame to include only the two oldest subjects.
+5. Plot a scatter plot of CpG methylation values for the two oldest subjects.
 
-Please find the code below that performs these steps:
+Here is the code to accomplish these tasks:
 
 ```
-# Step 1: Read the "metRmOlWithDbgapIdHeader.txt" file
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Step 1: Read the "metRmOlWithDbgapIdHeader.txt" table
+met_data <- read.delim("metRmOlWithDbgapIdHeader.txt", stringsAsFactors = FALSE)
 
-# Step 2: Read the "subjects.txt" file
-subject_data <- read.table("subjects.txt", header = TRUE)
+# Step 2: Read the "subjects.txt" table
+subjects_data <- read.delim("subjects.txt", stringsAsFactors = FALSE)
 
-# Step 3: Merge the two data frames using the "dbGap ID" column
-merged_data <- merge(met_data, subject_data, by.x = "dbGap ID", by.y = "dbGap ID")
+# Step 3: Merge the two data frames based on dbGap ID column
+merged_data <- merge(met_data, subjects_data, by.x = "DBGapId", by.y = "dbGap ID")
 
-# Step 4: Filter the data frame to select the two oldest subjects
+# Step 4: Subset the merged data frame to include only the two oldest subjects
 oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
 
-# Step 5: Plot a scatter plot of CpG methylation values for the selected subjects
-plot(oldest_subjects$CpG_id, oldest_subjects$Value, xlab = "CpG ID", ylab = "Methylation Value", main = "Scatter Plot of CpG Methylation")
+# Step 5: Plot a scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects[, -c(1, ncol(oldest_subjects))], pch = 16, xlab = "CpG Id", ylab = "Methylation Value")
 ```
 
-Please note that you need to replace the file names ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") with the actual file names and make sure the files are in the correct directory.
+Note: 
+1. Make sure the "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" files are in the same directory as your R script or set the correct file paths in the `read.delim` function.
+2. The code assumes that the CpG ID column in the "metRmOlWithDbgapIdHeader.txt" table is labeled as "CpG_id" and the dbGap ID column in the "subjects.txt" table is labeled as "dbGap ID". If not, please adjust the column names accordingly.

@@ -2,57 +2,89 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
 
 response:
-To accomplish this task, I would first load the required libraries, read the count table and annotation data, perform statistical tests to find genes specific to each group, and then plot the PCA using the group-specific genes.
+To complete this task, we will follow these steps:
 
-Here is the R code to complete the task:
+1. Load the count table and annotation data.
+2. Perform statistical tests to find genes that are specific for each group.
+3. Select the group-specific genes.
+4. Plot PCA using the selected genes and color code by the "group" variable.
+
+Let's start by loading the necessary libraries and the data files.
 
 ```
-# Load required libraries
-library(DESeq2)   # For differential expression analysis
-library(tidyr)    # For data manipulation
-library(ggplot2)  # For plotting
+# Load libraries
+library(openxlsx)
+library(limma)
+library(ggplot2)
 
-# Read count table
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1, sep = "\t")
-count_table <- as.matrix(count_table)
+# Set working directory if necessary
+# setwd("path_to_directory_containing_data_files")
 
-# Read annotation data
-anno_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1, sep = "\t")
+# Load count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 1)
 
-# Convert annotation data to factor
-anno_data$group <- as.factor(anno_data$group)
+# Load annotation data
+annotation <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
+```
 
-# Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = anno_data, design = ~ group)
+Next, we will perform statistical tests to find genes that are specific for each group. We will use the limma package for differential expression analysis.
+
+```
+# Convert count table to matrix format
+count_matrix <- as.matrix(count_table[, -1])
+
+# Define experimental design matrix
+design <- model.matrix(~0 + annotation$group)
+
+# Apply voom transformation to the count matrix
+voom_object <- voom(count_matrix, design, plot = FALSE)
+
+# Fit linear models and perform empirical Bayes moderation
+fit <- lmFit(voom_object, design)
+fit <- eBayes(fit)
+
+# Perform statistical tests for each group
+contrasts <- makeContrasts(
+  Group1_vs_Group2 = annotation$group == "Group1" - annotation$group == "Group2",
+  Group1_vs_Group3 = annotation$group == "Group1" - annotation$group == "Group3",
+  Group2_vs_Group3 = annotation$group == "Group2" - annotation$group == "Group3",
+  levels = design
+)
 
 # Perform differential expression analysis
-dds <- DESeq(dds)
+diff_expr <- contrasts.fit(fit, contrasts)
+diff_table <- topTable(diff_expr, coef = 1, adjust.method = "fdr", sort.by = "none", number = Inf)
 
-# Get group-specific genes using statistical tests
-group_specific_genes <- results(dds, contrast = c("group", "GroupA", "GroupB", "GroupC"))
-
-# Filter genes based on adjusted p-value threshold (e.g., 0.05)
-group_specific_genes <- subset(group_specific_genes, padj < 0.05)
-
-# Extract gene names
-group_specific_gene_names <- rownames(group_specific_genes)
-
-# Subset count table with group-specific genes
-count_table_subset <- count_table[group_specific_gene_names, ]
-
-# Perform PCA using group-specific genes
-pca_data <- prcomp(t(count_table_subset))
-
-# Create PCA plot with color-coded groups
-pca_plot <- ggplot(data = as.data.frame(pca_data$x), aes(x = PC1, y = PC2, color = anno_data$group)) +
-  geom_point() +
-  labs(color = "group") +
-  theme_minimal()
-
-# Display the PCA plot
-print(pca_plot)
+# Get group-specific genes
+group1_specific_genes <- diff_table$genes[diff_table$Group1_vs_Group2 < 0.05, drop = FALSE]
+group2_specific_genes <- diff_table$genes[diff_table$Group2_vs_Group3 < 0.05, drop = FALSE]
+group3_specific_genes <- diff_table$genes[diff_table$Group1_vs_Group3 < 0.05, drop = FALSE]
 ```
 
-Please make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths on your system.
+Now that we have the group-specific genes, we can plot the PCA using these genes and color code by the "group" variable in the annotation data.
 
-This code will perform statistical tests to find genes specific to each group, extract their names, and then use these genes to plot a PCA, color-coded by the group variable in the annotation data.
+```
+# Extract group-specific gene expression data
+group1_data <- count_matrix[rownames(group1_specific_genes), ]
+group2_data <- count_matrix[rownames(group2_specific_genes), ]
+group3_data <- count_matrix[rownames(group3_specific_genes), ]
+
+# Combine group-specific gene expression data
+pca_data <- rbind(group1_data, group2_data, group3_data)
+
+# Perform PCA on the combined data
+pca <- prcomp(t(pca_data))
+
+# Create a data frame for plotting
+pca_df <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], Group = rep(annotation$group, times = c(nrow(group1_data), nrow(group2_data), nrow(group3_data))))
+
+# Plot PCA with color coding by group
+ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point() +
+  labs(color = "Group") +
+  theme_minimal()
+```
+
+This code will load the count table and annotation data, perform statistical tests to find genes specific for each group, select the group-specific genes, and plot the PCA with color coding by the "group" variable.
+
+Note: The code assumes that the count table file is in xlsx format and the annotation data file is in tsv format. Make sure to modify the file paths and formats according to your data.

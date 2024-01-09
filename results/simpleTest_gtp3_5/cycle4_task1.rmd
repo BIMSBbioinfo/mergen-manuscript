@@ -3,15 +3,15 @@ I have a tab separated file called "subjects.txt". Read it and tell me how many 
 
 response:
 ```
-# Read the file
-data <- read.table("subjects.txt", sep = "\t")
+# Read the tab separated file
+data <- read.table("subjects.txt", sep="\t", header=TRUE)
 
-# Get the number of rows and columns
+# Get the number of rows and columns in the data
 num_rows <- nrow(data)
 num_cols <- ncol(data)
 
 # Print the number of rows and columns
-print(paste("Number of rows: ", num_rows))
-print(paste("Number of columns: ", num_cols))
+cat("The number of rows in the data is:", num_rows, "\n")
+cat("The number of columns in the data is:", num_cols, "\n")
 ```
-
+Note: Replace "subjects.txt" with the actual file path/name in your case.

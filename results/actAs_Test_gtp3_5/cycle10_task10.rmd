@@ -2,116 +2,41 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To complete this task, we will use R programming language and several packages such as "tidyverse" for data manipulation, "factoextra" for clustering analysis, and "dplyr" for data filtering.
+To complete this task, we will follow the steps mentioned:
 
-First, let's read the gene expression data from the "leukemiaExp.txt" file and load the necessary packages:
+1. Read the gene expression data from "leukemiaExp.txt" file.
+2. Calculate the variability for each gene.
+3. Filter the top 1000 genes with the highest variability.
+4. Cluster the samples based on the expression values of these genes.
+5. Extract cluster-specific genes for each cluster.
 
-```
-# Load necessary packages
-library(tidyverse)
-library(factoextra)
-
-# Read gene expression data
-gene_expression <- read.delim("leukemiaExp.txt", stringsAsFactors = FALSE)
-```
-
-Next, let's filter the genes based on their variability:
+Here is the code to accomplish these steps:
 
 ```
-# Calculate the variance of each gene across samples
-gene_variances <- apply(gene_expression[, -1], 1, var)
+# Step 1: Read the gene expression data
+expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Order genes based on variance in descending order and select the top 1000 most variable genes
-top_variable_genes <- gene_expression[order(gene_variances, decreasing = TRUE), ][1:1000, ]
-```
+# Step 2: Calculate variability for each gene
+gene_variability <- apply(expression_data[, -1], 1, var)
 
-Now that we have the top 1000 variable genes, let's perform clustering analysis on the samples:
+# Step 3: Filter top 1000 genes with highest variability
+top_1000_genes <- head(sort(gene_variability, decreasing = TRUE), 1000)
+filtered_expression_data <- expression_data[rownames(expression_data) %in% names(top_1000_genes), ]
 
-```
-# Perform hierarchical clustering on the samples
-clustering <- hclust(dist(t(top_variable_genes[, -1])))
+# Step 4: Cluster the samples based on the expression values of filtered genes
+sample_clusters <- hclust(dist(filtered_expression_data[, -1]))
+clusters <- cutree(sample_clusters, k = 2)  # Adjust k value based on desired number of clusters
 
-# Determine the optimal number of clusters using the elbow method
-fviz_nbclust(t(top_variable_genes[, -1]),
-             FUNcluster = hclust,
-             method = "wss")
+# Step 5: Extract cluster-specific genes for each cluster
+cluster_specific_genes <- lapply(unique(clusters), function(cluster) {
+  genes_in_cluster <- rownames(filtered_expression_data)[clusters == cluster]
+  return(genes_in_cluster)
+})
 
-# From the elbow method plot, choose an appropriate number of clusters
-
-# Set the desired number of clusters
-num_clusters <- 5
-
-# Perform k-means clustering with the chosen number of clusters
-kmeans_clusters <- kmeans(t(top_variable_genes[, -1]), centers = num_clusters)
-
-# Add the cluster labels to the gene expression data
-top_variable_genes$cluster <- kmeans_clusters$cluster
-```
-
-Finally, let's extract cluster-specific genes for each cluster:
-
-```
-# Create a list to store each cluster's specific genes
-cluster_specific_genes <- list()
-
-# Iterate over each cluster
-for (cluster in 1:num_clusters) {
-  # Get the genes belonging to the current cluster
-  cluster_genes <- top_variable_genes %>% filter(cluster == cluster)
-  
-  # Store the cluster-specific genes in the list
-  cluster_specific_genes[[cluster]] <- cluster_genes
+# Print the cluster-specific genes for each cluster
+for (i in 1:length(cluster_specific_genes)) {
+  cat("Cluster", i, ": ", paste(cluster_specific_genes[[i]], collapse = ", "), "\n")
 }
 ```
 
-The `cluster_specific_genes` list will contain the cluster-specific genes for each cluster.
-
-Complete code:
-
-```
-# Load necessary packages
-library(tidyverse)
-library(factoextra)
-
-# Read gene expression data
-gene_expression <- read.delim("leukemiaExp.txt", stringsAsFactors = FALSE)
-
-# Calculate the variance of each gene across samples
-gene_variances <- apply(gene_expression[, -1], 1, var)
-
-# Order genes based on variance in descending order and select the top 1000 most variable genes
-top_variable_genes <- gene_expression[order(gene_variances, decreasing = TRUE), ][1:1000, ]
-
-# Perform hierarchical clustering on the samples
-clustering <- hclust(dist(t(top_variable_genes[, -1])))
-
-# Determine the optimal number of clusters using the elbow method
-fviz_nbclust(t(top_variable_genes[, -1]),
-             FUNcluster = hclust,
-             method = "wss")
-
-# From the elbow method plot, choose an appropriate number of clusters
-
-# Set the desired number of clusters
-num_clusters <- 5
-
-# Perform k-means clustering with the chosen number of clusters
-kmeans_clusters <- kmeans(t(top_variable_genes[, -1]), centers = num_clusters)
-
-# Add the cluster labels to the gene expression data
-top_variable_genes$cluster <- kmeans_clusters$cluster
-
-# Create a list to store each cluster's specific genes
-cluster_specific_genes <- list()
-
-# Iterate over each cluster
-for (cluster in 1:num_clusters) {
-  # Get the genes belonging to the current cluster
-  cluster_genes <- top_variable_genes %>% filter(cluster == cluster)
-  
-  # Store the cluster-specific genes in the list
-  cluster_specific_genes[[cluster]] <- cluster_genes
-}
-```
-
-Note: Remember to replace "leukemiaExp.txt" with the actual file path and name containing the gene expression data. Also, adjust the number of clusters based on the elbow method plot or your specific requirements.
+Please note that in Step 4, you can adjust the `k` value in `cutree()` function to specify the desired number of clusters. Also, the code assumes that the first column of the gene expression data contains the gene names, and subsequent columns contain the sample data.

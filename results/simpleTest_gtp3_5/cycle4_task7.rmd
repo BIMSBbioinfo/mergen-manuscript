@@ -3,18 +3,24 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Load the data
+data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Check if number of columns is more than 500
-if (ncol(data) > 500) {
-  # Randomly sample 500 columns
-  subset_data <- data[, sample(ncol(data), 500)]
+# Check the number of samples
+num_samples <- ncol(data)
+
+# If there are more than 500 samples
+if (num_samples > 500) {
+  # Randomly sample 500 samples
+  sampled_columns <- sample(num_samples, 500)
+  
+  # Create a subset of the data
+  data_subset <- data[, sampled_columns]
 } else {
-  subset_data <- data
+  # If there are 500 or fewer samples, keep the original data
+  data_subset <- data
 }
 
 # Create a boxplot of the columns
-boxplot(subset_data, xlab="Samples", ylab="Gene Expression", main="Gene Expression Data")
+boxplot(data_subset, main = "Gene Expression Data", xlab = "Samples", ylab = "Expression")
 ```
-

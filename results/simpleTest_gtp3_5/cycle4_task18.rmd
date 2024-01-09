@@ -3,20 +3,25 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the CpG methylation values dataset
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the datasets
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Read the subject information dataset
-subject_info <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Get the common individuals' IDs from the datasets
+common_ids <- intersect(metRmOl$DBGapId, subjects$dbGapID)
 
-# Match the dbGap ID column in the subject information dataset with the first row in the methylation data dataset
-matched_ids <- subject_info[subject_info$dbGap_ID %in% methylation_data[1, ], ]
+# Filter the datasets to only include common individuals
+metRmOl_common <- metRmOl[, common_ids]
+subjects_common <- subjects[subjects$dbGapID %in% common_ids, ]
 
-# Filter the CpGs associated with Age but not with sex or Race
-filtered_cpgs <- methylation_data[rowSums(matched_ids$Age != "") > 0 & rowSums(matched_ids$sex == "") == 0 & rowSums(matched_ids$Race == "") == 0, ]
+# Get the CpGs associated with Age but not with sex or Race
+cpgs_age_only <- rownames(subjects_common[!is.na(subjects_common$Age) & 
+                                            is.na(subjects_common$sex) &
+                                            is.na(subjects_common$Race), ])
 
-# Display the top 20 CpGs
-top_20_cpgs <- head(filtered_cpgs, 20)
-top_20_cpgs
+# Display top 20 CpGs associated with Age only
+top_20_cpgs_age_only <- head(cpgs_age_only, 20)
+top_20_cpgs_age_only
 ```
-```
+
+Note: Please make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual filenames of the datasets in your system.

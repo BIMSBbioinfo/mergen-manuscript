@@ -4,16 +4,26 @@ Read the data and merge them into a single table using dbGapId information, retu
 
 response:
 ```
-# Read the data files
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subjects <- read.table("subjects.txt", header = TRUE)
+# Read the 'metRmOlWithDbgapIdHeader.txt' file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
 
-# Merge the data based on dbGap ID
-merged_data <- merge(subjects, metRmOl, by.x = "dbGap ID", by.y = "DBGapId")
+# Read the 'subjects.txt' file
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Get the number of columns in the merged data
+# Merge the two datasets based on dbGapId information
+merged_data <- merge(met_data, subjects_data, by.x = "dbGapId", by.y = "dbGap ID")
+
+# Get the number of columns in the merged dataset
 num_columns <- ncol(merged_data)
 
+# Print the number of columns
 num_columns
 ```
+Alternatively, if the files are located in different directories, you can specify the full file paths while reading them:
+```
+# Read the 'metRmOlWithDbgapIdHeader.txt' file
+met_data <- read.table("/path/to/metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
 
+# Read the 'subjects.txt' file
+subjects_data <- read.table("/path/to/subjects.txt", header = TRUE)
+```

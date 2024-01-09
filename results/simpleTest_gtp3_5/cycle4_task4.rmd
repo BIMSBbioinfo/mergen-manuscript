@@ -3,17 +3,19 @@ I have the following count table for an RNA-seq experiment, "SRP021193.raw_count
 
 response:
 ```
-# Read the count table into a data frame
+# Read the count table
 count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
 # Get the number of genes
 num_genes <- nrow(count_table)
 
-# Get the number of samples (excluding the first and last column)
+# Get the number of samples
 num_samples <- ncol(count_table) - 2
 
-# Print the number of genes and samples
-paste("Number of genes:", num_genes)
-paste("Number of samples:", num_samples)
+# Print the results
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```
-Note: Replace "SRP021193.raw_counts.tsv" with the actual file name and location.
+Note: 
+- Replace `"SRP021193.raw_counts.tsv"` with the correct file path if the file is located in a different directory.
+- The code assumes that the first column contains the gene names, the last column contains gene length, and the rest of the columns are samples. Adjust the indexing accordingly if the file structure is different.

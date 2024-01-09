@@ -237,4 +237,4 @@ for (j in 1:length(pcpairs)){
 }
 
 # save pcpairs as RDS
-saveRDS(pcpairs,file="pcpars.rds")
+saveRDS(pcpairs,file=paste0(output_folder,"/pcpairs.rds"))

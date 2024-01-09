@@ -2,37 +2,60 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-Here is the R code to perform the tasks mentioned:
-
 ```
 # Load required libraries
-library(readxl)
 library(DESeq2)
-library(apeglm)
+library(ggplot2)
+library(readxl)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
+# Read the annotation data
 annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Set the row names of count table as gene names
-rownames(count_table) <- count_table$GeneNames
-count_table <- count_table[, -1]  # Remove the first column (gene names)
+# Extract sample names from annotation data
+sample_names <- annotation_data$SampleID
 
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ 1)
-dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Set the row names of the count table as the gene names
+rownames(count_table) <- count_table$Gene
 
-# Perform PCA analysis
+# Remove the first column (gene names) from the count table
+count_table <- count_table[, -1]
+
+# Subset the count table to include only the samples present in the annotation data
+count_table <- count_table[, sample_names]
+
+# Create a DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ 1)
+
+# Perform normalization
+dds_normalized <- DESeq(dds)
+
+# Extract normalized counts
+normalized_counts <- counts(dds_normalized, normalized = TRUE)
+
+# Perform PCA
 pca_data <- prcomp(t(normalized_counts))
-pca_df <- as.data.frame(pca_data$x)
 
-# Create a plot color-coded by "group"
-plot(pca_df$PC1, pca_df$PC2, col = annotation_data$group)
+# Create a data frame with PCA results
+pca_results <- data.frame(PC1 = pca_data$x[, 1],
+                          PC2 = pca_data$x[, 2],
+                          Group = annotation_data$group,
+                          LibrarySelection = annotation_data$LibrarySelection)
 
-# Create a plot color-coded by "LibrarySelection"
-plot(pca_df$PC1, pca_df$PC2, col = annotation_data$LibrarySelection)
+# Plot PCA color coded by group
+ggplot(pca_results, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point() +
+  labs(title = "PCA plot of samples (Color coded by 'Group')") +
+  theme_minimal()
+
+# Plot PCA color coded by LibrarySelection
+ggplot(pca_results, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA plot of samples (Color coded by 'LibrarySelection')") +
+  theme_minimal()
 ```
-Please note that the above code assumes that you have installed the required libraries (readxl, DESeq2, apeglm). Additionally, make sure that you provide the correct file paths for the count table and annotation data.
+Note: Make sure to install the required libraries (`DESeq2`, `ggplot2`, `readxl`) before executing the code.

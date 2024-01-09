@@ -3,26 +3,27 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
+# Load necessary packages
 library(readxl)
 
-# Read count table
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Count number of rows and columns in count table
-num_rows_count <- nrow(count_data)
-num_cols_count <- ncol(count_data)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Count number of rows and columns for the count table
+n_rows_count_table <- nrow(count_table)
+n_cols_count_table <- ncol(count_table)
 
-# Count number of rows and columns in annotation data
-num_rows_annotation <- nrow(annotation_data)
-num_cols_annotation <- ncol(annotation_data)
+# Count number of rows and columns for the annotation data
+n_rows_annotation_data <- nrow(annotation_data)
+n_cols_annotation_data <- ncol(annotation_data)
 
 # Print the results
-cat("Number of rows in count table:", num_rows_count, "\n")
-cat("Number of columns in count table:", num_cols_count, "\n")
-
-cat("Number of rows in annotation data:", num_rows_annotation, "\n")
-cat("Number of columns in annotation data:", num_cols_annotation, "\n")
+cat("Number of rows in count table:", n_rows_count_table, "\n")
+cat("Number of columns in count table:", n_cols_count_table, "\n")
+cat("Number of rows in annotation data:", n_rows_annotation_data, "\n")
+cat("Number of columns in annotation data:", n_cols_annotation_data, "\n")
 ```
+

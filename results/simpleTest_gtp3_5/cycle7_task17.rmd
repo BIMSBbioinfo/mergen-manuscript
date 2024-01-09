@@ -3,33 +3,33 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(randomForest)
 
-# Read the methylation data
-methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+# Read in the datasets
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header=TRUE, row.names=1)
+subjects <- read.table("subjects.txt", header=TRUE)
 
-# Read the subjects data
-subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Set the rownames of methylation dataset to be equal to the first row of subjects dataset
+rownames(methylation) <- subjects$`dbGap ID`
 
-# Match the dbGap ID column in subjects data with the first row of methylation data
-dbGapId <- subjects[, 2]
-methylation <- methylation[, dbGapId]
+# Merge the two datasets based on dbGap ID
+data <- merge(methylation, subjects, by.x="Row.names", by.y="dbGap ID")
 
-# Transpose the methylation data
-methylation <- t(methylation)
+# Convert the Age column to numeric
+data$Age <- as.numeric(data$Age)
 
-# Add the Age column from subjects data to the methylation data
-methylation$Age <- subjects$Age
-
-# Convert Age column to numeric
-methylation$Age <- as.numeric(as.character(methylation$Age))
+# Split the data into training and testing sets
+set.seed(123)
+train_idx <- sample(1:nrow(data), nrow(data)*0.7)
+train <- data[train_idx, ]
+test <- data[-train_idx, ]
 
 # Build the random forest model
-model <- randomForest(Age ~ ., data = methylation)
+model <- randomForest(Age ~ ., data=train, importance=TRUE)
 
-# Display the most important variables for the predictive model
-importance <- importance(model)
-varImpPlot(model)
+# Display the variable importance
+var_importance <- importance(model)
+print(var_importance)
 ```
 ```

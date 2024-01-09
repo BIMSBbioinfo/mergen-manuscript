@@ -2,57 +2,42 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, we will make use of the `DESeq2`, `ggplot2`, and `reshape2` packages in R. We will perform the following steps:
+To complete this task, I would first load the count table and annotation data into R. Then, I would normalize the counts using a suitable method. Finally, I would create two PCA plots, one color-coded by the "group" variable and the other color-coded by the "LibrarySelection" variable.
 
-1. Read in the count table and annotation data.
-2. Normalize the count data using DESeq2.
-3. Perform PCA on the normalized count data.
-4. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection" in the annotation data.
-
-Here's the code to accomplish these steps:
+Here's the code to accomplish these tasks:
 
 ```
-# Step 1: Read in the count table and annotation data
+# Load required packages
 library(DESeq2)
 library(ggplot2)
-library(reshape2)
+library(plyr)
 
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", sep="\t", header=TRUE, row.names=1)
-annotation_data <- read.table("SRP021193.colData.tsv", sep="\t", header=TRUE, row.names=1)
+# Read count table
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header=TRUE, row.names=1, sep="\t")
 
-# Step 2: Normalize the count data
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header=TRUE, row.names=1, sep="\t")
+
+# Normalize counts using DESeq2
 dds <- DESeqDataSetFromMatrix(countData = count_table,
                               colData = annotation_data,
                               design = ~ 1)
-
 dds <- DESeq(dds)
 normalized_counts <- counts(dds, normalized=TRUE)
 
-# Step 3: Perform PCA on the normalized count data
+# Perform PCA
 pca <- prcomp(t(normalized_counts))
 
-# Step 4: Create PCA plots
-# Color-coded by "group"
-group_pca <- data.frame(Sample = colnames(normalized_counts),
-                        PC1 = pca$x[,1],
-                        PC2 = pca$x[,2],
-                        Group = annotation_data$group)
+# Create PCA plot color-coded by "group"
+group_colors <- c("Control"="blue", "Treatment"="red")
+group_color_labels <- as.numeric(factor(annotation_data$group))
+group_color_labels <- plyr::mapvalues(group_color_labels, from=1:length(group_colors), to=group_colors)
+plot(pca$x[,1], pca$x[,2], col=group_color_labels, pch=16, xlab="PC1", ylab="PC2", main="PCA Plot (Color-coded by Group)")
 
-# Color-coded by "LibrarySelection"
-library_pca <- data.frame(Sample = colnames(normalized_counts),
-                           PC1 = pca$x[,1],
-                           PC2 = pca$x[,2],
-                           LibrarySelection = annotation_data$LibrarySelection)
-
-# Plot color-coded by "group"
-ggplot(group_pca, aes(x = PC1, y = PC2, color = Group)) +
-  geom_point() +
-  labs(title = "PCA Plot - Color-coded by Group")
-
-# Plot color-coded by "LibrarySelection"
-ggplot(library_pca, aes(x = PC1, y = PC2, color = LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA Plot - Color-coded by LibrarySelection")
+# Create PCA plot color-coded by "LibrarySelection"
+library_colors <- c("PolyA"="green", "RiboMinus"="orange", "RiboZero"="purple")
+library_color_labels <- plyr::mapvalues(annotation_data$LibrarySelection, from=library_colors)
+plot(pca$x[,1], pca$x[,2], col=library_color_labels, pch=16, xlab="PC1", ylab="PC2", main="PCA Plot (Color-coded by Library Selection)")
 ```
 
-Please make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths to your count table and annotation data, respectively.
+Please note that the code assumes that the count table is in tab-separated format with row names for genes and column names for samples, and the annotation data is also in tab-separated format with row names for sample ids. The code also assumes that the required packages (DESeq2, ggplot2, and plyr) are already installed and loaded. You may need to adjust the code according to your specific data format and package setup.

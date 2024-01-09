@@ -3,29 +3,38 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the datasets
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
-subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the data from the metRmOlWithDbgapIdHeader.txt file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
 
-# Subset the columns of interest from the subjects dataset
-subjects_subset <- subjects[, c("dbGap ID", "Age", "sex", "Race")]
+# Read the data from the subjects.txt file
+subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Transpose the metRmOl dataset to have individuals as rows and CpGs as columns
-metRmOl_transposed <- as.data.frame(t(metRmOl))
-colnames(metRmOl_transposed) <- metRmOl_transposed[1, ]  # Set the column names as the first row
-metRmOl_transposed <- metRmOl_transposed[-1, ]  # Remove the first row
+# Get the column names from the met_data
+col_names <- colnames(met_data)
 
-# Match the dbGap ID column in subjects_subset with the column names in metRmOl_transposed
-matched_cpgs <- metRmOl_transposed[, which(colnames(metRmOl_transposed) %in% subjects_subset$`dbGap ID`)]
+# Get the dbGap IDs from the subjects_data
+dbGap_ids <- subjects_data$dbGapID
 
-# Filter the CpGs associated with Age but not with sex or Race
-age_cpgs <- matched_cpgs[which(!is.na(subjects_subset$Age)), ]  # Exclude missing Age values
-sex_cpgs <- matched_cpgs[which(is.na(subjects_subset$sex)), ]  # Include missing sex values
-race_cpgs <- matched_cpgs[which(is.na(subjects_subset$Race)), ]  # Include missing Race values
-age_only_cpgs <- age_cpgs[!(rownames(age_cpgs) %in% rownames(sex_cpgs) | rownames(age_cpgs) %in% rownames(race_cpgs)), ]
+# Find the index of the dbGap IDs in the col_names
+dbGap_ids_index <- match(dbGap_ids, col_names)
 
-# Display top 20 CpGs
-top_20_cpgs <- head(age_only_cpgs, n = 20)
+# Get the columns of interest from the met_data based on dbGap IDs
+met_data_subset <- met_data[, dbGap_ids_index]
+
+# Add the CpG_id column to the met_data_subset
+met_data_subset$CpG_id <- rownames(met_data)
+
+# Merge the met_data_subset with the subjects_data based on dbGap ID
+merged_data <- merge(met_data_subset, subjects_data, by.x = "CpG_id", by.y = "dbGapID", all.x = TRUE)
+
+# Filter the merged_data based on CpGs associated with Age but not with sex or Race
+filtered_data <- merged_data[!is.na(merged_data$Age) & is.na(merged_data$sex) & is.na(merged_data$Race), ]
+
+# Get the top 20 CpGs
+top_20_cpgs <- head(filtered_data$CpG_id, 20)
+
+# Print the top 20 CpGs
 top_20_cpgs
 ```
 
+Note: Please make sure to replace the file names (metRmOlWithDbgapIdHeader.txt and subjects.txt) with the correct file names and provide the correct file paths if necessary.

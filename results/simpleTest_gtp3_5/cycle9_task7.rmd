@@ -4,21 +4,27 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Load the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Check the number of samples
-num_samples <- ncol(data)
-if(num_samples > 500) {
-  # Randomly sample 500 samples
-  sample_cols <- sample(1:num_samples, 500)
+# Check the number of columns
+num_columns <- ncol(gene_data)
+
+# Check if there are more than 500 columns
+if (num_columns > 500) {
+  # Set seed for reproducibility
+  set.seed(123)
   
-  # Create a subset of the data with sampled columns
-  subset_data <- data[, sample_cols]
+  # Randomly sample 500 columns
+  sampled_columns <- sample(1:num_columns, size=500, replace=FALSE)
+  
+  # Subset the data with the sampled columns
+  subset_data <- gene_data[, sampled_columns]
+  
+  # Create a boxplot of the subset data
+  boxplot(subset_data, col="lightblue", main="Gene Expression Boxplot", xlab="Samples", ylab="Expression Level")
 } else {
-  subset_data <- data
+  # Create a boxplot of the original data
+  boxplot(gene_data, col="lightblue", main="Gene Expression Boxplot", xlab="Samples", ylab="Expression Level")
 }
-
-# Create a boxplot of the columns in the subset data
-boxplot(subset_data, main = "Gene Expression", xlab = "Samples", ylab = "Expression Level")
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path and name of your gene expression data file.
+

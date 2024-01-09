@@ -3,43 +3,41 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load required libraries
-library(cluster)
+# Read the gene expression data from the file
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Read the gene expression data
-exp_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Calculate the variability of each gene
+gene_variability <- apply(gene_exp, 1, var)
 
-# Calculate the variance of each gene
-gene_var <- apply(exp_data, 1, var)
+# Sort the genes based on their variability in descending order
+sorted_genes <- sort(gene_variability, decreasing = TRUE)
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- names(gene_var)[order(gene_var, decreasing = TRUE)]
+# Select the top 1000 most variable genes 
+top_1000_genes <- names(sorted_genes)[1:1000]
 
-# Select the top 1000 genes with highest variance
-top_var_genes <- sorted_genes[1:1000]
+# Subset the gene expression data to retain only the top 1000 genes
+filtered_gene_exp <- gene_exp[top_1000_genes, ]
 
-# Extract the expression data for the top variable genes
-var_exp_data <- exp_data[top_var_genes, ]
+# Perform clustering on the filtered gene expression data
+clusters <- kmeans(filtered_gene_exp, centers = 4)
 
-# Cluster the samples using hierarchical clustering
-sample_clusters <- hclust(dist(t(var_exp_data)), method = "complete")
+# Get the cluster assignments for each sample
+sample_clusters <- clusters$cluster
 
-# Cut the hierarchical clustering tree into 4 clusters
-cluster_labels <- cutree(sample_clusters, k = 4)
+# Create a list to store the cluster-specific genes
+cluster_specific_genes <- vector("list", max(sample_clusters))
 
-# Create a list to store cluster specific genes
-cluster_specific_genes <- vector("list", 4)
-
-# Loop through each cluster and extract cluster specific genes
-for (i in 1:4) {
-  cluster_specific_genes[[i]] <- top_var_genes[cluster_labels == i]
+# Extract cluster-specific genes for each cluster
+for (cluster in unique(sample_clusters)) {
+  cluster_genes <- rownames(filtered_gene_exp)[sample_clusters == cluster]
+  cluster_specific_genes[[cluster]] <- cluster_genes
 }
 
-# Print the cluster specific genes for each cluster
-for (i in 1:4) {
-  cat("Cluster", i, "specific genes:\n")
-  cat(paste(cluster_specific_genes[[i]], collapse = ", "))
+# Print the cluster-specific genes for each cluster
+for (cluster in unique(sample_clusters)) {
+  cat("Cluster", cluster, "specific genes:\n")
+  cat(paste(cluster_specific_genes[[cluster]], collapse = ", "))
   cat("\n\n")
 }
 ```
-Note: Make sure to replace "leukemiaExp.txt" with the correct file path to your gene expression data. The code assumes that the gene expression data is stored in a tab-separated text file and the gene names are in the first column.
+```

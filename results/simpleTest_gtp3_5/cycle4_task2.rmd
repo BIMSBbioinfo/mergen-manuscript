@@ -6,16 +6,14 @@ response:
 # Read the gene expression data file
 data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Get the number of genes
+# Count the number of rows (genes)
 num_genes <- nrow(data)
 
-# Get the number of samples
-num_samples <- ncol(data) - 1  # Subtract 1 to exclude the first column
+# Count the number of columns (samples)
+num_samples <- ncol(data)
 
 # Print the number of genes and samples
 print(paste("Number of genes:", num_genes))
 print(paste("Number of samples:", num_samples))
 ```
-Output:
-Number of genes: [number of genes in the dataset]
-Number of samples: [number of samples in the dataset]
+Note: Please make sure to replace "leukemiaExp.txt" with the actual file path of your gene expression data file.

@@ -2,55 +2,106 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, you can use the Bioconductor package `DESeq2` to normalize the counts and the `ggplot2` package to create the PCA plots. Here is the code to accomplish the task:
+To complete this task, we will use the R programming language and the following packages: `DESeq2`, `readxl`, `tidyverse`, and `ggplot2`. 
+
+First, let's install and load the required packages:
 
 ```
-# Load required packages
+
+
 library(DESeq2)
+library(readxl)
+library(tidyverse)
+library(ggplot2)
+```
+
+Next, we will read in the count table and annotation data:
+
+```
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation <- read.delim("SRP021193.colData.tsv", sep = "\t")
+```
+
+Now, let's perform normalization using DESeq2. DESeq2 is a popular R package for differential gene expression analysis, but we can also use it for simple count normalization. We will convert the count table into a DESeqDataSet object, estimate the size factors, and normalize the counts:
+
+```
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
+                              colData = annotation,
+                              design = ~1)
+
+# Estimate size factors and perform normalization
+dds <- estimateSizeFactors(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
+```
+
+Next, let's create a PCA plot with sample colors based on the "group" variable:
+
+```
+# Perform PCA
+pca_group <- prcomp(t(normalized_counts))
+pca_group_df <- as.data.frame(pca_group$x)
+pca_group_df$group <- annotation$group
+
+# Create PCA plot with group color coding
+ggplot(pca_group_df, aes(PC1, PC2, color = group)) +
+  geom_point(size = 3) +
+  labs(title = "PCA Plot - Samples Colored by Group")
+```
+
+Finally, let's create a PCA plot with sample colors based on the "LibrarySelection" variable:
+
+```
+# Create PCA plot with LibrarySelection color coding
+ggplot(pca_group_df, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point(size = 3) +
+  labs(title = "PCA Plot - Samples Colored by LibrarySelection")
+```
+
+And that's it! The code above will normalize the counts, and create two PCA plots with sample colors based on different variables from the annotation data.
+
+Complete Code:
+
+```
+
+
+library(DESeq2)
+library(readxl)
+library(tidyverse)
 library(ggplot2)
 
-# Read the count table
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t")
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read annotation data
+annotation <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Set rownames of count table as gene names
-rownames(count_table) <- count_table$GeneName
+# Convert count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
+                              colData = annotation,
+                              design = ~1)
 
-# Remove the gene name column
-count_table <- count_table[, -1]
-
-# Transpose the count table to match with annotation data
-count_table <- t(count_table)
-
-# Create a DESeq2 object
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ 1)
-
-# Perform normalization using DESeq2
-dds <- DESeq(dds)
-
-# Get the normalized counts
+# Estimate size factors and perform normalization
+dds <- estimateSizeFactors(dds)
 normalized_counts <- counts(dds, normalized = TRUE)
 
 # Perform PCA
-pca <- prcomp(t(normalized_counts))
+pca_group <- prcomp(t(normalized_counts))
+pca_group_df <- as.data.frame(pca_group$x)
+pca_group_df$group <- annotation$group
 
-# Create the PCA plot color coded by "group"
-group_pca_plot <- ggplot(data = annotation_data, aes(x = pca$x[, 1], y = pca$x[, 2], color = group)) +
-  geom_point() +
-  labs(title = "PCA Plot - Group", x = "PC1", y = "PC2")
+# Create PCA plot with group color coding
+ggplot(pca_group_df, aes(PC1, PC2, color = group)) +
+  geom_point(size = 3) +
+  labs(title = "PCA Plot - Samples Colored by Group")
 
-# Create the PCA plot color coded by "LibrarySelection"
-library_pca_plot <- ggplot(data = annotation_data, aes(x = pca$x[, 1], y = pca$x[, 2], color = LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA Plot - Library Selection", x = "PC1", y = "PC2")
-
-# Display the plots
-print(group_pca_plot)
-print(library_pca_plot)
+# Create PCA plot with LibrarySelection color coding
+ggplot(pca_group_df, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point(size = 3) +
+  labs(title = "PCA Plot - Samples Colored by LibrarySelection")
 ```
 
-Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths to your count table and annotation data, respectively.
-
-This code will read the count table and annotation data, normalize the counts using DESeq2, perform PCA on the normalized counts, and create two PCA plots color coded by "group" and "LibrarySelection" from the annotation data.
+Note: Make sure to replace the file paths `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual paths to your files.

@@ -3,32 +3,34 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To complete this task, we will use the "read.table" function in R to read the datasets and then use the "nrow" and "ncol" functions to count the number of rows and columns in each dataset.
+To complete this task, we will use the read.table() function in R to read the datasets and then use the nrow() and ncol() functions to count the number of rows and columns in each dataset.
 
 Here is the code to read and count the rows and columns for each dataset:
 
 ```
-# Read the dataset "metRmOlWithDbgapIdHeader.txt"
+# Read the "metRmOlWithDbgapIdHeader.txt" dataset
 met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Count the number of rows and columns
+# Count the number of rows and columns in "met_data"
 met_rows <- nrow(met_data)
 met_cols <- ncol(met_data)
 
-# Print the count
-cat("metRmOlWithDbgapIdHeader.txt dataset has", met_rows, "rows and", met_cols, "columns.\n")
+# Print the number of rows and columns in "met_data"
+cat("Number of rows in 'met_data':", met_rows, "\n")
+cat("Number of columns in 'met_data':", met_cols, "\n")
 
-# Read the dataset "subjects.txt"
+# Read the "subjects.txt" dataset
 subject_data <- read.table("subjects.txt", header = TRUE)
 
-# Count the number of rows and columns
+# Count the number of rows and columns in "subject_data"
 subject_rows <- nrow(subject_data)
 subject_cols <- ncol(subject_data)
 
-# Print the count
-cat("subjects.txt dataset has", subject_rows, "rows and", subject_cols, "columns.\n")
+# Print the number of rows and columns in "subject_data"
+cat("Number of rows in 'subject_data':", subject_rows, "\n")
+cat("Number of columns in 'subject_data':", subject_cols, "\n")
 ```
 
-Make sure to replace the file names with the actual names of the datasets you have in your environment.
+Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths to the datasets on your computer.
 
-The code above will read each dataset and store them in separate variables (`met_data` and `subject_data`). Then, it will count the number of rows and columns in each dataset using `nrow` and `ncol` functions. Finally, it will print out the counts for each dataset.
+This code reads the datasets, counts the number of rows and columns for each dataset, and then prints the results.

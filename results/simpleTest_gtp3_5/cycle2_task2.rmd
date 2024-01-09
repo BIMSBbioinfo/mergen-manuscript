@@ -3,15 +3,15 @@ I have the following gene expression data, "leukemiaExp.txt". Each row is a gene
 
 response:
 ```
-# Read the gene expression data from the file
-gene_exp_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the dataset
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Calculate the number of genes and samples in the dataset
-num_genes <- nrow(gene_exp_data)
-num_samples <- ncol(gene_exp_data)
+# Check the dimensions of the dataset
+genes <- nrow(data)  # Number of genes
+samples <- ncol(data)  # Number of samples
 
 # Print the number of genes and samples
-cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples, "\n")
+cat("Number of genes:", genes, "\n")
+cat("Number of samples:", samples, "\n")
 ```
-The dataset has `<number of genes>` genes and `<number of samples>` samples.
+Note: Make sure to replace "leukemiaExp.txt" with the actual file path of your dataset.

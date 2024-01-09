@@ -3,25 +3,35 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the dataset containing CpG methylation values
-methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the datasets
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Read the dataset containing information on individuals
-subjects <- read.table("subjects.txt", header = TRUE)
+# Transpose the metRmOl dataset
+metRmOl_transposed <- t(metRmOl)
 
-# Set the dbGap ID column in subjects dataset as row names
-rownames(subjects) <- subjects$`dbGap ID`
+# Get the column names from metRmOl_transposed
+column_names <- colnames(metRmOl_transposed)
 
-# Extract the CpGs columns from methylation dataset
-cpgs <- colnames(methylation)[-1]
+# Get the dbGap IDs from the first row of metRmOl_transposed
+dbGap_ids <- metRmOl_transposed[1, ]
 
-# Find all CpGs associated with Age but not with sex or Race
-age_cpgs <- cpgs[rowSums(is.na(subjects[rownames(methylation), "Age"])) == 0 & 
-                  rowSums(is.na(subjects[rownames(methylation), "Race"])) > 0 & 
-                  rowSums(is.na(subjects[rownames(methylation), "sex"])) > 0]
+# Find the indices where dbGap IDs match in subjects dataset
+matched_indices <- match(dbGap_ids, subjects$dbGap_ID)
 
-# Display top 20 CpGs associated with Age
-top_20_cpgs <- head(age_cpgs, 20)
-top_20_cpgs
+# Get the corresponding Age, sex, and Race columns from subjects dataset
+age <- subjects$Age[matched_indices]
+sex <- subjects$sex[matched_indices]
+race <- subjects$Race[matched_indices]
+
+# Find the CpGs associated with Age but not with sex or Race
+age_only_cpgs <- column_names[age != "" & sex == "" & race == ""]
+
+# Display top 20 CpGs
+top_20_cpgs <- age_only_cpgs[1:20]
+
+# Print the top 20 CpGs
+print(top_20_cpgs)
 ```
-```
+
+Note: Replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths of the datasets.

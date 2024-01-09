@@ -2,67 +2,35 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
 
 response:
-To filter genes based on their variability and retain the most variable top 1000 genes, we can follow these steps:
+To solve this task, we will follow these steps:
 
-1. Read the gene expression data from the "leukemiaExp.txt" file.
-2. Calculate the variance for each gene across the samples.
-3. Sort the genes based on their variance in descending order.
-4. Select the top 1000 genes with the highest variance.
-5. Plot a heatmap with clustering using the selected genes.
-6. Plot PCA for the samples.
+1. Read the gene expression data from the file "leukemiaExp.txt" and load it into R.
+2. Calculate the variability for each gene.
+3. Select the top 1000 most variable genes.
+4. Create a heatmap using these variable genes.
+5. Plot a PCA for the samples.
 
-Let's start by reading the gene expression data from the file using R:
+Here's the code to accomplish these steps:
 
 ```
 # Step 1: Read the gene expression data
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Display the first few rows of the data
-head(gene_data)
-```
+# Step 2: Calculate gene variability
+gene_variability <- apply(gene_data, 1, var)
 
-Now that we have read the data successfully, we can proceed to calculate the variance for each gene:
+# Step 3: Select top 1000 most variable genes
+top_variable_genes <- names(sort(gene_variability, decreasing=TRUE)[1:1000])
 
-```
-# Step 2: Calculate variance for each gene
-gene_var <- apply(gene_data[, -1], 1, var)
+# Step 4: Create heatmap with clustering
+heatmap_data <- gene_data[top_variable_genes, ]
+heatmap(heatmap_data, Colv=NA, scale="row")
 
-# Display the first few gene variances
-head(gene_var)
-```
-
-Next, we will sort the genes based on their variance in descending order and select the top 1000 genes with the highest variance:
+# Step 5: Plot PCA for samples
+pca <- prcomp(t(gene_data))
+plot(pca$x[,1], pca$x[,2])
 
 ```
-# Step 3: Sort genes based on variance and select the top 1000
-top_genes <- gene_data[order(-gene_var), ][1:1000, ]
 
-# Display the selected top genes
-head(top_genes)
-```
-
-Now we can proceed to plot a heatmap with clustering using the selected top genes:
-
-```
-# Step 4: Plot heatmap with clustering
-heatmap_data <- t(as.matrix(top_genes[, -1]))  # Transpose the data for heatmap plotting
-
-heatmap(heatmap_data, Rowv = TRUE, Colv = TRUE, scale = "row",
-        main = "Heatmap of Top 1000 Variable Genes", xlab = "Samples", ylab = "Genes")
-```
-
-Finally, let's plot PCA for the samples:
-
-```
-# Step 5: Plot PCA for the samples
-pca_data <- gene_data[, -1]  # Exclude the gene names column for PCA
-
-# Perform PCA
-pca_result <- prcomp(pca_data, scale = TRUE)
-
-# Plot PCA
-plot(pca_result$x[,1], pca_result$x[,2], xlab = "PC1", ylab = "PC2",
-     main = "PCA Plot of Gene Expression Samples")
-```
-
-Please note that the code assumes that the "leukemiaExp.txt" file is in the current working directory. If it is in a different location, please provide the appropriate file path in the `read.table` function.
+Note: Before running this code, make sure the file "leukemiaExp.txt" is in the current working directory or provide the correct file path.
+Also, you may need to install the "pheatmap" and "ggplot2" packages if they are not already installed.

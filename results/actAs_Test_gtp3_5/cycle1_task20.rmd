@@ -2,67 +2,69 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
 
 response:
-To complete this task, we will follow these steps:
+To complete this task, we will perform the following steps:
 
-1. Read the count table and annotation data files.
-2. Perform statistical tests to find genes specific for each group.
-3. Select the group-specific genes.
-4. Plot PCA using the group-specific genes and color code by the "group" variable.
+1. Read the count table and annotation data.
+2. Transpose the count table and merge it with the annotation data.
+3. Find genes specific for each group using statistical tests.
+4. Plot the PCA using the group-specific genes and color-code it by the group variable.
 
 Here is the code to accomplish these steps:
 
 ```
-# Step 1: Read the count table and annotation data files
-library(openxlsx)
+# Step 1: Read the count table and annotation data
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, header = TRUE)
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Read count table
-count_data <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2)
-genes <- count_data[, 1] # Extract gene names
-count_data <- count_data[, -1] # Remove gene names column
+# Step 2: Transpose count table and merge with annotation data
+count_table <- as.data.frame(t(count_table[-1])) # Transpose count table and remove first column
+colnames(count_table) <- count_table[1, ] # Set gene names as column names
+count_table <- count_table[-1, ] # Remove the row with gene names
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+merged_data <- merge(annotation_data, count_table, by.x = "row.names", by.y = "colnames")
+rownames(merged_data) <- merged_data$Row.names # Set row names
 
-# Step 2: Perform statistical tests to find genes specific for each group
-library(edgeR)
+# Step 3: Find group-specific genes using statistical tests
+groups <- unique(merged_data$group)
 
-# Convert count data to DGEList object
-dge_data <- DGEList(counts = count_data, genes = genes)
+group_specific_genes <- list()
 
-# Filter genes with low counts
-keep <- rowSums(dge_data$counts) >= 10
-dge_data <- dge_data[keep, , keep.lib.sizes = FALSE]
+for (group in groups) {
+  group_data <- merged_data[merged_data$group == group, ]
+  p_values <- apply(group_data[, -c(1:5)], 1, function(x) {
+    t.test(x[6:length(x)], x[group_data$group == "Control"])$p.value
+  })
+  significant_genes <- rownames(group_data)[p_values < 0.05]
+  group_specific_genes[group] <- significant_genes
+}
 
-# Perform differential expression analysis
-design <- model.matrix(~ annotation_data$group)
-dge_data <- calcNormFactors(dge_data)
-dge_data <- estimateDisp(dge_data, design)
-fit <- glmQLFit(dge_data, design)
-lrt <- glmQLFTest(fit, coef = 2)
-results <- decideTests(lrt, adjust.method = "BH")
-
-# Step 3: Select the group-specific genes
-group_specific_genes <- genes[results$padj < 0.05 & results$groupA_vs_groupB == "groupA_specific"]
-
-# Step 4: Plot PCA using the group-specific genes and color code by the "group" variable
+# Step 4: Plot PCA using group-specific genes
 library(ggplot2)
-library(prcomp)
+library(ggrepel)
+library(gplots)
 
-# Get count data for group-specific genes
-group_specific_counts <- count_data[group_specific_genes, ]
+# Use only group-specific genes for PCA analysis
+pca_data <- merged_data[, c("group", unlist(group_specific_genes))]
+pca_data <- pca_data[complete.cases(pca_data), ] # Remove rows with missing values
+
+# Normalize the expression values
+normalized_data <- log2(pca_data[, -1] + 1)
 
 # Perform PCA
-pca_data <- prcomp(t(group_specific_counts))
+pca <- prcomp(normalized_data[, -1])
 
-# Create a data frame for PCA results
-pca_results <- data.frame(PC1 = pca_data$x[, 1], PC2 = pca_data$x[, 2], Group = annotation_data$group)
+# Create a data frame with PCA scores
+pca_scores <- data.frame(pca$x)
+pca_scores$group <- pca_data$group
 
-# Plot PCA with color-coded groups
-ggplot(pca_results, aes(x = PC1, y = PC2, color = Group)) +
+# Plot PCA
+ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
   xlab("PC1") +
   ylab("PC2") +
-  ggtitle("PCA Plot with Group-specific Genes")
+  ggtitle("PCA of RNA-seq Data") +
+  theme_bw() +
+  theme(plot.title = element_text(size = 14, face = "bold"))
 ```
 
-This code reads the count table and annotation data, performs a statistical test (glmQLFTest) to find genes specific for each group, selects the group-specific genes, and finally plots a PCA using the group-specific genes with color-coded groups.
+Make sure to replace the file paths with the correct paths to your actual data files. Additionally, you may need to install and load the required packages (e.g., `readxl`, `ggplot2`, `ggrepel`, `gplots`) before running the code.

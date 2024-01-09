@@ -3,16 +3,33 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the data from metRmOlWithDbgapIdHeader.txt and subjects.txt
-methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
-subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Load required packages
+library(ggplot2)
 
-# Match the dbGap ID column in subjects with the first row of methylation dataset
-matched_data <- merge(subjects, methylation, by.x = "dbGap ID", by.y = "dbGap ID")
+# Read the first dataset
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Filter the data for the two oldest subjects
-oldest_subjects <- matched_data[order(matched_data$Age, decreasing = TRUE), ][1:2, ]
+# Read the second dataset
+subject_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Plot the scatter plot of CpG methylation values for the two oldest subjects
-plot(oldest_subjects$CpG_id, oldest_subjects$metRmOlWithDbgapIdHeader.txt, xlab = "CpG ID", ylab = "Methylation Values", main = "CpG Methylation Values for the Two Oldest Subjects", pch = 16)
+# Match the dbGap ID column in subject_data with the first row of met_data
+dbGapId <- subject_data$dbGap.ID
+matching_columns <- which(colnames(met_data) %in% dbGapId)
+
+# Create a new dataframe with the matched columns from met_data
+matching_data <- met_data[, matching_columns]
+
+# Add a column for Age from subject_data
+matching_data$Age <- subject_data$Age
+
+# Filter the two oldest subjects
+oldest_subjects <- head(matching_data[order(matching_data$Age, decreasing = TRUE), ], 2)
+
+# Plot a scatter plot of CpG methylation values for the two oldest subjects
+ggplot(data = oldest_subjects, aes(x = V1, y = V2)) +
+  geom_point() +
+  xlab("CpG Methylation for Subject 1") +
+  ylab("CpG Methylation for Subject 2") +
+  ggtitle("Scatter Plot of CpG Methylation for Two Oldest Subjects")
 ```
+Note: In the code above, `V1` and `V2` represent the columns in `matching_data` that correspond to the CpG methylation values for the two oldest subjects. You may need to adjust these column names based on your actual data.

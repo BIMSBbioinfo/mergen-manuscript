@@ -3,25 +3,37 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-data <- read.delim("leukemiaExp.txt", sep = "\t", row.names = 1)
+#install required packages
 
-# Calculate the variance for each gene
-variance <- apply(data, 1, var)
 
-# Get the top 1000 most variable genes
-top_genes <- names(sort(variance, decreasing = TRUE))[1:1000]
 
-# Filter the data for the top genes
-filtered_data <- data[top_genes, ]
 
-# Plot heatmap with clustering of variable genes
-heatmap(filtered_data, scale = "row", col = colorRampPalette(c("blue", "white", "red"))(100))
 
-# Perform PCA on the samples
-pca <- prcomp(t(filtered_data))
+#load required libraries
+library(reshape2)
+library(ComplexHeatmap)
+library(ggplot2)
+library(ggfortify)
 
-# Plot PCA results
-plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2")
+#read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+#calculate the variance for each gene
+variances <- apply(gene_exp, 1, var)
+
+#sort the genes based on the variance
+sorted_genes <- gene_exp[order(variances, decreasing = TRUE), ]
+
+#select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
+
+#generate heatmap with clustering
+heatmap(top_1000_genes, col = colorRampPalette(c("blue", "white", "red"))(50), scale = "column")
+
+#perform PCA on the samples
+pca <- prcomp(t(gene_exp))
+pca_plot <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2)) + geom_point() + labs(x = "PC1", y = "PC2")
+pca_plot
 ```
-This code reads the gene expression data from the "leukemiaExp.txt" file, calculates the variance for each gene, filters the gene expression data to retain the top 1000 most variable genes, and then plots a heatmap with clustering for these variable genes. Additionally, it performs PCA on the samples and plots the PCA results.
+
+Please make sure to replace "leukemiaExp.txt" with the correct file name/path.

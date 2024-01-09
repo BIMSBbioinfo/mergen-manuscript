@@ -3,23 +3,24 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load libraries
+# Load required packages
 library(readxl)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+
+# Count the number of rows and columns for each table
 count_rows <- nrow(count_table)
 count_cols <- ncol(count_table)
-
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
 annotation_rows <- nrow(annotation_data)
 annotation_cols <- ncol(annotation_data)
 
-# Print number of rows and columns for count table and annotation data
-print(paste0("Count Table Rows: ", count_rows))
-print(paste0("Count Table Columns: ", count_cols))
-print(paste0("Annotation Data Rows: ", annotation_rows))
-print(paste0("Annotation Data Columns: ", annotation_cols))
+# Print the results
+cat("Count table has", count_rows, "rows and", count_cols, "columns.\n")
+cat("Annotation data has", annotation_rows, "rows and", annotation_cols, "columns.\n")
 ```
-```
+
+Note: Make sure that the file paths are correctly specified for `read_excel()` and `read.delim()` functions based on the location of your files.

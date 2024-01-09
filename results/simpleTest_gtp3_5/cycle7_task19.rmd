@@ -3,41 +3,35 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required packages
-library(tidyverse)
-library(openxlsx)
-library(apeglm)
+# Load necessary libraries
+library(DESeq2)
+library(reshape2)
+library(ggplot2)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, header = TRUE) 
+count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t", row.names = 1)
+count_table <- as.matrix(count_table)
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", row.names = 1)
 
-# Extract sample ids from annotation data
-sample_ids <- annotation_data$sample_id
+# Create DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
 
-# Subset count table to include only the samples present in the annotation data
-count_table <- count_table[, sample_ids]
+# Perform size factor normalization
+dds <- estimateSizeFactors(dds)
 
-# Normalize counts using the voom function from the limma package
-library(limma)
-normalized_counts <- voom(count_table)
+# Normalize counts
+normalized_counts <- counts(dds, normalized = TRUE)
 
-# Perform PCA on the normalized counts
+# Perform Principal Component Analysis (PCA) for samples color coded by "group"
+pca_group <- prcomp(t(normalized_counts))
+pca_group_df <- data.frame(x = pca_group$x[,1], y = pca_group$x[,2], group = dds$group)
+ggplot(pca_group_df, aes(x = x, y = y, color = group)) + geom_point() + theme_minimal()
 
-# Transpose the normalized counts matrix
-normalized_counts_transposed <- t(normalized_counts)
-
-# Perform PCA
-pca <- prcomp(normalized_counts_transposed)
-
-# Plot PCA color coded by "group" in the annotation data
-group_colors <- annotation_data$group
-plot(pca$x[,1:2], col = group_colors, pch = 16, xlab = "PC1", ylab = "PC2")
-
-# Plot PCA color coded by "LibrarySelection" in the annotation data
-library_selection_colors <- annotation_data$LibrarySelection
-plot(pca$x[,1:2], col = library_selection_colors, pch = 16, xlab = "PC1", ylab = "PC2")
+# Perform Principal Component Analysis (PCA) for samples color coded by "LibrarySelection"
+pca_library <- prcomp(t(normalized_counts))
+pca_library_df <- data.frame(x = pca_library$x[,1], y = pca_library$x[,2], LibrarySelection = dds$LibrarySelection)
+ggplot(pca_library_df, aes(x = x, y = y, color = LibrarySelection)) + geom_point() + theme_minimal()
 ```
-```
+Note: Please make sure to install and load the necessary libraries before running the code. You can install them using the `install.packages()` function.

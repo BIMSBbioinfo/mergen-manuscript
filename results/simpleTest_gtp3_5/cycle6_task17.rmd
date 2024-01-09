@@ -3,26 +3,34 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the datasets
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subject_data <- read.table("subjects.txt", header = TRUE)
+# Load necessary libraries
+library(randomForest)
+library(dplyr)
 
-# Rename the DBGap ID column in subject_data to match the first row of met_data
-colnames(subject_data)[2] <- met_data[1, 2]
+# Read the methylation data
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
 
-# Merge the datasets based on the DBGap ID column
-merged_data <- merge(met_data, subject_data, by = colnames(subject_data)[2])
+# Read the subjects data
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Remove the first row of met_data (DBGap ID row)
-met_data <- met_data[-1, ]
+# Transpose the methylation data so that each row represents one individual and each column represents one CpG
+methylation <- t(methylation)
 
-# Convert methylation values to numeric
-met_data[, -1] <- apply(met_data[, -1], 2, as.numeric)
+# Rename the row names of methylation data to match with the dbGap ID column in subjects data
+rownames(methylation) <- subjects$`dbGap ID`
 
-# Create a linear regression model to predict Age from methylation values
-model <- lm(Age ~ ., data = merged_data[, -1])
+# Combine methylation and subjects data by matching the dbGap ID column
+combined_data <- subjects %>%
+  inner_join(methylation, by = "dbGap ID")
 
-# Display the most important variables for the predictive model
-summary(model)
+# Remove unnecessary columns from the combined data
+combined_data <- combined_data %>% select(-`dbGap ID`, -`Gender`, -`Phenotype`)
+
+# Train a random forest model to predict Age using methylation values
+set.seed(123)
+model <- randomForest(Age ~ ., data = combined_data)
+
+# Print the importance of variables in the model
+importance(model)
 ```
 ```

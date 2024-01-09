@@ -3,37 +3,29 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+# Read the data from "metRmOlWithDbgapIdHeader.txt" file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Read the "subjects.txt" file
-subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Read the data from "subjects.txt" file
+subj_data <- read.table("subjects.txt", header = TRUE)
 
-# Extract the age, sex, and race columns from the "subjects" dataset
-age <- subjects$Age
-sex <- subjects$sex
-race <- subjects$Race
+# Get the dbGap IDs from the first row of "metRmOlWithDbgapIdHeader" file
+dbGap_ids <- met_data[1, -1]
 
-# Get the dbGap ID values from the "subjects" dataset
-dbGap_ID <- subjects$dbGap ID
+# Get the column indices for Age, sex, and Race in subj_data
+age_col <- which(names(subj_data) == "Age")
+sex_col <- which(names(subj_data) == "sex")
+race_col <- which(names(subj_data) == "Race")
 
-# Subset the "metRmOl" dataset based on the dbGap ID values in the "subjects" dataset
-metRmOl_subset <- metRmOl[, dbGap_ID]
+# Filter the CpGs associated with Age but not with sex or Race
+age_cpgs <- met_data[rowSums(subj_data[, age_col] != "") > 0 & 
+                      rowSums(subj_data[, sex_col] == "") > 0 & 
+                      rowSums(subj_data[, race_col] == ""), ]
 
-# Calculate the correlation between CpGs and age, sex, and race
-cor_age <- cor(metRmOl_subset, age)
-cor_sex <- cor(metRmOl_subset, sex)
-cor_race <- cor(metRmOl_subset, race)
+# Get the top 20 CpGs
+top_20_cpgs <- head(age_cpgs, 20)
 
-# Subset the CpGs associated with age but not with sex or race
-age_cpg <- names(which(abs(cor_age) > 0.5))
-sex_cpg <- names(which(abs(cor_sex) > 0.5))
-race_cpg <- names(which(abs(cor_race) > 0.5))
-
-final_cpg <- setdiff(age_cpg, intersect(sex_cpg, race_cpg))
-top_20_cpg <- final_cpg[1:20]
-
-# Display the top 20 CpGs associated with Age
-top_20_cpg
+# Display the top 20 CpGs
+top_20_cpgs
 ```
-Note: Modify the file paths in the `read.table` function calls based on the actual file location in your system.
+

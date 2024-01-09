@@ -2,62 +2,53 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To filter genes based on their variability and retain the most variable top 1000 genes, we can follow these steps using R:
+To filter genes based on their variability and retain the top 1000 most variable genes, we can follow these steps:
 
-1. Read the gene expression data from the "leukemiaExp.txt" file into a data frame using the `read.table()` function. Set the `sep` parameter to "\t" for tab-separated values.
-
-```
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
-```
-
-2. Calculate the variability for each gene by calculating the standard deviation across samples using the `apply()` function with `MARGIN = 1` (apply function row-wise).
+Step 1: Reading the gene expression data from the file "leukemiaExp.txt" into a data frame.
 
 ```
-gene_variability <- apply(gene_data[,-1], 1, sd)
+# Load the gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 ```
 
-3. Sort the genes based on their variability in descending order and select the top 1000 variable genes.
+Step 2: Calculating the variability of each gene using the standard deviation.
 
 ```
-top_genes <- head(order(gene_variability, decreasing = TRUE), 1000)
-filtered_gene_data <- gene_data[top_genes, ]
+# Calculate the standard deviation for each gene
+gene_variability <- apply(gene_data[, -1], 1, sd)
 ```
 
-4. Now, we can use the filtered gene expression data to cluster the samples using a suitable clustering algorithm such as hierarchical clustering or k-means clustering. Let's use hierarchical clustering here with the `hclust()` function.
+Step 3: Sorting the genes based on their variability and keeping the top 1000 most variable genes.
 
 ```
-# Calculate distance matrix
-dist_matrix <- dist(filtered_gene_data[, -1])
-
-# Perform hierarchical clustering
-hc <- hclust(dist_matrix)
-
-# Determine clusters
-clusters <- cutree(hc, k = 5)  # Specifying k = 5 clusters for example, you can change it as per your requirement
+# Get the top 1000 most variable genes
+top_var_genes <- gene_data[order(gene_variability, decreasing = TRUE), ][1:1000, ]
 ```
 
-5. Once we have the clusters, we can extract cluster-specific genes for each cluster. We can create a list where each element contains the genes specific to a cluster.
+Step 4: Clustering the samples based on the expression levels of the variable genes.
 
 ```
-cluster_genes <- split(filtered_gene_data[, 1], clusters)
+# Transpose the data frame to have samples as rows
+top_var_genes_transposed <- t(top_var_genes[, -1])
+
+# Perform clustering using hierarchical clustering
+sample_clusters <- hclust(dist(top_var_genes_transposed))
+
+# Cut the dendrogram into clusters
+num_clusters <- 4  # Specify the desired number of clusters
+cluster_labels <- cutree(sample_clusters, k = num_clusters)
 ```
 
-This will create a list named `cluster_genes` where each element corresponds to a cluster and contains the gene names specific to that cluster.
-
-Here is the complete code:
+Step 5: Extracting cluster-specific genes for each cluster.
 
 ```
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Create a list to store cluster-specific genes
+cluster_specific_genes <- list()
 
-gene_variability <- apply(gene_data[,-1], 1, sd)
-top_genes <- head(order(gene_variability, decreasing = TRUE), 1000)
-filtered_gene_data <- gene_data[top_genes, ]
-
-dist_matrix <- dist(filtered_gene_data[, -1])
-hc <- hclust(dist_matrix)
-clusters <- cutree(hc, k = 5)
-
-cluster_genes <- split(filtered_gene_data[, 1], clusters)
+# Iterate over each cluster and extract genes
+for (i in 1:num_clusters) {
+  cluster_specific_genes[[i]] <- top_var_genes[cluster_labels == i, ]
+}
 ```
 
-Remember to adjust the value of `k` in the `cutree()` function based on the number of clusters you want to generate.
+At the end of these steps, the `cluster_specific_genes` list will contain the cluster-specific genes for each cluster, where each element of the list corresponds to a different cluster.

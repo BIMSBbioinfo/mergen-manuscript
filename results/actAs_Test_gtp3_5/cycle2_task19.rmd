@@ -2,40 +2,61 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, we need to perform the following steps:
+To complete this task, we will use the following packages in R: `readxl` for reading the count table from the Excel file, `dplyr` for data manipulations, `limma` for normalization, and `ggplot2` for creating the PCA plots.
 
-1. Read the count table and annotation data.
-2. Normalize the counts.
-3. Perform PCA analysis.
-4. Create two PCA plots, one color coded by "group" and the other color coded by "LibrarySelection".
-
-Here's the code to accomplish these steps:
+Here is the code to accomplish the task:
 
 ```
-# Load required libraries
+# Load required packages
 library(readxl)
-library(reshape2)
+library(dplyr)
+library(limma)
 library(ggplot2)
-library(ggfortify)
 
-# Step 1: Read the count table and annotation data
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# Read the count table from the Excel file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
 
-# Step 2: Normalize counts
-normalized_counts <- count_table[, -1] / rowSums(count_table[, -1]) * 1e6
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
 
-# Step 3: Perform PCA analysis
-pca <- prcomp(t(normalized_counts))
+# Get the sample names from the count table
+sample_names <- colnames(count_table)[-1]
 
-# Step 4: Create PCA plots
-# Color coded by "group"
-pca_plot_group <- autoplot(pca, data = annotation_data, colour = "group")
-pca_plot_group
+# Subset annotation data based on sample names
+sample_annotations <- annotation_data[annotation_data$Sample_ID %in% sample_names, ]
 
-# Color coded by "LibrarySelection"
-pca_plot_selection <- autoplot(pca, data = annotation_data, colour = "LibrarySelection")
-pca_plot_selection
+# Set sample names as column names in count table
+colnames(count_table)[-1] <- sample_names
+
+# Normalize counts using voom function from limma package
+normalized_counts <- voom(count_table[, -1], design = model.matrix(~1))
+
+# Perform PCA analysis
+pca <- prcomp(t(exprs(normalized_counts)))
+
+# Add sample annotations to normalized counts
+sample_annotations$Sample_ID <- as.character(sample_annotations$Sample_ID)
+colnames(normalized_counts) <- sample_annotations$Sample_ID
+
+# Merge sample annotations with PCA scores
+pca_data <- cbind(sample_annotations, as.data.frame(pca$x))
+rownames(pca_data) <- sample_annotations$Sample_ID
+
+# Create PCA plot color coded by "group"
+pca_plot_group <- ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot - Color Coded by Group")
+
+# Create PCA plot color coded by "LibrarySelection"
+pca_plot_library_selection <- ggplot(pca_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(title = "PCA Plot - Color Coded by LibrarySelection")
+
+# Print the PCA plots
+print(pca_plot_group)
+print(pca_plot_library_selection)
 ```
 
-Please make sure that the file paths to the count table and annotation data are correct in the code above. Additionally, you may need to install the required libraries if they are not already installed in your R environment.
+Make sure to replace the file paths `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual paths to your files.
+
+This code will read the count table and annotation data, normalize the counts using the voom function, perform PCA analysis, merge the sample annotations with PCA scores, and create two PCA plots, one color coded by "group" and the other color coded by "LibrarySelection" in the annotation data.

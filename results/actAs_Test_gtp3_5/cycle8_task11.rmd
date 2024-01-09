@@ -3,31 +3,28 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the datasets and count the number of rows and columns for each, you can use the following R code:
+To complete this task, we will use the R programming language to read the datasets and count the number of rows and columns for each. Here is the code to accomplish this:
 
 ```
-# Load the required libraries
-library(data.table)
+# Read the methylation values dataset
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-methylation_data <- fread("metRmOlWithDbgapIdHeader.txt")
+# Get the number of rows and columns for the methylation values dataset
+methylation_rows <- nrow(methylation_data)
+methylation_cols <- ncol(methylation_data)
 
-# Count the number of rows and columns for the methylation dataset
-num_rows_methylation <- nrow(methylation_data)
-num_cols_methylation <- ncol(methylation_data)
+# Read the subjects dataset
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Read the "subjects.txt" file
-subjects_data <- fread("subjects.txt")
+# Get the number of rows and columns for the subjects dataset
+subjects_rows <- nrow(subjects_data)
+subjects_cols <- ncol(subjects_data)
 
-# Count the number of rows and columns for the subjects dataset
-num_rows_subjects <- nrow(subjects_data)
-num_cols_subjects <- ncol(subjects_data)
-
-# Display the results
-cat("Number of rows in the methylation dataset:", num_rows_methylation, "\n")
-cat("Number of columns in the methylation dataset:", num_cols_methylation, "\n")
-cat("Number of rows in the subjects dataset:", num_rows_subjects, "\n")
-cat("Number of columns in the subjects dataset:", num_cols_subjects, "\n")
+# Print the number of rows and columns for each dataset
+print(paste("Methylation Values Dataset - Rows:", methylation_rows, "Columns:", methylation_cols))
+print(paste("Subjects Dataset - Rows:", subjects_rows, "Columns:", subjects_cols))
 ```
 
-Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths to your datasets.
+Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths to the datasets in your system.
+
+This code will read the methylation values dataset and the subjects dataset, and then calculate the number of rows and columns for each dataset. The results will be printed to the console.

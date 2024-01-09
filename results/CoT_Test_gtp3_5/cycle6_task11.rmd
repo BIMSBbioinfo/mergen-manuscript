@@ -3,31 +3,26 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables, count the number of rows and columns, and match the individuals based on the DBGap ID, you can use the following code:
+To read and count the number of rows and columns in each dataset, you can use the following code:
 
 ```
-# Read the methylation dataset
-methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-
-# Read the subjects dataset
+# Read the tables
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
 subjects <- read.table("subjects.txt", header = TRUE)
 
-# Count number of rows and columns in the methylation dataset
-num_rows_methylation <- nrow(methylation)
-num_cols_methylation <- ncol(methylation)
+# Count number of rows and columns in each dataset
+metRmOl_rows <- nrow(metRmOl)
+metRmOl_cols <- ncol(metRmOl)
+subjects_rows <- nrow(subjects)
+subjects_cols <- ncol(subjects)
 
-# Count number of rows and columns in the subjects dataset
-num_rows_subjects <- nrow(subjects)
-num_cols_subjects <- ncol(subjects)
-
-# Match individuals based on DBGap ID
-common_individuals <- intersect(colnames(methylation), subjects$dbGap.ID)
+# Print the results
+print(paste("Number of rows in metRmOl:", metRmOl_rows))
+print(paste("Number of columns in metRmOl:", metRmOl_cols))
+print(paste("Number of rows in subjects:", subjects_rows))
+print(paste("Number of columns in subjects:", subjects_cols))
 ```
 
-In this code, we first read the methylation dataset using the `read.table` function, specifying that the first row contains column names (header = TRUE). We then read the subjects dataset in the same way.
+This code reads the "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" files using the `read.table()` function. It then counts the number of rows and columns in each dataset using the `nrow()` and `ncol()` functions. Finally, it prints the results using the `print()` function.
 
-Next, we use the `nrow` and `ncol` functions to count the number of rows and columns in each dataset.
-
-Finally, we match the individuals based on the common DBGap ID using the `intersect` function. The resulting `common_individuals` variable will contain the DBGap IDs of the individuals that are present in both datasets.
-
-Note: Replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths or file names of your datasets.
+Make sure to replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file names and paths in your system.

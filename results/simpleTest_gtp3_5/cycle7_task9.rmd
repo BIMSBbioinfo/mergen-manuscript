@@ -3,34 +3,35 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Load the required libraries
+library(gplots)
+library(ggplot2)
 
-# Calculate the variability of each gene
-gene_variability <- apply(leukemiaExp[, -1], 1, var)
+# Read the gene expression data from the file
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Sort genes based on variability in descending order
-sorted_genes <- names(gene_variability)[order(-gene_variability)]
+# Calculate the variance of each gene
+gene_var <- apply(gene_data, 1, var)
 
-# Select the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000]
+# Sort the genes based on their variability
+sorted_genes <- names(gene_var)[order(gene_var, decreasing = TRUE)]
 
-# Filter the gene expression data to keep only the most variable genes
-filtered_exp <- leukemiaExp[c("GeneName", top_1000_genes)]
+# Subset the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000]
 
-# Calculate the z-scores for each gene across the samples
-scaled_exp <- scale(filtered_exp[, -1])
+# Filter the gene expression data to keep only the top variable genes
+filtered_data <- gene_data[top_genes, ]
 
-# Perform hierarchical clustering
-hc <- hclust(dist(scaled_exp), method = "complete")
+# Generate a heatmap with clustering based on the filtered gene expression data
+heatmap(filtered_data, Colv=NA, scale="row", margins=c(10,15))
 
-# Plot the heatmap with clustering
-heatmap(scaled_exp, Colv = as.dendrogram(hc))
+# Perform Principal Component Analysis (PCA) on the filtered gene expression data
+pca <- prcomp(t(filtered_data))
 
-# Perform PCA on the filtered gene expression data
-pca <- prcomp(filtered_exp[, -1])
-
-# Plot the PCA
-plot(pca$x)
+# Plot the first two principal components
+ggplot(data.frame(pca$x), aes(x=PC1, y=PC2)) +
+  geom_point() +
+  labs(x="Principal Component 1", y="Principal Component 2") +
+  theme_minimal()
 ```
-
+Note: Make sure to adjust the file path and separator in the `read.table()` function to match your specific file format.

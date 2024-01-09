@@ -4,17 +4,17 @@ I have the following gene expression data, "leukemiaExp.txt".The file is tab sep
 response:
 ```
 # Read the gene expression data
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability of each gene
-variability <- apply(data, 1, var)
+# Calculate the variability for each gene
+variance <- apply(data[, -1], 1, var)
 
-# Select the top 1000 most variable genes
-top_genes <- head(sort(variability, decreasing=TRUE), 1000)
+# Sort the genes based on their variability in descending order
+sorted_genes <- data[order(variance, decreasing = TRUE), ]
 
-# Filter the gene expression data based on the top genes
-filtered_data <- data[top_genes, ]
+# Retain the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000, ]
 
-# Print the filtered data
-print(filtered_data)
+# Write the filtered genes to a new file
+write.table(top_genes, file = "filtered_genes.txt", sep = "\t", quote = FALSE, row.names = FALSE)
 ```

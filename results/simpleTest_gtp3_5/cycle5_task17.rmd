@@ -3,39 +3,35 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load necessary packages
-library(data.table)
-library(randomForest)
+# Read the methylation values table
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Read the methylation data
-methylation <- fread("metRmOlWithDbgapIdHeader.txt")
+# Read the subjects information table
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Read the subjects data
-subjects <- fread("subjects.txt")
+# Obtain the common individuals between two datasets
+common_individuals <- intersect(methylation$`dbGap ID`, subjects$`dbGap ID`)
 
-# Transpose the methylation data
-methylation <- transpose(methylation)
+# Subset the datasets with common individuals
+methylation <- methylation[, c("dbGap ID", common_individuals)]
+subjects <- subjects[subjects$`dbGap ID` %in% common_individuals, ]
 
-# Set the first row as column names in methylation data
-colnames(methylation) <- methylation[1, ]
+# Rename the columns of the methylation table
+colnames(methylation)[-1] <- methylation[1, -1]
 
-# Remove the first row in methylation data
+# Remove the first row of methylation table
 methylation <- methylation[-1, ]
 
-# Merge the methylation and subjects data based on dbGap ID
-merged_data <- merge(methylation, subjects, by.x = "dbGap ID", by.y = "dbGap ID")
+# Convert the methylation values to numeric
+methylation[, -1] <- lapply(methylation[, -1], as.numeric)
 
-# Convert methylation values to numeric
-merged_data[, -c(1, 2)] <- as.numeric(as.matrix(merged_data[, -c(1, 2)]))
+# Merge the methylation and subjects tables on dbGap ID
+merged_data <- merge(methylation, subjects, by = "dbGap ID")
 
-# Build the predictive model using random forest
-model <- randomForest(Age ~ ., data = merged_data)
+# Build a predictive model to predict Age from methylation values
+model <- lm(Age ~ ., data = merged_data)
 
-# Display the most important variables for the predictive model
-importance <- importance(model)
-important_variables <- row.names(importance)[order(-importance$MeanDecreaseGini)]
-
-# Print the important variables
-print(important_variables)
+# Display the most important variables for the predictive models
+summary(model)
 ```
-Note: Make sure to replace the file paths in fread() function with the actual paths to the files on your system.
+Note: This code assumes that the "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" files are in the current working directory. Adjust the file paths accordingly if they are located elsewhere.

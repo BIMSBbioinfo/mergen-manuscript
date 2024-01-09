@@ -3,25 +3,22 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the first dataset
-df1 <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the datasets
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Read the second dataset
-df2 <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Rename the first column in subjects_data to match the DBGap ID
+colnames(subjects_data)[1] <- colnames(met_data)[1]
 
-# Extract the relevant columns from the second dataset
-df2 <- df2[, c("dbGap ID", "Age", "sex", "Race")]
-
-# Rename the first column of the second dataset to match the first row of the first dataset
-colnames(df2)[1] <- df2[1, 1]
-
-# Remove the first row of the second dataset
-df2 <- df2[-1, ] 
+# Merge the datasets based on DBGap ID
+merged_data <- merge(met_data, subjects_data, by = "dbGap ID")
 
 # Find CpGs associated with Age but not with sex or Race
-cpgs <- colnames(df1)[colnames(df1) %in% colnames(df2) & !(colnames(df1) %in% c("sex", "Race"))]
+age_cpgs <- merged_data[!(is.na(merged_data$Age) | !is.na(merged_data$sex) | !is.na(merged_data$Race)), colnames(met_data)]
 
-# Display top 20 CpGs
-head(cpgs, 20)
+# Display top 20 CpGs associated with Age
+top_20_age_cpgs <- head(sort(age_cpgs, decreasing = TRUE), 20)
+
+top_20_age_cpgs
 ```
-
+```

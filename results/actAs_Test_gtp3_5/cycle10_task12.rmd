@@ -2,31 +2,38 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Read the tables count number of rows and columns for each.
 
 response:
-To read the count table and annotation data in R, we will use the `readxl` package to read the count table from the Excel file and the `readr` package to read the annotation data from the TSV file. Here is the code to accomplish this task:
+To read the count table and annotation data in R, you can use the `read.xlsx()` and `read.delim()` functions respectively. Here's the code to accomplish that:
 
 ```
+# Install required packages if not already installed
+if (!require(openxlsx)) {
+  
+}
+if (!require(tidyverse)) {
+  
+}
+
 # Load required libraries
-library(readxl)
-library(readr)
+library(openxlsx)
+library(tidyverse)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
-
-# Count the number of rows and columns for each table
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
 count_rows <- nrow(count_table)
-count_columns <- ncol(count_table)
+count_cols <- ncol(count_table)
 
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 annotation_rows <- nrow(annotation_data)
-annotation_columns <- ncol(annotation_data)
+annotation_cols <- ncol(annotation_data)
 
-# Print the results
-print(paste("Count table has", count_rows, "rows and", count_columns, "columns."))
-print(paste("Annotation data has", annotation_rows, "rows and", annotation_columns, "columns."))
+# Print the count of rows and columns for each table
+count_rows
+count_cols
+annotation_rows
+annotation_cols
 ```
 
-This code will read the count table from the "Supplementary_Table_1_exp.xlsx" file using the `read_excel()` function and store it in the `count_table` variable. It will also read the annotation data from the "SRP021193.colData.tsv" file using the `read_tsv()` function and store it in the `annotation_data` variable.
+Make sure to replace the file paths ("Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv") with the actual paths to the count table and annotation data files in your system.
 
-Then, the code will count the number of rows and columns for each table using the `nrow()` and `ncol()` functions. Finally, it will print the results using the `print()` function.
+This code will read the count table and annotation data, and then it will print the count of rows and columns for each table.

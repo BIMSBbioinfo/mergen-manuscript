@@ -3,43 +3,34 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(DESeq2)
+# Load required packages
 library(readxl)
-library(data.table)
-library(reshape2)
-library(ggplot2)
+library(Seurat)
+library(SeuratData)
 
-# Read the count table
-counts <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Set row names for count table as gene names
-rownames(counts) <- counts[,1]
-counts <- counts[,-1]
+# Create Seurat object
+rna_seurat <- CreateSeuratObject(counts = count_table, project = "MyProject")
+rna_seurat <- NormalizeData(rna_seurat)
 
-# Normalize the counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = counts, colData = annotation, design = ~ group)
-dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Add sample annotations to Seurat object
+rna_seurat$sample_ids <- rownames(annotation_data)
+rna_seurat$group <- annotation_data$group
+rna_seurat$LibrarySelection <- annotation_data$LibrarySelection
 
-# Convert the normalized counts to a data.frame
-normalized_counts_df <- data.frame(normalized_counts)
-row.names(normalized_counts_df) <- rownames(normalized_counts)
+# Perform PCA
+rna_seurat <- FindVariableFeatures(rna_seurat)
+rna_seurat <- RunPCA(rna_seurat)
 
-# Perform PCA analysis
-pca_df <- prcomp(t(normalized_counts_df))
+# Plot PCA, color coded by group
+PCAPlot(rna_seurat, group.by = "group")
 
-# Plot PCA color coded by "group"
-ggplot(data = pca_df, aes(x = PC1, y = PC2, color = annotation$group)) +
-  geom_point() +
-  labs(title = "PCA Plot: Samples colored by Group")
-
-# Plot PCA color coded by "LibrarySelection"
-ggplot(data = pca_df, aes(x = PC1, y = PC2, color = annotation$LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA Plot: Samples colored by LibrarySelection")
-}
+# Plot PCA, color coded by LibrarySelection
+PCAPlot(rna_seurat, group.by = "LibrarySelection")
 ```
+

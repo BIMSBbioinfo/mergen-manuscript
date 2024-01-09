@@ -3,28 +3,55 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables, count the number of rows and columns for each, you can use the following R code:
+To complete this task, we will use the R programming language and the `read.table()` function to read the contents of the datasets. We will also use the `dim()` function to count the number of rows and columns in each dataset.
+
+First, let's read the "metRmOlWithDbgapIdHeader.txt" dataset and count the number of rows and columns:
 
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file
-met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the dataset
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Read the "subjects.txt" file
-subjects_table <- read.table("subjects.txt")
+# Count the number of rows and columns
+num_rows_met <- nrow(met_data)
+num_cols_met <- ncol(met_data)
 
-# Count number of rows and columns for the "metRmOlWithDbgapIdHeader.txt" file
-met_rows <- nrow(met_table)
-met_cols <- ncol(met_table)
-
-# Count number of rows and columns for the "subjects.txt" file
-subjects_rows <- nrow(subjects_table)
-subjects_cols <- ncol(subjects_table)
-
-# Print the results
-print(paste("Number of rows in 'metRmOlWithDbgapIdHeader.txt':", met_rows))
-print(paste("Number of columns in 'metRmOlWithDbgapIdHeader.txt':", met_cols))
-print(paste("Number of rows in 'subjects.txt':", subjects_rows))
-print(paste("Number of columns in 'subjects.txt':", subjects_cols))
+cat("Number of rows in met_data dataset:", num_rows_met, "\n")
+cat("Number of columns in met_data dataset:", num_cols_met, "\n")
 ```
 
-Note: Modify the file paths ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") according to the actual locations of your files.
+Next, let's read the "subjects.txt" dataset and count the number of rows and columns:
+
+```
+# Read the dataset
+subject_data <- read.table("subjects.txt", header = TRUE)
+
+# Count the number of rows and columns
+num_rows_subject <- nrow(subject_data)
+num_cols_subject <- ncol(subject_data)
+
+cat("Number of rows in subject_data dataset:", num_rows_subject, "\n")
+cat("Number of columns in subject_data dataset:", num_cols_subject, "\n")
+```
+Finally, let's put the code blocks together:
+
+```
+# Read the "metRmOlWithDbgapIdHeader.txt" dataset
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Count the number of rows and columns in met_data dataset
+num_rows_met <- nrow(met_data)
+num_cols_met <- ncol(met_data)
+
+# Read the "subjects.txt" dataset
+subject_data <- read.table("subjects.txt", header = TRUE)
+# Count the number of rows and columns in subject_data dataset
+num_rows_subject <- nrow(subject_data)
+num_cols_subject <- ncol(subject_data)
+
+# Output the results
+cat("Number of rows in met_data dataset:", num_rows_met, "\n")
+cat("Number of columns in met_data dataset:", num_cols_met, "\n")
+cat("Number of rows in subject_data dataset:", num_rows_subject, "\n")
+cat("Number of columns in subject_data dataset:", num_cols_subject, "\n")
+```
+
+Make sure to replace the file names "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file names and make sure the files are in the correct directory.

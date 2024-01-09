@@ -2,64 +2,70 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
 
 response:
-To complete this task, we will first need to load the count table and annotation data. Then, we will perform statistical tests to find genes specific for each group in the annotation data. Finally, we will plot a PCA using the group-specific genes and color code it by the group variable.
+To accomplish this task, we will need to perform the following steps:
+1. Read the count data table and the annotation data
+2. Clean and preprocess the count data
+3. Identify the group-specific genes using statistical tests
+4. Perform Principal Component Analysis (PCA) using the group-specific genes
+5. Plot the PCA with the color-coded group variable
 
-Here's the code to accomplish these tasks:
+Assuming you already have the required libraries installed (such as 'readxl', 'dplyr', 'DESeq2', and 'ggplot2'), here is the code to complete the task:
 
 ```
-# Load required libraries
-library(DESeq2)
-library(reshape2)
-library(ggplot2)
+# Step 1: Read the count data table and the annotation data
+count_data <- readxl::read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Load count table
-count_data <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Load annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+# Step 2: Clean and preprocess the count data
+# Assuming that the first column of the count_data is the gene names
+# Setting row names as gene names for easy reference
+rownames(count_data) <- count_data[, 1]
+count_data <- count_data[, -1]  # Removing the first column (gene names)
 
-# Convert annotation data to a data frame
-annotation_data <- data.frame(annotation_data)
-
-# Transpose count data
-count_data <- t(count_data)
-
-# Keep only the columns corresponding to the samples in the annotation data
-count_data <- count_data[, colnames(count_data) %in% rownames(annotation_data)]
-
-# Create a DESeq2 object
-dds <- DESeqDataSetFromMatrix(countData = count_data, colData = annotation_data, design = ~1)
-
-# Perform statistical tests to find group-specific genes
-dds <- DESeq(dds)
-results <- results(dds)
-
-# Subset genes specific for each group
+# Step 3: Identify the group-specific genes using statistical tests
+# Assuming the group variable is in the 'group' column of the annotation_data
 group_specific_genes <- list()
-unique_groups <- unique(annotation_data$group)
+groups <- unique(annotation_data$group)
 
-for (group in unique_groups) {
-  group_specific_genes[[group]] <- rownames(results)[results$padj < 0.05 & results$log2FoldChange > 1 & annotation_data$group == group]
+for (group in groups) {
+  group_samples <- annotation_data$sample_id[annotation_data$group == group]
+  group_count_data <- count_data[, group_samples]
+  
+  # You can use different statistical tests depending on your data and research question
+  # For example, we can use the DESeq2 package for differential expression analysis
+  
+  # Perform DESeq2 normalisation and differential expression analysis
+  library(DESeq2)
+  dds <- DESeqDataSetFromMatrix(countData = group_count_data,
+                                colData = annotation_data,
+                                design = ~ group)
+  dds <- DESeq(dds)
+  
+  # Get differentially expressed genes
+  group_specific_genes[[group]] <- rownames(subset(results(dds), padj < 0.05 & abs(log2FoldChange) > 1))
 }
 
-# Perform PCA using group-specific genes
-group_specific_count_data <- count_data[row.names(count_data) %in% unlist(group_specific_genes)]
+# Step 4: Perform Principal Component Analysis (PCA) using the group-specific genes
+# Combine the group-specific genes into a single vector
+all_group_specific_genes <- unique(unlist(group_specific_genes))
 
-# Log-transform count data
-log_count_data <- log2(counts(dds, normalized = TRUE) + 1)
+# Subset count data and annotation data to include only the group-specific genes
+group_specific_count_data <- count_data[all_group_specific_genes, ]
+group_specific_annotation_data <- annotation_data[rownames(group_specific_count_data), ]
 
-# Perform PCA
-pca <- prcomp(t(log_count_data), scale. = TRUE)
+# Perform PCA using the group-specific genes
+pca_data <- prcomp(t(group_specific_count_data))
 
-# Create a data frame with PCA results
-pca_data <- data.frame(sample = rownames(log_count_data), pca$x)
+# Step 5: Plot the PCA with the color-coded group variable
+library(ggplot2)
 
-# Plot PCA colored by group
-ggplot(pca_data, aes(x = PC1, y = PC2, color = annotation_data$group)) +
+pca_plot_data <- as.data.frame(pca_data$x[, 1:2])
+pca_plot_data$group <- group_specific_annotation_data$group
+
+ggplot(pca_plot_data, aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
-  labs(title = "PCA plot of RNA-seq data", x = "PC1", y = "PC2")
+  labs(title = "PCA plot of group-specific genes", x = "PC1", y = "PC2")
 ```
 
-Make sure to replace `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual file paths of your count table and annotation data, respectively.
-
-This code performs statistical tests using the DESeq2 package to find genes specific for each group in the annotation data. Then, it plots a PCA using the group-specific genes and colors it by the group variable in the annotation data.
+Please make sure to adjust the file paths and column names according to your specific data files. The code assumes that the count table file is in the Excel format and the annotation file is in TSV format.

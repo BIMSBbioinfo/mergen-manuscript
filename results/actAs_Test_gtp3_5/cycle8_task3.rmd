@@ -2,28 +2,26 @@ prompt:
 I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
 
 response:
-To determine the number of genes and samples in the dataset, we can use the `readxl` package in R to read the excel sheet and then extract the required information.
+To count the number of genes and samples in the excel sheet "Supplementary_Table_1_exp.xlsx", we can use the `readxl` library in R to read the data and then use the `dim()` function to get the dimensions of the data frame.
 
 Here's the code to accomplish this task:
 
 ```
-# Install and load the required package
-
+# Load the required library
 library(readxl)
 
-# Specify the file path of the excel sheet
-file_path <- "Supplementary_Table_1_exp.xlsx"
-
 # Read the excel sheet
-data <- read_excel(file_path)
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Fetch the number of genes and samples
-num_genes <- nrow(data)
-num_samples <- ncol(data) - 1  # Subtract 1 for the gene names column
+# Get the number of genes
+num_genes <- dim(data)[1]
+
+# Get the number of samples
+num_samples <- dim(data)[2] - 1  # Subtract 1 to exclude the gene name column
 
 # Print the results
 print(paste("Number of genes:", num_genes))
 print(paste("Number of samples:", num_samples))
 ```
 
-Make sure to update the `file_path` variable with the actual file path of your excel sheet. Running the above code will print the number of genes and samples in the dataset.
+Make sure to replace "Supplementary_Table_1_exp.xlsx" with the appropriate file path or name if it's in the same directory as your R script.

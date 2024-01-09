@@ -3,15 +3,17 @@ I have the following count table for an RNA-seq experiment, "SRP021193.raw_count
 
 response:
 ```
-# Read the count table into a data frame
+# Read the count table
 count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Count the number of genes and samples
+# Get the number of genes
 num_genes <- nrow(count_table)
-num_samples <- ncol(count_table) - 2  # Subtracting 2 to exclude the first and last columns
+
+# Get the number of samples
+num_samples <- ncol(count_table) - 2
 
 # Print the results
-num_genes
-num_samples
+paste("Number of genes:", num_genes)
+paste("Number of samples:", num_samples)
 ```
-There are `num_genes` genes and `num_samples` samples in the dataset.
+Note: In this code, it is assumed that the input count table file is in the same directory as the R script or R session in which this code is being executed. If the file is located in a different directory, you would need to provide the appropriate path to the count table file.

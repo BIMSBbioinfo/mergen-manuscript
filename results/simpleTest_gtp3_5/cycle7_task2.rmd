@@ -3,10 +3,10 @@ I have the following gene expression data, "leukemiaExp.txt". Each row is a gene
 
 response:
 ```
-# Read the gene expression data
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read the gene expression data from the file
+gene_data <- read.delim("leukemiaExp.txt", sep="\t")
 
-# Get the number of genes and samples
+# Count the number of rows (genes) and columns (samples)
 num_genes <- nrow(gene_data)
 num_samples <- ncol(gene_data)
 
@@ -14,4 +14,4 @@ num_samples <- ncol(gene_data)
 num_genes
 num_samples
 ```
-The dataset has a certain number of genes = num_genes and samples = num_samples, where num_genes and num_samples are the calculated numbers using the provided gene expression data.
+The dataset has a total of `num_genes` genes and `num_samples` samples.

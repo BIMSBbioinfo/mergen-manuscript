@@ -3,30 +3,28 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load required libraries
-library(gplots)
-library(ggplot2)
-library(gdata)
+# Read the gene expression data from file
+data <- read.table("leukemiaExp.txt", header = T, sep = "\t")
 
-# Read gene expression data from file
-gene_expression <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Filter genes based on variability
+variance_values <- apply(data[, -1], 1, var)
+sorted_genes <- data[order(variance_values, decreasing = TRUE), ]
 
-# Calculate the variance of each gene
-gene_variability <- apply(gene_expression, 1, var)
+# Retain the most variable top 1000 genes
+top_1000_genes <- sorted_genes[1:1000, ]
 
-# Select the top 1000 most variable genes
-top_genes <- names(sort(gene_variability, decreasing = TRUE)[1:1000])
+# Plot a heatmap with clustering
+heatmap_data <- top_1000_genes[, -1]
+heatmap_row_order <- hclust(dist(heatmap_data), method = "complete")$order
+heatmap_col_order <- hclust(dist(t(heatmap_data)), method = "complete")$order
+heatmap(heatmap_data[heatmap_row_order, heatmap_col_order], 
+        Rowv = NA, Colv = NA,
+        col = colorRampPalette(c("blue", "white", "red"))(100))
 
-# Subset the gene expression data to include only the top variable genes
-gene_expression_subset <- gene_expression[top_genes, ]
-
-# Perform clustering and plot heatmap
-heatmap.2(as.matrix(gene_expression_subset), trace = "none", col = cm.colors(256), main = "Gene Expression Heatmap")
-
-# Perform PCA and plot
-pca_data <- prcomp(t(gene_expression_subset))
-pca_plot <- ggplot(data = data.frame(pca_data$x), aes(x = PC1, y = PC2)) + 
-  geom_point() + 
-  ggtitle("PCA Plot")
-print(pca_plot)
+# Plot PCA for samples
+pca_data <- prcomp(data[, -1])
+plot(pca_data$x[, 1], pca_data$x[, 2], 
+     col = palette()[unclass(as.factor(data$Sample))],
+     xlab = "PC1", ylab = "PC2", main = "PCA plot")
 ```
+Note: Make sure to replace "leukemiaExp.txt" with the full path to the file if it's not in the current working directory.

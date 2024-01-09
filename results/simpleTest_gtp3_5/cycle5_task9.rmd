@@ -3,33 +3,46 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load necessary libraries
-library(gplots)
+# Load required libraries
 library(heatmaply)
 library(ggplot2)
-library(pheatmap)
-library(dplyr)
-library(factoextra)
 
-# Read in gene expression data
-data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t", row.names=1)
+# Read the gene expression data
+genes <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
 # Calculate the variance for each gene
-variances <- apply(data, 1, var)
+gene_var <- apply(genes, 1, var)
 
-# Sort genes by variance in descending order
-sorted_genes <- names(sort(variances, decreasing=TRUE))
+# Sort the genes by variance in descending order
+sorted_genes <- genes[order(gene_var, decreasing = TRUE), ]
 
-# Select the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000]
-filtered_data <- data[top_genes, ]
+# Retain the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000, ]
 
-# Plot heatmap with clustering
-heatmap(filtered_data, main="Gene Expression Heatmap", cexRow=0.5, cexCol=0.8)
+# Create a heatmap with clustering using the most variable genes
+heatmaply(top_genes, clustering_distance_rows = "euclidean", clustering_distance_cols = "euclidean")
 
-# Perform PCA on the filtered data
-pca <- prcomp(filtered_data, scale=TRUE)
+# Perform PCA on the samples
+pca <- prcomp(t(genes))
 
-# Plot PCA for samples
-fviz_pca_ind(pca, col.ind = "blue", repel = TRUE)
+# Create a scree plot to visualize the explained variance by each principal component
+scree_plot <- ggplot(data = as.data.frame(summary(pca)$importance), aes(x = Cumulative.Proportion, y = PC)) +
+  geom_point() +
+  geom_line() +
+  xlab("Cumulative Proportion of Variance Explained") +
+  ylab("Principal Component") +
+  ggtitle("Scree Plot for PCA")
+
+# Plot the PCA
+pca_plot <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2, color = factor(leukemia_label))) +
+  geom_point(size = 3) +
+  xlab("Principal Component 1") +
+  ylab("Principal Component 2") +
+  ggtitle("PCA Plot") +
+  theme(legend.title = element_blank())
+
+# Print the scree plot and PCA plot
+print(scree_plot)
+print(pca_plot)
 ```
+Note: Make sure to replace `"leukemiaExp.txt"` with the correct file path to your gene expression data file. Also, the code assumes that you have a column named `leukemia_label` in your dataset that specifies the leukemia classification for each sample.

@@ -3,28 +3,32 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables and count the number of rows and columns for each, we can use the `read.table()` function in R. 
+To read the tables and count the number of rows and columns for each, we can use the following steps:
 
-Here is the code to accomplish this task:
+1. Read the "metRmOlWithDbgapIdHeader.txt" file using the `read.table()` function in R. Since the first row contains the DBGapIds, we can skip it by specifying `header=TRUE`. Assign this table to a variable, let's say `methylation_data`.
+
+2. Read the "subjects.txt" file using the `read.table()` function in R. Assign this table to a variable, let's say `subjects_data`.
+
+3. Count the number of rows and columns in the `methylation_data` table using the `nrow()` and `ncol()` functions respectively. Assign these counts to variables, let's say `methylation_rows` and `methylation_columns`.
+
+4. Count the number of rows and columns in the `subjects_data` table using the `nrow()` and `ncol()` functions respectively. Assign these counts to variables, let's say `subjects_rows` and `subjects_columns`.
+
+Here is the code to accomplish these steps:
 
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file and count number of rows and columns
-met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-num_rows_met <- nrow(met_table)
-num_cols_met <- ncol(met_table)
+# Step 1: Read the "metRmOlWithDbgapIdHeader.txt" file
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header=TRUE)
 
-# Read the "subjects.txt" file and count number of rows and columns
-subjects_table <- read.table("subjects.txt", header = TRUE)
-num_rows_subjects <- nrow(subjects_table)
-num_cols_subjects <- ncol(subjects_table)
+# Step 2: Read the "subjects.txt" file
+subjects_data <- read.table("subjects.txt")
 
-# Print the results
-cat("Number of rows in metRmOlWithDbgapIdHeader.txt:", num_rows_met, "\n")
-cat("Number of columns in metRmOlWithDbgapIdHeader.txt:", num_cols_met, "\n")
-cat("Number of rows in subjects.txt:", num_rows_subjects, "\n")
-cat("Number of columns in subjects.txt:", num_cols_subjects, "\n")
+# Step 3: Count number of rows and columns in methylation_data
+methylation_rows <- nrow(methylation_data)
+methylation_columns <- ncol(methylation_data)
+
+# Step 4: Count number of rows and columns in subjects_data
+subjects_rows <- nrow(subjects_data)
+subjects_columns <- ncol(subjects_data)
 ```
 
-Make sure to replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file paths.
-
-This code will read both tables and print the number of rows and columns for each table.
+After running this code, you will have the counts of rows and columns for each dataset stored in the respective variables (`methylation_rows`, `methylation_columns`, `subjects_rows`, `subjects_columns`). You can print these variables to see the counts.

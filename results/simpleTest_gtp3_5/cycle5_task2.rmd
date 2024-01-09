@@ -4,14 +4,16 @@ I have the following gene expression data, "leukemiaExp.txt". Each row is a gene
 response:
 ```
 # Read the data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Get the number of rows (genes) and columns (samples)
+# Get the number of genes
 num_genes <- nrow(data)
+
+# Get the number of samples
 num_samples <- ncol(data)
 
-# Print the number of genes and samples
-print(paste("Number of genes:", num_genes))
-print(paste("Number of samples:", num_samples))
+# Print the results
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```
-
+The dataset has **X** genes and **Y** samples, where X and Y are the actual numbers.

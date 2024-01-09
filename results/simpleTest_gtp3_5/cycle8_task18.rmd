@@ -3,26 +3,24 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load required libraries
-library(dplyr)
-
 # Read the datasets
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
-subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+metRmOl <- read.delim("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+subjects <- read.delim("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Rename the first column of metRmOl to "CpG_id"
-names(metRmOl)[1] <- "CpG_id"
+# Match the dbGap IDs between the two datasets
+matched_ids <- match(subjects$dbGapID, metRmOl[1, ])
 
-# Join the datasets based on dbGap ID
-data <- left_join(metRmOl, subjects, by = c("dbGap ID" = "dbGap ID"))
+# Extract the relevant columns from the datasets
+age <- subjects$Age[matched_ids]
+sex <- subjects$sex[matched_ids]
+race <- subjects$Race[matched_ids]
+methylation <- metRmOl[-1, matched_ids]
 
-# Filter the CpGs associated with Age but not with sex or Race
-filtered_data <- filter(data, !is.na(Age) & is.na(sex) & is.na(Race))
+# Find CpGs associated with Age but not with sex or Race
+cpgs <- rownames(methylation)[!is.na(age) & is.na(sex) & is.na(race)]
 
-# Order the filtered data by methylation values and select top 20 CpGs
-top_20_cpgs <- head(arrange(filtered_data, desc(methylation_value)), 20)
-
-# Display the top 20 CpGs
-top_20_cpgs
+# Display top 20 CpGs
+top_cpgs <- head(cpgs, 20)
+top_cpgs
 ```
-Note: Replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths or file names of your datasets.
+Note: Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths, if they are different.

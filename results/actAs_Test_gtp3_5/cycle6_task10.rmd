@@ -2,42 +2,91 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To complete the tasks, we will follow these steps:
-1. Read the gene expression data from the "leukemiaExp.txt" file.
-2. Calculate the variance for each gene and select the top 1000 most variable genes.
-3. Cluster the samples based on the expression profiles of the selected genes.
-4. Identify cluster-specific genes for each cluster.
+To complete this task, we can use the R programming language and the popular bioinformatics package called "DESeq2". DESeq2 provides methods for differential gene expression analysis based on count data. Here's how we can approach the task:
 
-Here's the code to accomplish these tasks:
+1. Load the required libraries and read the gene expression data from the file "leukemiaExp.txt":
 
 ```
-# Step 1: Read the gene expression data
-gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Install the required packages if not already installed
 
-# Step 2: Calculate gene variance and select top 1000 most variable genes
-gene_variance <- apply(gene_exp, 1, var)
-top_genes <- names(sort(gene_variance, decreasing = TRUE)[1:1000])
 
-# Step 3: Cluster the samples based on the selected genes
-clustered_samples <- hclust(dist(t(gene_exp[top_genes, ])))
-cluster_assignments <- cutree(clustered_samples, k = 5)  # Assuming we want to cluster into 5 groups
 
-# Step 4: Identify cluster-specific genes for each cluster
-cluster_specific_genes <- lapply(unique(cluster_assignments), function(cluster) {
-  cluster_samples <- which(cluster_assignments == cluster)
-  cluster_exp <- gene_exp[, cluster_samples]
-  cluster_variance <- apply(cluster_exp, 1, var)
-  top_cluster_genes <- names(sort(cluster_variance, decreasing = TRUE)[1:100])
-  return(top_cluster_genes)
+# Load the required libraries
+library(DESeq2)
+library(magrittr)
+
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+```
+
+2. Create a DESeq dataset using the data:
+
+```
+# Convert the data into a matrix format
+counts <- as.matrix(data[, -1])
+
+# Create the DESeq dataset
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = colData,
+                              design = ~ 1)
+```
+
+3. Perform DESeq2 analysis to calculate the variability of genes and filter the top 1000 most variable genes:
+
+```
+# Perform DESeq2 analysis
+dds <- DESeq(dds)
+
+# Filter the most variable genes
+topVarGenes <- order(rowVars(assay(dds)), decreasing = TRUE)[1:1000]
+filteredData <- data[topVarGenes, ]
+```
+
+4. Cluster the samples based on the filtered data:
+
+```
+# Calculate sample distances
+distances <- dist(t(filteredData))
+
+# Cluster the samples using complete linkage algorithm
+clusters <- hclust(distances, method = "complete")
+
+# Sort the samples by the clustering order
+sortedData <- filteredData[, order.dendrogram(clusters)]
+
+# Plot the clustering dendrogram
+plot(clusters)
+```
+
+5. Extract cluster-specific genes for each cluster:
+
+```
+# Define the number of clusters
+numClusters <- 3
+
+# Cut the dendrogram into clusters
+clusterLabels <- cutree(clusters, k = numClusters)
+
+# Get the cluster-specific genes for each cluster
+clusterGenes <- lapply(1:numClusters, function(cluster) {
+  clusterIndices <- which(clusterLabels == cluster)
+  clusterData <- filteredData[, clusterIndices]
+  
+  # Calculate the average expression for each gene in the cluster
+  avgExpression <- rowMeans(clusterData)
+  
+  # Select the genes with the highest average expression
+  topGenes <- order(avgExpression, decreasing = TRUE)[1:100]
+  clusterGenes <- rownames(filteredData)[topGenes]
+  
+  return(clusterGenes)
 })
 
-# Print the cluster-specific genes for each cluster
-for (cluster in unique(cluster_assignments)) {
-  cat("Cluster:", cluster, "\n")
-  cat("Cluster-Specific Genes:", cluster_specific_genes[[cluster]], "\n\n")
+# Print the cluster-specific genes
+for (cluster in 1:numClusters) {
+  cat("Cluster", cluster, "specific genes:\n")
+  cat(clusterGenes[[cluster]], "\n\n")
 }
 ```
 
-This code assumes that the gene expression data is in the same directory as the R script and is named "leukemiaExp.txt". Additionally, it assumes we want to cluster the samples into 5 groups (`k = 5` in `cutree()`). You can adjust this value based on your specific needs.
-
-Note: Make sure to install any required packages before running the code (e.g., `` for the `cutree` function).
+That's it! The above code will filter the top 1000 most variable genes, cluster the samples, and extract cluster-specific genes for each cluster. You can modify the code as per your specific requirements, such as changing the number of clusters or the number of genes to extract.

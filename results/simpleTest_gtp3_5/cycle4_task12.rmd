@@ -3,3 +3,27 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
+# Load required libraries
+library(readxl)
+
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Count number of rows and columns for count table
+n_rows_count_table <- nrow(count_table)
+n_cols_count_table <- ncol(count_table)
+
+# Count number of rows and columns for annotation data
+n_rows_annotation_data <- nrow(annotation_data)
+n_cols_annotation_data <- ncol(annotation_data)
+
+# Print the counts
+print(paste("Number of rows in count table:", n_rows_count_table))
+print(paste("Number of columns in count table:", n_cols_count_table))
+print(paste("Number of rows in annotation data:", n_rows_annotation_data))
+print(paste("Number of columns in annotation data:", n_cols_annotation_data))
+```
+This code reads the count table from the "Supplementary_Table_1_exp.xlsx" file using the `read_excel` function and the annotation data from the "SRP021193.colData.tsv" file using the `read.table` function. It then counts the number of rows and columns for both the count table and the annotation data using the `nrow` and `ncol` functions, and finally prints the counts.

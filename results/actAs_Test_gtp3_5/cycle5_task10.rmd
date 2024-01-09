@@ -2,65 +2,45 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To complete the task, we will use the R programming language and leverage its bioinformatics packages such as `Biobase` and `limma`. 
+To complete this task, we will first load the gene expression data from the "leukemiaExp.txt" file. Then we will calculate the variability for each gene and filter the top 1000 most variable genes. Next, we will cluster the samples based on these genes and identify the cluster-specific genes for each cluster.
 
-First, let's load the necessary libraries and read the gene expression data from "leukemiaExp.txt":
-
-```
-# Install necessary packages if not already installed
-
-
-# Load required libraries
-library(Biobase)
-library(limma)
-
-# Read gene expression data
-gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
-```
-
-Next, we will filter genes based on their variability and retain the top 1000 variable genes using the "variance" function from the `limma` package:
+Here is the code to accomplish the task:
 
 ```
-# Calculate variance of gene expression across samples
-gene_var <- rowVars(gene_exp)
+# Read the gene expression data
+gene_data <- read.delim("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Order genes based on variance in descending order
-sorted_genes <- order(gene_var, decreasing = TRUE)
+# Calculate gene variability
+gene_variability <- apply(gene_data, 1, var)
 
-# Retain the top 1000 most variable genes
-top_variable_genes <- gene_exp[sorted_genes[1:1000], ]
-```
+# Get the indices of the top 1000 most variable genes
+top_var_genes <- order(gene_variability, decreasing=TRUE)[1:1000]
 
-Now, let's cluster the samples based on the expression of the selected variable genes using Hierarchical Clustering from the `hclust` function:
+# Filter the gene data based on the top variable genes
+filtered_gene_data <- gene_data[top_var_genes, ]
 
-```
-# Perform hierarchical clustering
-hclust_result <- hclust(dist(t(top_variable_genes)))
+# Perform clustering on the filtered gene data
+library(cluster)
+gene_clusters <- pam(t(filtered_gene_data), k=5)  # Change k value as desired for number of clusters
 
-# Determine the cluster assignments for each sample
-cluster_assignments <- cutree(hclust_result, k = 5)  # Assuming we want to cluster into 5 groups, change k as necessary
-```
+# Identify cluster-specific genes for each cluster
+cluster_specific_genes <- lapply(unique(gene_clusters$clustering), function(cluster) {
+  cluster_genes <- rownames(filtered_gene_data)[gene_clusters$clustering == cluster]
+  cluster_specific <- apply(filtered_gene_data[cluster_genes, ], 1, function(gene_exp) {
+    var(gene_exp) > 0  # Change the variability threshold if desired
+  })
+  cluster_genes[cluster_specific]
+})
 
-Finally, we can extract cluster-specific genes for each cluster by identifying the genes with the highest mean expression in each cluster:
-
-```
-# Create an empty list to store cluster-specific genes
-cluster_specific_genes <- list()
-
-# Iterate over each cluster and identify cluster-specific genes
-for (i in 1:max(cluster_assignments)) {
-  cluster_samples <- which(cluster_assignments == i)  # Index of samples in current cluster
-  cluster_gene_expression <- top_variable_genes[, cluster_samples]
-  
-  # Calculate mean gene expression for each gene in the cluster
-  mean_expression <- rowMeans(cluster_gene_expression)
-  
-  # Order genes based on mean expression in descending order
-  sorted_cluster_genes <- order(mean_expression, decreasing = TRUE)
-  
-  # Select the top 10 genes with highest mean expression in the cluster
-  cluster_specific_genes[[i]] <- rownames(cluster_gene_expression)[sorted_cluster_genes[1:10]]
+# Print the cluster-specific genes for each cluster
+for (i in seq_along(cluster_specific_genes)) {
+  cat("Cluster", i, "specific genes:\n")
+  cat(cluster_specific_genes[[i]], "\n\n")
 }
 ```
 
-The `cluster_specific_genes` list will contain the top 10 most cluster-specific genes for each cluster. You can modify the code according to your desired number of variable genes and clusters.
+In this code, we assume that the number of desired clusters is set to 5 (k=5) when performing clustering. You can change this value according to your specific requirements.
+
+Please note that the code above assumes that the necessary R packages (e.g., `cluster`) are already installed. If they are not, you can install them using the `install.packages()` function before executing the code.
+
+Remember to replace "leukemiaExp.txt" with the actual path to your gene expression data file.

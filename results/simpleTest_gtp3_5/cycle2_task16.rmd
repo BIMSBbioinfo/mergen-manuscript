@@ -3,24 +3,29 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required libraries
+# Load required packages
 library(readxl)
-library(tidyverse)
 library(ggplot2)
 
-# Read the count table
+# Read the count table file
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+# Read the annotation data file
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
 
-# Merge the count table and annotation data based on sample ids
+# Merge the annotation data and count table by matching sample ids
 merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = "sample_id")
 
-# Plot boxplots for gene expression values per sample and color code based on "group" variable
-ggplot(merged_data, aes(x = group, y = gene_name)) +
-  geom_boxplot(color = "black", fill = "lightblue") +
-  labs(x = "Group", y = "Gene Expression") +
-  ggtitle("Boxplot of Gene Expression by Group")
+# Select the columns with gene names and sample expressions
+expression_data <- merged_data[, c("gene_name", colnames(count_table))]
+
+# Reshape the data for plotting
+melted_data <- reshape2::melt(expression_data, id.vars = "gene_name", variable.name = "sample", value.name = "expression")
+
+# Plot the boxplots with color coding
+ggplot(melted_data, aes(x = sample, y = expression, fill = group)) +
+  geom_boxplot() +
+  labs(x = "Sample", y = "Expression Value", fill = "Group") +
+  theme_bw()
 ```
-Note: Make sure to adjust the file paths and column names in the code according to your actual data.
+```

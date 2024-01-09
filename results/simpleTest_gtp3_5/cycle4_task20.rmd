@@ -3,39 +3,55 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary packages
-library(DESeq2)
+# Load required libraries
+library(readxl)
+library(dplyr)
+library(pcaMethods)
 library(ggplot2)
 
 # Read count table
-count_table <- read.csv("Supplementary_Table_1_exp.csv", header = TRUE, row.names = 1)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Create a DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ group)
+# Specify groups to test
+groups <- unique(annotation_data$group)
 
-# Perform differential expression analysis
-dds <- DESeq(dds)
+# Perform statistical tests for each group
+group_specific_genes <- list()
 
-# Get differentially expressed genes for each group
-group_specific_genes <- lapply(unique(annotation_data$group), function(group) {
-  res <- results(dds, contrast = c("group", group, "control"))
-  return(res[which(res$padj < 0.05), ])
-})
+for (group in groups) {
+  # Subset count table and annotation data for the current group
+  subset_count_table <- count_table[, annotation_data$group == group]
+  subset_annotation_data <- annotation_data[annotation_data$group == group, ]
+  
+  # Perform differential expression analysis
+  results <- edgeR::exactTest(subset_count_table)
+  
+  # Select genes with significant differential expression
+  significant_genes <- subset_count_table[rowSums(results$tests$p < 0.05) > 0, ]
+  
+  # Save group specific genes
+  group_specific_genes[[group]] <- significant_genes
+}
 
-# Plot PCA using group-specific genes
-pca_data <- plotPCA(dds, intgroup = "group", returnData = TRUE)
-pca_data <- merge(pca_data, annotation_data, by = "row.names")
-colnames(pca_data)[1] <- "Gene"
+# Combine group specific genes into a single dataframe
+group_specific_genes <- do.call(rbind, group_specific_genes)
 
-ggplot(data = pca_data, aes(x = PC1, y = PC2, color = group)) +
-  geom_point(size = 3) +
-  xlab("PC1") +
-  ylab("PC2") +
-  ggtitle("PCA plot with group-specific genes")
+# Perform PCA using group specific genes
+pca_data <- prcomp(t(group_specific_genes))
+
+# Extract PCA scores
+pca_scores <- as.data.frame(pca_data$x)
+
+# Add group variable from annotation data to PCA scores dataframe
+pca_scores$group <- annotation_data$group
+
+# Plot PCA with color coded groups
+ggplot(pca_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2") + 
+  theme_minimal()
 ```
-
+Note: Make sure to adjust the file paths in the `read_excel` and `read.table` functions according to the location of your files. Also, ensure that you have the necessary libraries installed before running the code.

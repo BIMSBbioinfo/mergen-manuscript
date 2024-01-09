@@ -3,27 +3,28 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required packages
+# Load necessary packages
 library(readxl)
-library(dplyr)
 
-# Read the count table from the Excel file
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
 annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Rename the first column of the annotation data to match with sample IDs in count table
-colnames(annotation_data)[1] <- "SampleID"
+# Set the column names of the count table
+colnames(count_table) <- c("Gene", colnames(count_table)[2:length(colnames(count_table))])
 
-# Merge count table and annotation data using common sample IDs
-merged_data <- count_table %>% 
-  left_join(annotation_data, by = "SampleID")
+# Set the row names of the annotation data
+rownames(annotation_data) <- annotation_data$Sample_ID
+
+# Merge the count table and annotation data based on the sample IDs
+merged_data <- merge(count_table, annotation_data, by.x = "Gene", by.y = "Sample_ID", all.x = TRUE)
 
 # Calculate the number of columns in the merged data
 num_columns <- ncol(merged_data)
 
 # Print the number of columns
-print(num_columns)
+num_columns
 ```
-```
+

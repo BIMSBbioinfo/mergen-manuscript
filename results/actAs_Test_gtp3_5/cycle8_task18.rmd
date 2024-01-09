@@ -2,56 +2,46 @@ prompt:
 We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here are the "Age","sex" and "Race" columns. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Find all CpGs associated with Age but not with sex or Race, and display top 20 CpGs.
 
 response:
-To solve this task, we will need to load the data from the two datasets into R and perform data manipulation and analysis. Here's the code:
+To solve this task, we need to load both datasets and perform some data filtering and manipulation. Here's the code to accomplish this task:
 
 ```
-# Load required libraries
-library(dplyr)
+# Load the required packages
+library(data.table)
 
-# Read the methylation values dataset
-methylation_df <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the CpG methylation dataset
+methylation_data <- fread("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
 # Read the subjects dataset
-subjects_df <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+subjects_data <- fread("subjects.txt", header = TRUE)
 
-# Extract the required columns from subjects dataset
-subjects_df <- subjects_df[, c("dbGap ID", "Age", "sex", "Race")]
+# Set the first row as column names in methylation_data
+colnames(methylation_data) <- methylation_data[1, ]
 
-# Transpose the methylation dataframe to have individuals as rows and CpGs as columns
-methylation_df <- t(methylation_df)
+# Remove the first row from methylation_data
+methylation_data <- methylation_data[-1, ]
 
-# Assign column names from the first row (individual DBGapIds) 
-colnames(methylation_df) <- methylation_df[1,]
+# Filter the subjects_data to include only the required columns
+subjects_data <- subjects_data[, c("dbGap ID", "Age", "sex", "Race")]
 
-# Remove the first row (DBGapIds) from the methylation dataset
-methylation_df <- methylation_df[-1,]
+# Filter the methylation_data to include only the columns that match the dbGap IDs in subjects_data
+selected_columns <- intersect(colnames(methylation_data), subjects_data[["dbGap ID"]])
+methylation_data <- methylation_data[, selected_columns]
 
-# Convert the methylation values to numeric
-methylation_df <- as.data.frame(sapply(methylation_df, as.numeric))
+# Combine the methylation_data and subjects_data based on the dbGap ID
+combined_data <- merge(methylation_data, subjects_data, by.x = "dbGap ID", by.y = "dbGap ID")
 
-# Merge the methylation dataset with the subjects dataset based on dbGap ID
-merged_df <- merge(methylation_df, subjects_df, by.x = "dbGap ID", by.y = "dbGap ID")
+# Filter the CpGs associated with Age but not with sex or Race
+filtered_data <- combined_data[!is.na(Age) & is.na(sex) & is.na(Race)]
 
-# Filter CpGs associated with Age but not with sex or Race
-age_cpgs <- merged_df %>% 
-  filter(!is.na(Age) & is.na(sex) & is.na(Race)) %>%
-  select(-Age, -sex, -Race)
+# Sort the filtered_data by CpG_id and select the top 20 CpGs
+top_20_cpgs <- head(filtered_data[order(CpG_id)], 20)
 
-# Display top 20 CpGs
-top_20_cpgs <- head(age_cpgs, 20)
-top_20_cpgs
+# Display the top 20 CpGs
+print(top_20_cpgs)
 ```
 
-Explanation of the code:
-1. We load the required libraries, specifically the `dplyr` library for data manipulation.
-2. We read the methylation values dataset from the "metRmOlWithDbgapIdHeader.txt" file using `read.table()`. We set `header = TRUE` to indicate that the file has a header row.
-3. We read the subjects dataset from the "subjects.txt" file using `read.table()`.
-4. We extract the required columns (dbGap ID, Age, sex, Race) from the subjects dataset.
-5. We transpose the methylation dataframe using the `t()` function to have individuals as rows and CpGs as columns.
-6. We assign column names from the first row of the transposed methylation dataframe, which are the individual DBGapIds.
-7. We remove the first row (DBGapIds) from the methylation dataframe.
-8. We convert the methylation values to numeric using `as.numeric()` applied to each column.
-9. We merge the methylation dataset with the subjects dataset based on the dbGap ID using `merge()`.
-10. We filter the merged dataset to select CpGs associated with Age but not with sex or Race. We use `filter()` and `is.na()` to check for missing values in the sex and Race columns.
-11. We remove the Age, sex, and Race columns from the filtered dataset using `select()`.
-12. Finally, we display the top 20 CpGs using the `head()` function and assign it to the `top_20_cpgs` variable.
+Make sure to replace the file paths "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual paths to the files on your system.
+
+This code reads both datasets using the `fread` function from the `data.table` package. Then, it sets the first row as column names in the methylation dataset and removes it. The subjects dataset is filtered to include only the required columns. The methylation dataset is also filtered to include only the columns that match the dbGap IDs in the subjects dataset.
+
+The two datasets are then merged based on the dbGap ID. The merged dataset is filtered to include CpGs associated with Age but not with sex or Race. Finally, the filtered dataset is sorted by CpG ID and the top 20 CpGs are selected and displayed.

@@ -3,16 +3,16 @@ I have the following gene expression data, "leukemiaExp.txt". Each row is a gene
 
 response:
 ```
-# Read the data from the file
-data <- read.delim("leukemiaExp.txt", sep = "\t")
+# Read the data file
+gene_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
 
 # Get the number of genes
-num_genes <- nrow(data)
+num_genes <- nrow(gene_data)
 
 # Get the number of samples
-num_samp <- ncol(data)
+num_samples <- ncol(gene_data) - 1  # Subtract 1 to exclude the first column with gene names
 
-# Print the results
+# Print the number of genes and samples
 cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samp, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```

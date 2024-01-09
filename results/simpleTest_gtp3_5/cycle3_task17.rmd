@@ -3,24 +3,51 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load required packages
-library(dplyr)
+# Load necessary libraries
+library(data.table)
 library(randomForest)
 
-# Read in the data
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subjects_data <- read.table("subjects.txt", header = TRUE)
+# Read the methylation data
+methylation_data <- fread("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Rename the first column of methylation_data to "dbGap ID"
-colnames(methylation_data)[1] <- "dbGap ID"
+# Read the subject data
+subject_data <- fread("subjects.txt", header = TRUE)
 
-# Merge the two datasets on the "dbGap ID" column
-merged_data <- merge(methylation_data, subjects_data, by = "dbGap ID")
+# Transpose the methylation data to have individuals as rows and CpGs as columns
+methylation_data <- data.table::transpose(methylation_data)
 
-# Create a random forest model to predict Age from methylation values
-model <- randomForest(Age ~ ., data = merged_data)
+# Set the column names of the methylation data as the values in the first row
+colnames(methylation_data) <- as.character(methylation_data[1,])
 
-# Display the importance of variables in the model
-varImpPlot(model)
+# Remove the first row from the methylation data
+methylation_data <- methylation_data[-1,]
+
+# Set the column names of the subject data
+colnames(subject_data) <- c("dbGap ID", "Age")
+
+# Convert the Age column in the subject data to numeric
+subject_data$Age <- as.numeric(subject_data$Age)
+
+# Get the common individuals between the methylation data and subject data
+common_individuals <- intersect(colnames(methylation_data), subject_data$dbGap ID)
+
+# Filter the methylation data and subject data to include only the common individuals
+methylation_data <- methylation_data[, c("CpG_id", common_individuals), with = FALSE]
+subject_data <- subject_data[subject_data$dbGap ID %in% common_individuals,]
+
+# Create a merged dataset with methylation values and Age
+merged_data <- merge(methylation_data, subject_data, by.x = "CpG_id", by.y = "dbGap ID", all.x = TRUE)
+
+# Convert the methylation values to numeric
+merged_data[, -1] <- lapply(merged_data[, -1], as.numeric)
+
+# Remove rows with missing values
+merged_data <- merged_data[complete.cases(merged_data),]
+
+# Build a random forest model to predict Age
+rf_model <- randomForest(Age ~ ., data = merged_data, ntree = 100, importance = TRUE)
+
+# Display the most important variables for the predictive model
+print(importance(rf_model))
 ```
-```
+Note: The above code assumes that the "metRmOlWithDbgapIdHeader.txt" file and the "subjects.txt" file are in the current working directory. If they are located in a different directory, you would need to provide the full file path to the `fread` function.

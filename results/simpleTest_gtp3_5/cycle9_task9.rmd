@@ -3,28 +3,30 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-geneExpr <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+# Load necessary libraries
+library(gplots)
+library(pvclust)
+library(heatmap3)
+library(ggplot2)
 
-# Calculate the variance for each gene
-variance <- apply(geneExpr, 1, var)
+# Read the gene expression data from the file
+gene_expression <- read.table(file = "leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
 
-# Sort the genes based on variance in descending order
-sortedGenes <- names(variance)[order(variance, decreasing = TRUE)]
+# Filter genes based on variability
+var_genes <- gene_expression[apply(gene_expression, 1, var) > quantile(apply(gene_expression, 1, var), 0.95), ]
 
-# Select the top 1000 genes with highest variance
-top1000Genes <- sortedGenes[1:1000]
+# Select the top 1000 most variable genes
+var_genes <- var_genes[order(apply(var_genes, 1, var), decreasing = TRUE)[1:1000], ]
 
-# Subset the gene expression data with the top 1000 genes
-geneExprTop1000 <- geneExpr[top1000Genes, ]
+# Create a heatmap with clustering using the variable genes
+heatmap3(var_genes, Colv = NA, scale = "row", ColSideColors = c(rep(2, ncol(var_genes) / 2), rep(3, ncol(var_genes) / 2)))
 
-# Perform clustering and plot a heatmap
-heatmap(as.matrix(geneExprTop1000), scale = "row", Colv = NA)
+# Perform PCA on the samples
+pca <- prcomp(t(gene_expression))
 
-# Perform PCA on the gene expression data
-pca <- prcomp(geneExpr)
-
-# Plot the PCA results for samples
-plot(pca$x[, 1], pca$x[, 2], xlab = "PC1", ylab = "PC2")
+# Plot PCA for samples
+ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2)) +
+  geom_point() +
+  theme_minimal()
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path of the gene expression data file.
+This code reads the gene expression data from the file "leukemiaExp.txt" and filters the genes based on their variability. It retains the most variable top 1000 genes and then creates a heatmap with clustering using these variable genes. Additionally, it performs PCA on the samples and plots a PCA plot using the first two principal components.

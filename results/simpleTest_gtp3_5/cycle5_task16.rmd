@@ -3,26 +3,43 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
 library(readxl)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Merge annotation data and count table
-merged_data <- left_join(annotation_data, count_table, by = "Sample_ID")
+# Remove first column from annotation data
+annotation_data <- annotation_data[, -1]
+
+# Set the column names of count table as the first column of annotation data
+colnames(annotation_data) <- count_table[, 1]
+
+# Remove the first column from count table
+count_table <- count_table[, -1]
+
+# Transpose count table
+count_table <- t(count_table)
+
+# Merge count table and annotation data
+merged_data <- merge(count_table, annotation_data, by = "row.names")
+
+# Set the merged data column names
+colnames(merged_data) <- c("Gene", colnames(count_table), colnames(annotation_data)[-1])
 
 # Plot boxplots for gene expression values per sample
-ggplot(merged_data, aes(x = Sample_ID, y = Gene_Name, fill = Group)) +
+plot_data <- merged_data %>%
+  pivot_longer(-c("Gene", "group"), names_to = "Sample", values_to = "Expression") %>%
+  ggplot(aes(x = Sample, y = Expression, fill = group)) +
   geom_boxplot() +
-  labs(title = "Gene expression values per sample",
-       x = "Sample ID",
-       y = "Gene Name") +
-  scale_fill_manual(values = c("red", "blue"))  # Set color palette for groups
+  labs(x = "Sample", y = "Gene Expression") +
+  scale_fill_discrete(name = "group") +
+  theme_minimal()
+
+# Display the plot
+plot_data
 ```
 

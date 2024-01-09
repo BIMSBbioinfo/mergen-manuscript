@@ -3,25 +3,26 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-gene_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+# Read the data from the file
+gene_expression <- read.delim("leukemiaExp.txt", sep="\t")
 
-# Check the number of columns (samples)
-num_samples <- ncol(gene_data)
+# Check the number of columns in the data
+num_samples <- ncol(gene_expression)
 
-# Check if the number of samples is greater than 500
+# If more than 500 samples, randomly sample 500 samples
 if(num_samples > 500) {
-  # Randomly sample 500 columns
-  sampled_columns <- sample(num_samples, 500)
-  
-  # Create subset of the data with sampled columns
-  gene_subset <- gene_data[, sampled_columns]
+  # Set seed for reproducibility
+  set.seed(123)
+  # Randomly select 500 sample indices
+  sample_indices <- sample(num_samples, size = 500)
+  # Create subset of data using the selected sample indices
+  gene_expression_subset <- gene_expression[, sample_indices]
 } else {
-  # If the number of samples is not greater than 500, use the original data
-  gene_subset <- gene_data
+  # If less than or equal to 500 samples, use the entire data
+  gene_expression_subset <- gene_expression
 }
 
-# Create boxplot of the columns
-boxplot(gene_subset, main = "Gene Expression Data", xlab = "Samples", ylab = "Expression", col = "lightblue")
+# Create boxplot of the columns in the subset of data
+boxplot(gene_expression_subset)
 ```
-
+```

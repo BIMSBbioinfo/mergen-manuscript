@@ -6,15 +6,16 @@ response:
 # Load the required library
 library(readxl)
 
-# Read the Excel file
+# Read the excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Get the number of genes and samples
-num_genes <- nrow(data) - 1  # Subtract 1 for the gene name column
-num_samples <- ncol(data) - 1  # Subtract 1 for the sample name column
+num_genes <- nrow(data) - 1  # Subtract 1 to exclude the header row
+num_samples <- ncol(data)
 
-# Print the number of genes and samples
-cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples, "\n")
+# Print the results
+num_genes
+num_samples
 ```
-Note: Replace "Supplementary_Table_1_exp.xlsx" with the actual file path if the file is not in the current working directory.
+```
+

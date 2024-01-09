@@ -3,62 +3,63 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
 library(readxl)
-library(limma)
+library(reshape2)
+library(DESeq2)
 library(ggplot2)
-library(dplyr)
-library(ggrepel)
-library(pcaMethods)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
+# Convert count table to matrix format
+count_matrix <- as.matrix(count_table[, -1]) # Exclude the first column
+
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+annot_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Remove any row or column with NA values
-count_table <- count_table[complete.cases(count_table), ]
-annotation_data <- annotation_data[complete.cases(annotation_data), ]
+# Get group names from annotation data
+groups <- unique(annot_data$group)
 
-# Set gene names as row names
-rownames(count_table) <- count_table[, 1]
-count_table <- count_table[, -1]
+# Create a list to store group-specific genes
+group_specific_genes <- list()
 
-# Remove gene names column from annotation_data
-annotation_data <- annotation_data[, -1]
-
-# Perform differential expression analysis using limma
-design_matrix <- model.matrix(~ group, data = annotation_data)
-fit <- lmFit(count_table, design_matrix)
-fit <- eBayes(fit)
-results <- decideTests(fit)
-
-# Split genes based on significant differential expression
-DE_genes <- split(row.names(count_table), results)
-
-# Filter out genes specific for each group
-group_specific_genes <- lapply(DE_genes, function(x) intersect(x, row.names(count_table)))
-
-# Prepare data for PCA
-pca_data <- count_table[group_specific_genes[[1]], ]
-for (i in 2:length(group_specific_genes)) {
-  pca_data <- rbind(pca_data, count_table[group_specific_genes[[i]], ])
+# Perform statistical test for each group
+for (group in groups) {
+  # Get sample ids for the current group
+  sample_ids <- annot_data$sample_id[annot_data$group == group]
+  
+  # Select count matrix for the current group
+  group_count_matrix <- count_matrix[, colnames(count_matrix) %in% sample_ids]
+  
+  # Convert count matrix to DESeqDataSet format
+  dds <- DESeqDataSetFromMatrix(countData = group_count_matrix,
+                                colData = data.frame(sample = colnames(group_count_matrix)),
+                                design = ~ sample)
+  
+  # Perform differential expression analysis
+  dds <- DESeq(dds)
+  
+  # Find significantly differentially expressed genes
+  res <- results(dds)
+  group_specific_genes[[group]] <- rownames(res[res$padj < 0.05 & abs(res$log2FoldChange) > 1, ])
 }
 
-# Perform PCA
-pca_result <- prcomp(pca_data)
+# Combine genes specific for each group
+combined_specific_genes <- do.call(c, group_specific_genes)
 
-# Get percentage of variance explained by principal components
-variance_explained <- pca_result$sdev^2 / sum(pca_result$sdev^2) * 100
+# Filter count matrix to keep only group-specific genes
+filtered_count_matrix <- count_matrix[row.names(count_matrix) %in% combined_specific_genes, ]
 
-# Plot PCA
-ggplot(data = as.data.frame(pca_result$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
+# Perform PCA on the filtered count matrix
+pca <- prcomp(t(filtered_count_matrix))
+
+# Create data frame for PCA results
+pca_data <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], group = annot_data$group)
+
+# Plot PCA with color-coded groups
+ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
-  scale_color_manual(values = c("blue", "red")) +
-  geom_text_repel(aes(label = rownames(pca_result$x)), size = 3) +
-  xlab(paste0("PC1 (", round(variance_explained[1], 2), "%)")) +
-  ylab(paste0("PC2 (", round(variance_explained[2], 2), "%)")) +
-  labs(color = "Group")
+  theme_minimal()
 ```
 ```

@@ -3,55 +3,30 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load the data from the leukemiaExp.txt file
+# Load the data
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column containing gene names
-expression_data <- data[, -1]
+# Filter genes based on variability
+library(stats)
+variance <- apply(data[, -1], 1, var)
+top_var_genes <- head(order(variance, decreasing = TRUE), 1000)
+filtered_data <- data[top_var_genes, ]
 
-# Calculate the variance for each gene
-gene_variability <- apply(expression_data, 1, var)
+# Cluster the samples
+library(ConsensuClusterPlus)
+clustering <- ConsensusClusterPlus(filtered_data[-1])
 
-# Sort the genes based on their variability
-sorted_genes <- order(gene_variability, decreasing = TRUE)
+# Extract cluster-specific genes for each cluster
+cluster_labels <- clustering$consensusClusterObject$cluster
+cluster_specific_genes <- sapply(unique(cluster_labels), function(cluster) {
+  cluster_genes <- filtered_data[cluster_labels == cluster, ]
+  top_gene <- row.names(cluster_genes[which.max(apply(cluster_genes, 1, var)), ])
+  return(list(cluster, top_gene))
+})
 
-# Select the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000]
-
-# Store the expression data of the top 1000 genes
-expression_data_top_1000_genes <- expression_data[top_1000_genes, ]
-
-# Perform clustering on the samples using hierarchical clustering
-sample_clusters <- hclust(dist(t(expression_data_top_1000_genes)))
-
-# Identify clusters based on the hierarchical clustering
-cluster_labels <- cutree(sample_clusters, k = 3)
-
-# Create a list to store the cluster-specific genes
-cluster_specific_genes <- vector("list", length = max(cluster_labels))
-
-# Find the cluster-specific genes for each cluster
-for (i in 1:length(cluster_labels)) {
-  # Get the samples belonging to the current cluster
-  samples_in_cluster <- which(cluster_labels == i)
-  
-  # Calculate the variance for each gene within the cluster
-  cluster_gene_variability <- apply(expression_data_top_1000_genes[, samples_in_cluster], 1, var)
-  
-  # Sort the genes within the cluster based on their variability
-  sorted_cluster_genes <- order(cluster_gene_variability, decreasing = TRUE)
-  
-  # Select the top 100 cluster-specific genes within the cluster
-  top_100_cluster_genes <- sorted_cluster_genes[1:100]
-  
-  # Store the cluster-specific genes in the list
-  cluster_specific_genes[[i]] <- rownames(expression_data_top_1000_genes)[top_100_cluster_genes]
-}
-
-# Print the cluster-specific genes for each cluster
-for (i in 1:length(cluster_specific_genes)) {
-  cat("Cluster", i, "specific genes:", "\n")
-  print(cluster_specific_genes[[i]])
+# Print the cluster-specific genes
+for (cluster_genes in cluster_specific_genes) {
+  print(paste("Cluster", cluster_genes[[1]], "specific gene:", cluster_genes[[2]]))
 }
 ```
-Note: This code assumes that you have the "leukemiaExp.txt" file in the same directory as your R script. If the file is located in a different directory, please update the file path accordingly.
+Note: It is assumed that the required R packages (e.g., "stats" and "ConsensuClusterPlus") have been installed and loaded beforehand.

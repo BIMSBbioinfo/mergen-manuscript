@@ -2,40 +2,74 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
 
 response:
-To filter the genes based on their variability and retain the top 1000 most variable genes, we can follow these steps:
+To filter genes based on their variability and retain the most variable top 1000 genes, we can follow these steps using R programming language:
 
-1. Read the gene expression data from the file "leukemiaExp.txt" into a data frame in R.
-2. Calculate the variability for each gene by calculating the standard deviation of its expression across all samples.
+1. Read the gene expression data from the "leukemiaExp.txt" file into a data frame.
+
+```
+# Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+```
+
+2. Calculate the variability for each gene by calculating the standard deviation across all samples.
+
+```
+# Calculate the variability for each gene
+gene_variability <- apply(gene_exp[, -1], 1, sd)
+```
+
 3. Sort the genes based on their variability in descending order.
-4. Select the top 1000 most variable genes.
-5. Create a matrix of the gene expression data for the selected genes.
-6. Plot a heatmap with clustering using the selected genes.
-7. Plot PCA for the samples using the selected genes.
-
-Here is the code to perform these steps:
 
 ```
-# Step 1: Read the gene expression data into a data frame
-gene_data <- read.delim("leukemiaExp.txt", sep="\t")
-
-# Step 2: Calculate the variability for each gene
-gene_variability <- apply(gene_data[, -1], 1, sd)
-
-# Step 3: Sort the genes based on their variability in descending order
-sorted_genes <- gene_data[order(gene_variability, decreasing = TRUE), ]
-
-# Step 4: Select the top 1000 most variable genes
-top_variable_genes <- sorted_genes[1:1000, ]
-
-# Step 5: Create a matrix of the gene expression data for the selected genes
-gene_matrix <- as.matrix(top_variable_genes[, -1])
-
-# Step 6: Plot a heatmap with clustering using the selected genes
-heatmap(gene_matrix, col = colorRampPalette(c("white", "black"))(100))
-
-# Step 7: Plot PCA for the samples using the selected genes
-pca <- prcomp(t(gene_matrix))
-biplot(pca)
+# Sort the genes based on variability
+sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
 ```
 
-This code will read the gene expression data, calculate the gene variability, select the top 1000 most variable genes, and then plot a heatmap with clustering based on those genes. Additionally, it will also plot the PCA for the samples using the selected genes.
+4. Subset the top 1000 most variable genes.
+
+```
+# Subset the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
+```
+
+5. Plot a heatmap with clustering for the selected genes.
+
+```
+# Plot a heatmap with clustering
+heatmap(as.matrix(top_1000_genes[, -1]), Colv = NA, scale = "row")
+```
+
+6. Perform PCA on the samples using the selected genes.
+
+```
+# Perform PCA on the samples
+pca <- prcomp(t(top_1000_genes[, -1]))
+
+# Plot PCA for samples
+plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2")
+```
+
+Here is the complete code block combining all the steps:
+
+```
+# Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+
+# Calculate the variability for each gene
+gene_variability <- apply(gene_exp[, -1], 1, sd)
+
+# Sort the genes based on variability
+sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
+
+# Subset the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
+
+# Plot a heatmap with clustering
+heatmap(as.matrix(top_1000_genes[, -1]), Colv = NA, scale = "row")
+
+# Perform PCA on the samples
+pca <- prcomp(t(top_1000_genes[, -1]))
+
+# Plot PCA for samples
+plot(pca$x[,1], pca$x[,2], xlab = "PC1", ylab = "PC2")
+```

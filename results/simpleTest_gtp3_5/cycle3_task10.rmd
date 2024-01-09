@@ -3,39 +3,38 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from the file
+# Read the gene expression data file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the gene variability
-variance <- apply(data[, -1], 1, var)
+# Calculate the variance for each gene
+variances <- apply(data[, -1], 1, var)
 
-# Get the indices of the top 1000 genes with highest variability
-top_1000_genes <- order(variance, decreasing = TRUE)[1:1000]
+# Sort the genes based on their variance in descending order
+sorted_genes <- sort(variances, decreasing = TRUE)
 
-# Filter the data to retain only the top 1000 genes
-filtered_data <- data[c(top_1000_genes + 1), ]
+# Select the top 1000 genes with the highest variance
+top_genes <- names(sorted_genes)[1:1000]
+
+# Filter the data to retain only the top variable genes
+filtered_data <- data[c("gene", top_genes)]
 
 # Perform hierarchical clustering on the samples
-dist_matrix <- dist(t(filtered_data[, -1]))
-hc <- hclust(dist_matrix)
-clusters <- cutree(hc, k = 5)  # Assuming we want to cluster samples into 5 clusters
+distances <- dist(filtered_data[, -1]) # Calculate distance matrix
+hclust_res <- hclust(distances) # Perform hierarchical clustering
+clusters <- cutree(hclust_res, k = 5) # Assign samples to clusters
 
 # Extract cluster-specific genes for each cluster
-cluster_specific_genes <- list()
-for (i in 1:max(clusters)) {
-  cluster_samples <- which(clusters == i)
-  cluster_expression <- filtered_data[, cluster_samples + 1]
-  # Calculate the gene variability within the cluster
-  cluster_variance <- apply(cluster_expression, 1, var)
-  # Get the indices of the top 100 genes with highest variability within the cluster
-  top_100_genes <- order(cluster_variance, decreasing = TRUE)[1:100]
-  # Store the cluster-specific genes
-  cluster_specific_genes[[i]] <- rownames(cluster_expression)[top_100_genes]
-}
+cluster_genes <- lapply(1:max(clusters), function(i) {
+  cluster_samples <- which(clusters == i) # Get samples belonging to the cluster
+  # Find the genes that are differentially expressed in the cluster
+  top_cluster_genes <- names(sort(apply(filtered_data[, cluster_samples], 1, var), decreasing = TRUE))[1:100]
+  return(top_cluster_genes)
+})
 
 # Print the cluster-specific genes for each cluster
-for (i in 1:max(clusters)) {
-  cat("Cluster", i, "specific genes:\n")
-  cat(cluster_specific_genes[[i]], "\n\n")
+for(i in 1:length(cluster_genes)) {
+  cat("Cluster", i, "genes:\n")
+  cat(cluster_genes[[i]], "\n\n")
 }
 ```
+Note: This code assumes that the first column of the "leukemiaExp.txt" file contains the gene names and the remaining columns contain the sample data. Adjustments may be needed if the structure of the input file is different.

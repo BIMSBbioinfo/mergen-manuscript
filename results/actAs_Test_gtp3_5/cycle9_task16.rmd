@@ -2,80 +2,39 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Merge annotation data and gene expression tables. Plot boxplots for gene expression values per sample and color code boxplots based on group" variable in my annotation data.
 
 response:
-To accomplish this task, we will use the `tidyverse` package in R for data manipulation and plotting. We will also require the `readxl` package to read the count table from the Excel file. Before starting, make sure you have both packages installed by running `` and `` if necessary.
+To complete this task, we can use the following steps:
 
-First, let's load the required libraries and read the count table and annotation data:
+1. Load the required libraries: tidyr, dplyr, ggplot2
+2. Read the count table and annotation data
+3. Rename the columns of the count table to match the sample names in the annotation data
+4. Merge the count table and annotation data based on matching sample names
+5. Plot boxplots for gene expression values per sample, color-coded based on the "group" variable in the annotation data
 
-```
-library(tidyverse)
-library(readxl)
-
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Read annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
-```
-
-Next, we need to reshape the count table from wide to long format, which will make it easier to merge with the annotation data:
+Here is the code to accomplish this task:
 
 ```
-# Reshape count table
-count_table_long <- count_table %>%
-  pivot_longer(cols = -GeneName, names_to = "SampleID", values_to = "ExpressionValue")
-```
+# Step 1: Load the required libraries
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 
-Now, we can merge the annotation data and the reshaped count table based on the sample IDs:
+# Step 2: Read the count table and annotation data
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheetName = 1)
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-```
-# Merge annotation data and count table
-merged_data <- annotation_data %>%
-  left_join(count_table_long, by = c("SampleID" = "Sample.ID"))
-```
+# Step 3: Rename the columns of the count table
+colnames(count_table)[-1] <- annotation_data$sample_id
 
-Finally, we can plot the boxplots for gene expression values per sample, color-coded based on the "group" variable in the annotation data:
+# Step 4: Merge the count table and annotation data
+merged_data <- count_table %>%
+  gather(sample_id, expression, -Gene) %>%
+  left_join(annotation_data, by = "sample_id")
 
-```
-# Plot boxplots
-ggplot(merged_data, aes(x = SampleID, y = ExpressionValue, fill = group)) +
+# Step 5: Plot boxplots for gene expression values per sample, color-coded based on the "group" variable
+ggplot(merged_data, aes(x = sample_id, y = expression, fill = group)) +
   geom_boxplot() +
-  xlab("Sample ID") +
-  ylab("Expression Value") +
-  labs(fill = "Group") +
-  theme_minimal()
+  labs(x = "Sample", y = "Gene Expression") +
+  ggtitle("Gene Expression per Sample")
 ```
 
-This code will generate a plot with boxplots representing the gene expression values per sample, color-coded based on the "group" variable in the annotation data.
-
-Remember to replace the file names (`Supplementary_Table_1_exp.xlsx` and `SRP021193.colData.tsv`) with the actual paths to your files.
-
-Complete code:
-
-```
-library(tidyverse)
-library(readxl)
-
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Read annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
-
-# Reshape count table
-count_table_long <- count_table %>%
-  pivot_longer(cols = -GeneName, names_to = "SampleID", values_to = "ExpressionValue")
-
-# Merge annotation data and count table
-merged_data <- annotation_data %>%
-  left_join(count_table_long, by = c("SampleID" = "Sample.ID"))
-
-# Plot boxplots
-ggplot(merged_data, aes(x = SampleID, y = ExpressionValue, fill = group)) +
-  geom_boxplot() +
-  xlab("Sample ID") +
-  ylab("Expression Value") +
-  labs(fill = "Group") +
-  theme_minimal()
-```
-
-Note that this code assumes that the count table and annotation data are stored in the same directory as the R script or notebook you are running. If they are stored in a different location, you need to provide the full file paths.
+Make sure to replace the file paths in the `read.xlsx` and `read.delim` functions with the actual paths to your files. Also, adapt the sheet name in the `read.xlsx` function if your count table is on a different sheet.

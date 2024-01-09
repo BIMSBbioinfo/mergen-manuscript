@@ -2,58 +2,67 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, we will use the R programming language and the following packages: `tidyverse`, `readxl`, `DESeq2` and `factoextra`. Before we start, make sure you have installed these packages by running the following commands:
+To complete the task, we will need to install and load some packages, read the count table and annotation data, normalize the counts, and create two PCA plots color coded by "group" and "LibrarySelection" respectively. 
+
+First, let's install and load the necessary packages:
 
 ```
+# Install required packages if not already installed
+if(!require("readxl")) 
+if(!require("dplyr")) 
+if(!require("ggplot2")) 
+if(!require("tidyr")) 
+if(!require("tibble")) 
+if(!require("FactoMineR")) 
 
-
-
-
-```
-
-Now, let's begin by loading the required libraries and reading the count table and annotation data. Assuming both files are in the same directory as the R script:
-
-```
-# Load the required libraries
-library(tidyverse)
+# Load the installed packages
 library(readxl)
-library(DESeq2)
-library(factoextra)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(tibble)
+library(FactoMineR)
+```
 
+Next, let's read the count table and annotation data:
+
+```
 # Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation <- read_tsv("SRP021193.colData.tsv")
+annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
 ```
 
-Next, we will normalize the counts using the DESeq2 package. We will first convert the count table into a DESeqDataSet object and then perform the normalization:
+Now, let's normalize the counts:
 
 ```
-# Convert count table to DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
-                              colData = annotation,
-                              design = ~ 1)
+# Extract the count values from the count table
+count_values <- as.matrix(count_table[, -1])
 
-# Perform the normalization
-dds <- DESeq(dds)
+# Normalize the counts using the TMM method from the edgeR package
+normalized_counts <- calcNormFactors(count_values)
+
+# Add the gene names as row names to the normalized counts matrix
+row.names(normalized_counts) <- count_table$Gene
+
+# Convert the normalized counts matrix to a data frame
+normalized_counts <- as.data.frame(normalized_counts)
 ```
 
-Now that we have normalized counts, let's proceed to create two PCA plots. The first plot will be color-coded by the "group" variable, and the second plot will be color-coded by the "LibrarySelection" variable:
+Finally, let's create two PCA plots color coded by "group" and "LibrarySelection" respectively:
 
 ```
-# Extract PCA coordinates
-pca <- prcomp(t(log2(counts(dds, normalized = TRUE) + 1)))
+# Merge the annotation data with the normalized counts
+merged_data <- merge(annotation_data, normalized_counts, by.x = "sample.id", by.y = "row.names")
 
-# Plot 1: Color-coded by "group"
-fviz_pca_ind(pca, geom.ind = "point", col.ind = annotation$group,
-             palette = "jco", addEllipses = TRUE)
+# Create the PCA plot color coded by "group"
+pca_plot_group <- PCA(merged_data[, -c(1, 2)], graph = FALSE)
+fviz_pca_ind(pca_plot_group, col = merged_data$group)
 
-# Plot 2: Color-coded by "LibrarySelection"
-fviz_pca_ind(pca, geom.ind = "point", col.ind = annotation$LibrarySelection,
-             palette = "jco", addEllipses = TRUE)
+# Create the PCA plot color coded by "LibrarySelection"
+pca_plot_library <- PCA(merged_data[, -c(1, 2)], graph = FALSE)
+fviz_pca_ind(pca_plot_library, col = merged_data$LibrarySelection)
 ```
 
-That's it! The above code will normalize the counts, create two PCA plots, and color-code the samples based on the specified variables in the annotation data.
-
-Remember to save the R script as a `.R` file and run it in an R environment to see the results.
+The PCA plots will be displayed in the R graphics device, each with the samples color coded by their respective annotation data ("group" and "LibrarySelection").

@@ -3,48 +3,40 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
-library(readxl)
+# Load required libraries
 library(DESeq2)
 library(ggplot2)
-library(PCAtools)
 
 # Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+counts <- read.table("Supplementary_Table_1_exp.xlsx", header=TRUE, row.names=1)
+# Transpose the count table
+counts <- t(counts)
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+annotation <- read.table("SRP021193.colData.tsv", header=TRUE)
 
-# Set row names as gene names
-rownames(count_table) <- count_table[,1]
-count_table <- count_table[,-1]
-
-# Extract group labels from annotation data
-group_labels <- annotation_data$group
-
-# Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
+# Create a DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = counts,
+                              colData = annotation,
                               design = ~ group)
 
 # Perform differential expression analysis
 dds <- DESeq(dds)
 
-# Get differentially expressed genes for each group
-group_specific_genes <- list()
+# Get the results
+result <- results(dds)
 
-for (group in unique(group_labels)){
-  res <- results(dds, contrast=c("group", group, "control"))
-  group_specific_genes[[group]] <- rownames(res)[padj(res) < 0.05 & abs(log2FoldChange(res)) > 1]
-}
+# Get group specific genes
+group_specific_genes <- subset(result, padj < 0.05)
 
-# Create a matrix containing group-specific genes only
-group_specific_counts <- count_table[group_specific_genes[[1]], ]
+# Create a PCA plot using group specific genes
+pca <- prcomp(t(assay(dds)[rownames(group_specific_genes), ]))
+pca_df <- as.data.frame(pca$x)
+pca_df$group <- annotation$group
 
-# Plot PCA using group-specific genes
-pca_plot <- plotPCA(group_specific_counts, metadata = annotation_data, color = "group")
-
-# Show PCA plot
-pca_plot
+# Plot PCA
+ggplot(pca_df, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot", x = "PC1", y = "PC2")
 ```
-Note: This code assumes that you have the necessary libraries installed (`readxl`, `DESeq2`, `ggplot2`, `PCAtools`). You may need to install them before running the code using the `install.packages()` function. Also, make sure to adjust the file paths in the code to match the location of your files.
+Note: Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths in your system.

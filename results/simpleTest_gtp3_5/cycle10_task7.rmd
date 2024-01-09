@@ -3,25 +3,27 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
+# Load the required library
+library(ggplot2)
+
 # Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Check the number of columns in the data
-num_samples <- ncol(gene_data)
-
-# Check if there are more than 500 samples
-if(num_samples > 500) {
-  # Randomly sample 500 columns
-  sample_columns <- sample(num_samples, 500)
+# Check the number of samples
+n_samples <- ncol(data)
+if (n_samples > 500) {
+  # Randomly sample 500 column indices
+  sample_indices <- sample(1:n_samples, 500)
   
-  # Create a subset of the data with sampled columns
-  gene_data_subset <- gene_data[, sample_columns]
+  # Subset the data using the sampled column indices
+  subset_data <- data[, sample_indices]
+  
+  # Create a boxplot of the subset data
+  ggplot(melt(subset_data), aes(x = Var2, y = value)) +
+    geom_boxplot()
 } else {
-  # If there are 500 or fewer samples, use the entire data
-  gene_data_subset <- gene_data
+  # Create a boxplot of the original data
+  ggplot(melt(data), aes(x = Var2, y = value)) +
+    geom_boxplot()
 }
-
-# Create a boxplot of the columns
-boxplot(gene_data_subset, col="lightblue", main="Gene Expression Data Boxplot")
 ```
-Note: Replace "leukemiaExp.txt" with the actual file name/path if it is in a different directory.

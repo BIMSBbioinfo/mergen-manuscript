@@ -3,30 +3,26 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheetName = 1)
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
+# Load necessary libraries
+library(readxl)
+library(dplyr)
 
-# Remove any rows with duplicate gene names in the count table
-count_table <- count_table[!duplicated(count_table$Gene), ]
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Get the sample IDs from the annotation data
-sample_ids <- annotation_data[, 1]
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Get the column names from the count table (excluding the first column)
-column_names <- colnames(count_table)[-1]
+# Get sample ids from annotation data
+sample_ids <- annotation_data$Sample_id
 
-# Merge the count table and annotation data based on the sample IDs
-merged_data <- merge(annotation_data, count_table, by.x = "SampleIDs", by.y = "Gene", all = FALSE)
+# Merge annotation data and count table by matching sample ids
+merged_data <- merge(annotation_data, count_table, by.x = "Sample_id", by.y = "Gene", all.x = TRUE)
 
-# Calculate the number of columns (excluding the first column)
-num_columns <- ncol(merged_data) - 1
+# Calculate number of columns in the merged data
+num_columns <- ncol(merged_data)
 
 # Print the number of columns
 print(num_columns)
 ```
-Note: Make sure you have the 'openxlsx' package installed to read the Excel file. If not, you can install it using the following command:
-```
-
-```
+Note: Make sure to install and load the necessary libraries if they are not already installed.

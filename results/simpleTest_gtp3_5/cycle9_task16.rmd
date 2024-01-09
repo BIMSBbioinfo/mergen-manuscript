@@ -3,28 +3,30 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(readxl)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+# Read annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
 
-# Merge annotation data and count table
-merged_data <- left_join(count_table, annotation_data, by = c("Sample_ID" = "sample_id"))
+# Rename first column of annotation data
+colnames(annotation_data)[1] <- "sample_id"
 
-# Plot boxplots for gene expression values per sample, color coded based on group variable
-merged_data %>%
-  gather(Sample_ID, Expression, -Gene) %>%
-  ggplot(aes(x = Group, y = Expression, fill = Group)) +
+# Merge count table and annotation data
+merged_data <- inner_join(count_table, annotation_data, by = "sample_id")
+
+# Plot boxplots for gene expression values per sample
+plot <- merged_data %>%
+  pivot_longer(cols = -c(sample_id, group), names_to = "gene", values_to = "expression_value") %>%
+  ggplot(aes(x = sample_id, y = expression_value, fill = group)) +
   geom_boxplot() +
-  xlab("Group") +
-  ylab("Gene Expression") +
-  ggtitle("Gene Expression Values per Sample") +
-  theme_minimal()
-```
+  labs(x = "Sample ID", y = "Expression Value", fill = "Group")
 
+# Display the plot
+plot
+```
+Please make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the appropriate file paths for your system.

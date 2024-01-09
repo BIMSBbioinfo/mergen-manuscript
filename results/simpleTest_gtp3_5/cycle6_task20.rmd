@@ -2,42 +2,49 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Find genes specific for each "group" in my annotation data  using statistical tests. Plot PCA only using "group" specific genes and color code PCA by "group" variable in my annotation data.
 
 response:
-The R code for accomplishing these tasks is as follows:
-
 ```
-# Load necessary libraries
+# Load required libraries
 library(readxl)
-library(DESeq2)
+library(dplyr)
+library(limma)
 library(ggplot2)
 
 # Read count table
-count_table <- as.matrix(read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE))
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
 annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Convert count table to DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ group)
+# Transpose the count table
+count_table <- t(count_table)
 
-# Perform statistical tests to find group-specific genes
-dds <- DESeq(dds)
-results <- results(dds, contrast = c("group", "groupB", "groupA"))
+# Set row names as gene names
+rownames(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
 
-# Filter out non-significant genes
-filtered_genes <- subset(results, padj < 0.05)
+# Set column names as sample ids
+colnames(count_table) <- annotation_data$sample_id
 
-# Get gene names of group-specific genes
-groupA_genes <- rownames(subset(filtered_genes, log2FoldChange > 0))
-groupB_genes <- rownames(subset(filtered_genes, log2FoldChange < 0))
+# Filter count table based on sample groups
+group_A_genes <- count_table[, annotation_data$group == "Group A"]
+group_B_genes <- count_table[, annotation_data$group == "Group B"]
+group_C_genes <- count_table[, annotation_data$group == "Group C"]
 
-# Plot PCA using group-specific genes
-pca_data <- plotPCA(dds, intgroup = "group", genes = c(groupA_genes, groupB_genes))
-ggplot(pca_data, aes(PC1, PC2, color = group)) + 
-  geom_point() + 
-  labs(color = "Group") +
-  theme_minimal()
+# Perform statistical tests to find group specific genes
+group_A_specific_genes <- rownames(count_table)[apply(group_A_genes, 1, function(x) t.test(x, group_B_genes)$p.value < 0.05)]
+group_B_specific_genes <- rownames(count_table)[apply(group_B_genes, 1, function(x) t.test(x, group_A_genes)$p.value < 0.05)]
+group_C_specific_genes <- rownames(count_table)[apply(group_C_genes, 1, function(x) t.test(x, group_A_genes)$p.value < 0.05)]
+
+# Create PCA plot using group specific genes
+group_specific_genes <- c(group_A_specific_genes, group_B_specific_genes, group_C_specific_genes)
+pca_data <- count_table[group_specific_genes, ]
+pca_result <- prcomp(t(pca_data))
+
+# Plot PCA with color coded groups
+pca_plot <- ggplot(as.data.frame(pca_result$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2") +
+  scale_color_discrete(name = "Group")
+print(pca_plot)
 ```
-
-Note: Make sure to install the necessary libraries (`readxl`, `DESeq2`, and `ggplot2`) before running the code. Also, replace the file paths in the `read_excel()` and `read.table()` functions with the actual paths to the files on your system.
+```

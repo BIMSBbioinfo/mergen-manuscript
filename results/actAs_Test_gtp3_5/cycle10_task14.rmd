@@ -3,41 +3,34 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the data and merge them into a single table using dbGapId information, return the number of columns.
 
 response:
-To merge the two datasets based on the dbGap ID information and return the number of columns, you can follow these steps using R:
-
-1. Read the data from the "metRmOlWithDbgapIdHeader.txt" file using the `read.table()` function and specify the appropriate delimiter (e.g., tab-delimited) if needed. Assign it to a variable, let's say `met_data`.
+To complete this task, you can use the R programming language and several packages including `data.table`, `readr`, and `dplyr`. Here is the code to read and merge the datasets:
 
 ```
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
-```
+# Load required packages
+library(data.table)
+library(readr)
+library(dplyr)
 
-2. Read the data from the "subjects.txt" file using the `read.table()` function, again specifying the delimiter if needed. Assign it to a variable, let's say `subjects_data`.
+# Read the CpG methylation dataset
+cpg_data <- fread("metRmOlWithDbgapIdHeader.txt")
 
-```
-subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
-```
+# Read the individuals dataset
+subjects_data <- read_delim("subjects.txt", delim = "\t")
 
-3. Merge the two datasets based on the dbGap ID using the `merge()` function. Specify the common column names in both datasets ('dbGap ID') and assign the merged data to a new variable, like `merged_data`.
+# Set the first row as column names in CpG methylation dataset
+colnames(cpg_data) <- cpg_data[1, ]
+cpg_data <- cpg_data[-1, ]
 
-```
-merged_data <- merge(subjects_data, met_data, by.x = "dbGap ID", by.y = "dbGapId")
-```
+# Merge the datasets based on the dbGap ID
+merged_data <- merge(cpg_data, subjects_data, by.x = "dbGapId", by.y = "dbGap ID")
 
-4. Return the number of columns in the merged dataset using the `ncol()` function.
-
-```
+# Get the number of columns in the merged dataset
 num_columns <- ncol(merged_data)
+
+# Print the number of columns
 num_columns
 ```
 
-Here's the complete code block:
+Make sure to replace the file names with the actual file path if they are not in the working directory.
 
-```
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
-subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
-merged_data <- merge(subjects_data, met_data, by.x = "dbGap ID", by.y = "dbGapId")
-num_columns <- ncol(merged_data)
-num_columns
-```
-
-Note: Make sure to adjust the file paths and delimiters according to your specific dataset.
+Note: The code assumes that the delimiter in the "subjects.txt" file is tab ("\t"). If it is a different delimiter, you can modify the `delim` argument in the `read_delim()` function accordingly.

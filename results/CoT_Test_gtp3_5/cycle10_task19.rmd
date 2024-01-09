@@ -2,82 +2,104 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To complete this task, we will use the R programming language and some commonly used packages for data analysis and visualization, such as `readxl`, `edgeR`, and `ggplot2`. 
+To complete this task, we will use the following libraries in R:
 
-Here are the step-by-step instructions to normalize counts, create PCA plots, and color code them by "group" and "LibrarySelection":
+- `readxl` for reading the count table from the Excel file
+- `limma` for normalizing the counts
+- `tidyverse` for data manipulation and plotting
+- `ggfortify` for PCA plot visualization
 
-Step 1: Load the required packages
-We need to load the necessary packages `readxl`, `edgeR`, and `ggplot2`.
+Here are the steps to accomplish the task:
+
+1. Install and load the required libraries:
 
 ```
+
+
 library(readxl)
-library(edgeR)
-library(ggplot2)
+library(limma)
+library(tidyverse)
+library(ggfortify)
 ```
 
-Step 2: Read the count table and annotation data
-Read the count table from the "Supplementary_Table_1_exp.xlsx" file and the annotation data from the "SRP021193.colData.tsv" file.
+2. Read the count table from the Excel file:
 
 ```
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 ```
 
-Step 3: Normalize counts using the TMM method
-We will use the edgeR package to normalize the counts using the Trimmed Mean of M-values (TMM) method.
+3. Read the annotation data:
 
 ```
-# Convert count table to DGEList object
-dge <- DGEList(counts = count_table[, -1], genes = count_table[, 1])
-
-# Calculate common dispersion
-dge <- estimateCommonDisp(dge)
-
-# Estimate tagwise dispersion
-dge <- estimateTagwiseDisp(dge)
-
-# Normalize counts using the TMM method
-dge <- calcNormFactors(dge)
-norm_counts <- cpm(dge, log = TRUE)
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 ```
 
-Step 4: Merge the normalized counts with the annotation data
-We need to merge the normalized counts with the annotation data based on the sample ids.
+4. Normalize the counts using the `voom` function from the `limma` package:
 
 ```
-# Get the sample ids from the normalized counts
-sample_ids <- colnames(norm_counts)
-
-# Merge counts with annotation data
-merged_data <- merge(annotation_data, norm_counts, by.x = "sample_id", by.y = "row.names")
+normalized_counts <- voom(count_table)
 ```
 
-Step 5: Perform PCA on normalized counts
-We will compute the principal components on the normalized counts.
+5. Join the normalized counts with the annotation data by matching the sample IDs:
 
 ```
-# Extract normalized counts
-normalized_counts <- merged_data[, -(1:5)]
-
-# Perform PCA on normalized counts
-pca <- prcomp(t(normalized_counts), scale. = TRUE)
+joined_data <- normalized_counts %>%
+  rownames_to_column(var = "gene") %>%
+  inner_join(annotation_data, by = c("gene" = "Sample_ID"))
 ```
 
-Step 6: Create the PCA plots
-We will create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
+6. Create a PCA plot color-coded by the "group" column:
 
 ```
-# Create PCA plot - color coded by "group"
-ggplot(data = merged_data, aes(x = pca$x[, 1], y = pca$x[, 2], color = group)) +
+pca_group <- prcomp(joined_data[, -c(1:5)], scale = TRUE)
+
+ggplot(pca_group$x, aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
-  ggtitle("PCA Plot - Color coded by Group")
-
-# Create PCA plot - color coded by "LibrarySelection"
-ggplot(data = merged_data, aes(x = pca$x[, 1], y = pca$x[, 2], color = LibrarySelection)) +
-  geom_point() +
-  ggtitle("PCA Plot - Color coded by Library Selection")
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot (Color-coded by group)")
 ```
 
-That's it! The provided code will help you normalize counts, create two PCA plots, and color code them by "group" and "LibrarySelection" using the provided count table and annotation data.
+7. Create a PCA plot color-coded by the "LibrarySelection" column:
 
-Note: Make sure to adjust the file paths in the `read_excel()` and `read.table()` functions to match the location of your files.
+```
+pca_library <- prcomp(joined_data[, -c(1:5)], scale = TRUE)
+
+ggplot(pca_library$x, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot (Color-coded by LibrarySelection)")
+```
+
+Code: 
+
+```
+
+
+library(readxl)
+library(limma)
+library(tidyverse)
+library(ggfortify)
+
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read_tsv("SRP021193.colData.tsv")
+
+normalized_counts <- voom(count_table)
+
+joined_data <- normalized_counts %>%
+  rownames_to_column(var = "gene") %>%
+  inner_join(annotation_data, by = c("gene" = "Sample_ID"))
+
+pca_group <- prcomp(joined_data[, -c(1:5)], scale = TRUE)
+
+ggplot(pca_group$x, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", title = "PCA Plot (Color-coded by group)")
+
+pca_library <- prcomp(joined_data[, -c(1:5)], scale = TRUE)
+
+ggplot(pca_library$x, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", title = "PCA Plot (Color-coded by LibrarySelection)")
+```

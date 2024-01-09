@@ -2,45 +2,92 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To complete this task, we will follow these steps:
+To complete this task, we will use the R programming language and the `DESeq2` package for filtering genes based on variability and clustering analysis. Here's the step-by-step procedure:
 
-1. Read the gene expression data from the "leukemiaExp.txt" file.
-2. Calculate the variance of each gene across all samples.
-3. Sort the genes based on their variance in descending order.
-4. Select the top 1000 genes with the highest variance.
-5. Perform clustering on the samples using the selected genes.
-6. Assign each sample to a cluster.
-7. Extract cluster-specific genes for each cluster.
-
-Here's the code to accomplish these tasks:
-
+1. Read the gene expression data from the file "leukemiaExp.txt" and store it in a variable called `expression_data`.
 ```
-# Step 1: Read the gene expression data
-gene_data <- read.delim("leukemiaExp.txt", sep = "\t")
+expression_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+```
+Make sure that the gene names are set as row names and the first row contains the sample names.
 
-# Step 2: Calculate variance of each gene
-gene_variances <- apply(gene_data[, -1], 1, var)
+2. Filter genes based on their variability to retain the top 1000 most variable genes.
+```
+library(DESeq2)
 
-# Step 3: Sort genes based on variance
-sorted_genes <- gene_data[order(gene_variances, decreasing = TRUE), ]
+# Convert the expression data into a matrix object
+expression_mtx <- as.matrix(expression_data)
 
-# Step 4: Select top 1000 genes with highest variance
-top_var_genes <- sorted_genes[1:1000, ]
+# Create a DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = expression_mtx, colData = NULL, design = ~ 1)
 
-# Step 5: Perform clustering on the samples
+# Estimate size factors
+dds <- estimateSizeFactors(dds)
+
+# Filter genes based on variability
+filtered_genes <- rownames(expression_mtx)[rowSds(expression_mtx) > quantile(rowSds(expression_mtx), probs = 1 - 1000/nrow(expression_mtx))]
+
+# Subset the expression data to retain only the filtered genes
+filtered_expression_data <- expression_data[filtered_genes, ]
+```
+
+3. Perform clustering analysis on the filtered expression data to cluster the samples.
+```
+# Preprocess the filtered expression data
+preprocessed_expression_data <- log2(counts(filtered_expression_data) + 1)
+
+# Perform hierarchical clustering using Euclidean distance
+dist_matrix <- dist(t(preprocessed_expression_data))
+hclust_result <- hclust(dist_matrix, method = "complete")
+
+# Determine the optimal number of clusters using the elbow method
+elbow_data <- data.frame(k = 1:10, wss = rep(0, 10))
+for (i in 1:10) {
+  kmeans_result <- kmeans(preprocessed_expression_data, centers = i, nstart = 10)
+  elbow_data[i, "wss"] <- sum(kmeans_result$withinss)
+}
+elbow_plot <- ggplot(elbow_data, aes(x = k, y = wss)) +
+  geom_line() +
+  geom_point(size = 3) +
+  labs(x = "Number of Clusters", y = "Within-cluster Sum of Squares") +
+  theme_minimal()
+elbow_plot
+```
+Based on the elbow plot, select the appropriate number of clusters. Let's assume we choose `num_clusters` as the number of clusters.
+
+4. Extract cluster-specific genes for each cluster.
+```
 library(cluster)
-set.seed(123)  # For reproducibility
-cluster_results <- kmeans(top_var_genes[, -1], centers = 5)  # Change the value of 'centers' as desired
 
-# Step 6: Assign each sample to a cluster
-cluster_assignments <- cluster_results$cluster
+# Perform k-means clustering with the chosen number of clusters
+kmeans_result <- kmeans(preprocessed_expression_data, centers = num_clusters, nstart = 25)
 
-# Step 7: Extract cluster-specific genes for each cluster
-cluster_specific_genes <- lapply(1:max(cluster_assignments), function(cluster) {
-  cluster_samples <- which(cluster_assignments == cluster)
-  cluster_genes <- top_var_genes[cluster_samples, ]
-  return(cluster_genes)
-})
+# Get the cluster assignments for each sample
+cluster_assignments <- kmeans_result$cluster
+
+# Create an empty list to store cluster-specific genes
+cluster_specific_genes <- vector("list", length = num_clusters)
+
+# Iterate over each cluster
+for (cluster_id in 1:num_clusters) {
+  # Get the sample indices belonging to the current cluster
+  samples_in_cluster <- which(cluster_assignments == cluster_id)
+  
+  # Subset the expression data to retain only the samples in the current cluster
+  subset_expression_data <- filtered_expression_data[, samples_in_cluster]
+  
+  # Identify the cluster-specific genes using differential expression analysis
+  subset_dds <- DESeqDataSetFromMatrix(countData = subset_expression_data, colData = NULL, design = ~ 1)
+  subset_dds <- estimateSizeFactors(subset_dds)
+  subset_dds <- DESeq(subset_dds)
+  results <- results(subset_dds)
+  cluster_specific_genes[[cluster_id]] <- rownames(results)[padj(results) < 0.05]
+}
+
+# Print the cluster-specific genes for each cluster
+for (cluster_id in 1:num_clusters) {
+  cat("Cluster", cluster_id, "specific genes:\n")
+  cat(cluster_specific_genes[[cluster_id]], "\n")
+}
 ```
 
-Make sure to replace `'leukemiaExp.txt'` with the correct file path if needed. Also, adjust the number of `centers` in the `kmeans` function based on the desired number of clusters.
+This code will filter the genes based on their variability, perform clustering analysis on the filtered genes, and then extract cluster-specific genes for each cluster.

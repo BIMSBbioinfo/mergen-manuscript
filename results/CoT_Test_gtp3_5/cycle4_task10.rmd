@@ -4,66 +4,128 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 To filter genes based on their variability and retain the most variable top 1000 genes, we can follow these steps:
 
-Step 1: Read the gene expression data from the file "leukemiaExp.txt" into R.
+Step 1: Read the gene expression data from the file "leukemiaExp.txt" and store it in a data frame.
 
 ```
 # Read the gene expression data
-gene_exp <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE)
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 ```
 
-Step 2: Calculate the variability of genes using the coefficient of variation (CV). CV measures the relative variability of a gene's expression across samples.
+Step 2: Calculate the variance of each gene across samples.
 
 ```
-# Calculate the coefficient of variation for each gene
-gene_cv <- apply(gene_exp[, -1], 1, function(x) sd(x) / mean(x))
-
-# Sort genes based on their CV in descending order
-sorted_genes <- gene_exp[order(gene_cv, decreasing = TRUE), ]
+# Calculate the variance of each gene
+gene_var <- apply(gene_exp, 1, var)
 ```
 
-Step 3: Retain the top 1000 most variable genes.
+Step 3: Sort the genes based on their variance in descending order.
 
 ```
-# Filter and retain the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000, ]
+# Sort genes based on variance
+sorted_genes <- sort(gene_var, decreasing = TRUE)
 ```
 
-Step 4: Cluster the samples based on the expression profiles of the retained genes.
+Step 4: Select the top 1000 genes with the highest variance.
 
 ```
-# Transpose the data frame to have samples as rows and genes as columns
-gene_exp_t <- t(top_1000_genes[, -1])
-
-# Perform clustering on the samples using hierarchical clustering
-clusters <- hclust(dist(gene_exp_t))
-
-# Cut the dendrogram to obtain clusters
-cut_clusters <- cutree(clusters, k = <number_of_clusters>)
+# Select the top 1000 genes
+top_1000_genes <- names(sorted_genes)[1:1000]
 ```
 
-Step 5: Extract cluster-specific genes for each cluster.
+Now, we can proceed to cluster the samples based on these variable genes and extract cluster-specific genes for each cluster. We will use hierarchical clustering for this task.
+
+Step 5: Perform hierarchical clustering on the selected genes.
 
 ```
-# Create a list to store the cluster-specific genes
-cluster_specific_genes <- list()
+# Subset the data for the top 1000 genes
+gene_exp_subset <- gene_exp[top_1000_genes, ]
 
-# Iterate through each cluster
-for (i in 1:max(cut_clusters)) {
-  # Subset gene expression data for samples in the current cluster
-  cluster_samples <- gene_exp_t[cut_clusters == i, ]
-  
-  # Calculate the standard deviation of gene expression for each gene in the cluster
-  gene_sd <- apply(cluster_samples, 2, sd)
-  
-  # Sort genes based on their standard deviation in descending order
-  sorted_cluster_genes <- data.frame(gene_names = rownames(cluster_samples), gene_sd)
-  sorted_cluster_genes <- sorted_cluster_genes[order(gene_sd, decreasing = TRUE), ]
-  
-  # Retain the top 100 cluster-specific genes
-  cluster_specific_genes[[i]] <- sorted_cluster_genes[1:100, "gene_names"]
+# Perform hierarchical clustering
+hc <- hclust(dist(gene_exp_subset))
+```
+
+Step 6: Determine the number of clusters.
+
+```
+# Determine the number of clusters using the elbow method
+wss <- (nrow(gene_exp_subset) - 1) * sum(apply(gene_exp_subset, 2, var))
+for (i in 2:10) {
+  wss[i] <- sum(kmeans(gene_exp_subset, centers = i)$withinss)
 }
 ```
 
-The variable `cluster_specific_genes` is a list where each element corresponds to a cluster and contains the gene names of the top 100 cluster-specific genes for that cluster. You can access the genes for a specific cluster using `cluster_specific_genes[[cluster_number]]`.
+Step 7: Choose the optimal number of clusters based on the elbow method.
 
-Note: In step 4, replace `<number_of_clusters>` with the number of clusters you want to identify. Also, make sure to have the required R packages installed, such as `stats`, for performing clustering.
+```
+# Plot the within-cluster sum of squares
+plot(1:10, wss, type = "b", xlab = "Number of Clusters", ylab = "Within-cluster Sum of Squares")
+```
+
+Based on the plot, choose the number of clusters where the decrease in within-cluster sum of squares becomes less significant. Let's assume we choose 4 clusters.
+
+Step 8: Perform K-means clustering with the chosen number of clusters.
+
+```
+# Perform K-means clustering with 4 clusters
+kmeans_clusters <- kmeans(gene_exp_subset, centers = 4)
+```
+
+Step 9: Extract cluster-specific genes for each cluster.
+
+```
+# Create a data frame to store cluster-specific genes
+cluster_specific_genes <- data.frame(Cluster = kmeans_clusters$cluster, Gene = row.names(gene_exp_subset))
+
+# Group the genes by cluster and select the most variable gene within each cluster
+library(dplyr)
+cluster_specific_genes <- cluster_specific_genes %>%
+  group_by(Cluster) %>%
+  mutate(Variability = var(gene_exp_subset[Gene, ])) %>%
+  slice(which.max(Variability))
+```
+
+The variable "cluster_specific_genes" now contains the cluster-specific genes for each cluster, where the most variable gene within each cluster is selected.
+
+Full code for reference:
+
+```
+# Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Calculate the variance of each gene
+gene_var <- apply(gene_exp, 1, var)
+
+# Sort genes based on variance
+sorted_genes <- sort(gene_var, decreasing = TRUE)
+
+# Select the top 1000 genes
+top_1000_genes <- names(sorted_genes)[1:1000]
+
+# Subset the data for the top 1000 genes
+gene_exp_subset <- gene_exp[top_1000_genes, ]
+
+# Perform hierarchical clustering
+hc <- hclust(dist(gene_exp_subset))
+
+# Determine the number of clusters using the elbow method
+wss <- (nrow(gene_exp_subset) - 1) * sum(apply(gene_exp_subset, 2, var))
+for (i in 2:10) {
+  wss[i] <- sum(kmeans(gene_exp_subset, centers = i)$withinss)
+}
+
+# Plot the within-cluster sum of squares
+plot(1:10, wss, type = "b", xlab = "Number of Clusters", ylab = "Within-cluster Sum of Squares")
+
+# Perform K-means clustering with 4 clusters
+kmeans_clusters <- kmeans(gene_exp_subset, centers = 4)
+
+# Create a data frame to store cluster-specific genes
+cluster_specific_genes <- data.frame(Cluster = kmeans_clusters$cluster, Gene = row.names(gene_exp_subset))
+
+# Group the genes by cluster and select the most variable gene within each cluster
+library(dplyr)
+cluster_specific_genes <- cluster_specific_genes %>%
+  group_by(Cluster) %>%
+  mutate(Variability = var(gene_exp_subset[Gene, ])) %>%
+  slice(which.max(Variability))
+```

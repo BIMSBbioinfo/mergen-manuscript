@@ -2,91 +2,116 @@ prompt:
 We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Build a predictive model to predict Age from methylation values, and display most important variables for the predictive models. 
 
 response:
-To build a predictive model to predict Age from methylation values, we need to perform the following steps:
+To build a predictive model to predict Age from methylation values, we can use a machine learning algorithm called Random Forest regression. Random Forest is effective for feature selection and it can also handle non-linear relationships between predictors and the target variable.
 
-1. Import the data: Load the "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" files into R and assign them to appropriate variables.
+Here are the steps to perform the task:
 
-```
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subject_data <- read.table("subjects.txt", header = TRUE)
-```
-
-2. Merge the data: Merge the two datasets based on the matching DBGap ID column.
+1. Read the "metRmOlWithDbgapIdHeader.txt" file and the "subjects.txt" file.
 
 ```
-merged_data <- merge(met_data, subject_data, by.x = "DBGapId", by.y = "dbGap ID")
+# Read the methylation dataset
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1, sep = "\t")
+
+# Read the subjects dataset
+subjects <- read.table("subjects.txt", header = TRUE)
 ```
 
-3. Prepare the data: Extract the methylation values and the Age column from the merged dataset. Convert the Age column to numeric if needed.
+2. Merge the two datasets based on the matching dbGap ID.
 
 ```
-methylation_values <- merged_data[, 2:ncol(merged_data)]
-age <- as.numeric(merged_data$Age)
+# Merge the datasets based on dbGap ID
+merged_data <- merge(subjects, methylation, by.x = "dbGap ID", by.y = "row.names")
 ```
 
-4. Split the data: Split the data into training and testing sets. We will use 80% of the data for training the model and 20% for testing.
+3. Split the merged data into training and testing sets.
 
 ```
-set.seed(123)  # Set seed for reproducibility
-train_indices <- sample(1:nrow(merged_data), 0.8*nrow(merged_data))
-train_data <- methylation_values[train_indices, ]
-train_labels <- age[train_indices]
-test_data <- methylation_values[-train_indices, ]
-test_labels <- age[-train_indices]
+# Split the data into training and testing sets
+set.seed(123)  # for reproducibility
+train_indices <- sample(nrow(merged_data), nrow(merged_data) * 0.8)  # randomly select 80% for training
+train_data <- merged_data[train_indices, ]
+test_data <- merged_data[-train_indices, ]
 ```
 
-5. Build the predictive model: Train a predictive model using the training data. Here, we will use a linear regression model as an example.
+4. Build a Random Forest regression model using the training data.
 
 ```
-model <- lm(train_labels ~ ., data = train_data)
+# Load the randomForest package
+library(randomForest)
+
+# Create a formula for the model
+formula <- Age ~ .
+
+# Build the Random Forest model
+rf_model <- randomForest(formula, data = train_data)
 ```
 
-6. Evaluate the model: Predict the labels for the test data using the trained model and calculate the performance metrics.
+5. Predict Age using the test data and evaluate the performance of the model.
 
 ```
-predictions <- predict(model, newdata = test_data)
+# Predict Age using the test data
+predictions <- predict(rf_model, test_data)
+
+# Calculate the mean squared error (MSE)
+mse <- mean((predictions - test_data$Age)^2)
+mse
 ```
 
-7. Display the most important variables: If we want to assess the importance of each variable in the predictive model, we can use methods like feature selection or variable importance plots. Here's an example of using the `caret` package to calculate variable importance using the repetitive cross-validation (rfcv) method:
+6. Determine the most important variables for the predictive model.
 
 ```
-library(caret)
-importance <- varImp(rfFuncs, train_data, train_labels)
-print(importance)
+# Get the variable importance
+importance <- importance(rf_model)
+
+# Sort the importance values in descending order
+sorted_importance <- importance[order(importance, decreasing = TRUE)]
+
+# Display the top 10 most important variables
+top_10_importance <- sorted_importance[1:10]
+top_10_importance
 ```
 
-This will display the importance of each variable in the predictive model.
-
-Complete code:
+Here is the complete code block:
 
 ```
-# Step 1: Import the data
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subject_data <- read.table("subjects.txt", header = TRUE)
+# Read the methylation dataset
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Step 2: Merge the data
-merged_data <- merge(met_data, subject_data, by.x = "DBGapId", by.y = "dbGap ID")
+# Read the subjects dataset
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Step 3: Prepare the data
-methylation_values <- merged_data[, 2:ncol(merged_data)]
-age <- as.numeric(merged_data$Age)
+# Merge the datasets based on dbGap ID
+merged_data <- merge(subjects, methylation, by.x = "dbGap ID", by.y = "row.names")
 
-# Step 4: Split the data
-set.seed(123)
-train_indices <- sample(1:nrow(merged_data), 0.8*nrow(merged_data))
-train_data <- methylation_values[train_indices, ]
-train_labels <- age[train_indices]
-test_data <- methylation_values[-train_indices, ]
-test_labels <- age[-train_indices]
+# Split the data into training and testing sets
+set.seed(123)  # for reproducibility
+train_indices <- sample(nrow(merged_data), nrow(merged_data) * 0.8)  # randomly select 80% for training
+train_data <- merged_data[train_indices, ]
+test_data <- merged_data[-train_indices, ]
 
-# Step 5: Build the predictive model
-model <- lm(train_labels ~ ., data = train_data)
+# Load the randomForest package
+library(randomForest)
 
-# Step 6: Evaluate the model
-predictions <- predict(model, newdata = test_data)
+# Create a formula for the model
+formula <- Age ~ .
 
-# Step 7: Display the most important variables
-library(caret)
-importance <- varImp(rfFuncs, train_data, train_labels)
-print(importance)
+# Build the Random Forest model
+rf_model <- randomForest(formula, data = train_data)
+
+# Predict Age using the test data
+predictions <- predict(rf_model, test_data)
+
+# Calculate the mean squared error (MSE)
+mse <- mean((predictions - test_data$Age)^2)
+mse
+
+# Get the variable importance
+importance <- importance(rf_model)
+
+# Sort the importance values in descending order
+sorted_importance <- importance[order(importance, decreasing = TRUE)]
+
+# Display the top 10 most important variables
+top_10_importance <- sorted_importance[1:10]
+top_10_importance
 ```

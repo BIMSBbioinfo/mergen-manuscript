@@ -2,44 +2,32 @@ prompt:
 We have the following datasets. One of the dataset contains CpG methylation values per CpG and per individual as a table this is contained in the “metRmOlWithDbgapIdHeader.txt” file. Each column is an individual represented by a DBGapId, which is included as the first row. Each row is a CpG represented by "CpG_id", values in the table are methylation values. Another data set is contained in “subjects.txt”. This file has the information on the individuals. Most important feature for us here is the "Age" column. The "dbGap ID" column (second column) in this table should match the first row of the "metRmOlWithDbgapIdHeader.txt", and they represent the same individuals. Read the data and merge them into a single table using dbGapId information. Plot a scatter plot of CpG methylation values for the two oldest subjects in the samples.
 
 response:
-To complete this task, we will use the R programming language and several packages, including readr, dplyr, and ggplot2.
+To complete this task, we will follow these steps:
 
-First, let's read the data from the files "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" and merge them into a single table using the dbGapId information. Assuming the files are in the same directory as the R script, we can use the following code:
+1. Read the "metRmOlWithDbgapIdHeader.txt" file and store it in a data frame.
+2. Read the "subjects.txt" file and store it in a data frame.
+3. Merge the two data frames using the "dbGap ID" column.
+4. Subset the merged data frame to only include the two oldest subjects.
+5. Plot a scatter plot of CpG methylation values for the two oldest subjects.
 
-```
-library(readr)
-library(dplyr)
-
-# Read the methylation data
-methylation_data <- read_delim("metRmOlWithDbgapIdHeader.txt", delim = "\t")
-
-# Read the subject data
-subject_data <- read_delim("subjects.txt", delim = "\t")
-
-# Merge the two datasets based on dbGapId
-merged_data <- inner_join(methylation_data, subject_data, by = c("dbGap ID" = "dbGap ID"))
-
-# Print the merged dataset
-merged_data
-```
-
-Next, let's plot a scatter plot of CpG methylation values for the two oldest subjects in the samples. We will use the ggplot2 package for this. Assuming the merged dataset is stored in the variable "merged_data", we can use the following code:
+Here's the code to accomplish this task:
 
 ```
-library(ggplot2)
+# Step 1: Read the "metRmOlWithDbgapIdHeader.txt" file
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Filter the data for the two oldest subjects
-oldest_subjects <- merged_data %>% 
-  arrange(desc(Age)) %>% 
-  slice(1:2)
+# Step 2: Read the "subjects.txt" file
+subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Plot a scatter plot of CpG methylation values for the two oldest subjects
-ggplot(oldest_subjects, aes(x = CpG_id, y = value)) +
-  geom_point() +
-  labs(x = "CpG ID", y = "Methylation Value") +
-  theme_minimal()
+# Step 3: Merge the two data frames using the "dbGap ID" column
+merged_data <- merge(methylation_data, subjects_data, by.x = "dbGapId", by.y = "dbGap ID")
+
+# Step 4: Subset the merged data frame to only include the two oldest subjects
+oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
+
+# Step 5: Plot a scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects[, -c(1, ncol(oldest_subjects))], pch = 16, xlab = "CpGs", ylab = "Methylation Values", main = "CpG Methylation Values")
+legend("topright", c(oldest_subjects$Subject), pch = 16, col = "black")
 ```
 
-This will generate a scatter plot where the x-axis represents the CpG ID and the y-axis represents the methylation value. Each point on the plot represents a CpG methylation value for one of the two oldest subjects in the samples.
-
-Please note that you may need to adjust the code based on the specific formatting of your data files.
+Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file names. Additionally, modify the arguments in the plot function according to your data to properly label the x and y-axis, as well as the plot title.

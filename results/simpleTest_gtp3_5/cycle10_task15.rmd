@@ -3,36 +3,20 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read metRmOlWithDbgapIdHeader.txt file
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the datasets
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Remove the first row and store it as dbGapId
-dbGapId <- methylation_data[1, ]
-methylation_data <- methylation_data[-1, ]
+# Merge the data using dbGap ID
+merged_data <- merge(met_data, subjects, by.x = "dbGap ID", by.y = "dbGap ID", all = TRUE)
 
-# Transpose the methylation data table
-methylation_data <- t(methylation_data)
-
-# Set column names as CpG_id
-colnames(methylation_data) <- methylation_data[1, ]
-methylation_data <- methylation_data[-1, ]
-
-# Read subjects.txt file
-subjects_data <- read.table("subjects.txt", header = TRUE)
-
-# Merge the two datasets using dbGapId information
-merged_data <- merge(methylation_data, subjects_data, by.x = "dbGapId", by.y = "dbGap ID")
-
-# Convert Age column to numeric
-merged_data$Age <- as.numeric(merged_data$Age)
-
-# Get the two oldest subjects
+# Find the two oldest subjects
 oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
 
-# Plot scatter plot of CpG methylation values for the two oldest subjects
-plot(oldest_subjects$`CpG_id`, oldest_subjects[, 2:ncol(oldest_subjects)], 
-     xlab = "CpG_id", ylab = "Methylation values", 
-     main = "Scatter plot of CpG methylation values for the two oldest subjects",
-     col = 2:length(oldest_subjects), pch = 16)
+# Create scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects$CpG_id, oldest_subjects$Methylation, 
+     main = "Scatter Plot of CpG Methylation for Two Oldest Subjects",
+     xlab = "CpG ID", ylab = "Methylation Value", 
+     pch = 16, col = "blue")
 ```
-Note: Make sure to replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the correct file names or file paths in the code above.
+Note: Replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file paths or names. Also, modify the column names used in the `merge` and `plot` functions if they are different in your datasets.

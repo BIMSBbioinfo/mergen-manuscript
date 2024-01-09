@@ -3,30 +3,30 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables and count the number of rows and columns for each, we can use the `read.table()` function in R along with the `nrow()` and `ncol()` functions to count the rows and columns, respectively.
+To count the number of rows and columns in each dataset, we can use the `read.table()` function in R to read the datasets into data frames. We will then use the `nrow()` and `ncol()` functions to count the number of rows and columns in each data frame.
 
-Here's the code:
+Here's the code to accomplish this task:
 
 ```
-# Read the first table containing methylation values
-methylation_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the "metRmOlWithDbgapIdHeader.txt" file into a data frame
+met_df <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Count the number of rows and columns in the methylation table
-num_rows_methylation <- nrow(methylation_table)
-num_cols_methylation <- ncol(methylation_table)
+# Read the "subjects.txt" file into a data frame
+subjects_df <- read.table("subjects.txt", header = TRUE)
 
-# Read the second table containing individual information
-individual_info <- read.table("subjects.txt", header = TRUE)
+# Count the number of rows and columns in the met_df data frame
+met_rows <- nrow(met_df)
+met_cols <- ncol(met_df)
 
-# Count the number of rows and columns in the individual information table
-num_rows_individual <- nrow(individual_info)
-num_cols_individual <- ncol(individual_info)
+# Count the number of rows and columns in the subjects_df data frame
+subjects_rows <- nrow(subjects_df)
+subjects_cols <- ncol(subjects_df)
 
-# Print the number of rows and columns for each table
-cat("Number of rows in methylation table:", num_rows_methylation, "\n")
-cat("Number of columns in methylation table:", num_cols_methylation, "\n")
-cat("Number of rows in individual information table:", num_rows_individual, "\n")
-cat("Number of columns in individual information table:", num_cols_individual, "\n")
+# Print the results
+print(paste("met_df has", met_rows, "rows and", met_cols, "columns."))
+print(paste("subjects_df has", subjects_rows, "rows and", subjects_cols, "columns."))
 ```
 
-This code will read the two tables and then count the number of rows and columns in each table. The resulting counts will be printed as output.
+Make sure to replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file names of your datasets.
+
+The code will read the datasets into data frames and then count the number of rows and columns in each data frame. The results will be printed to the console.

@@ -3,22 +3,21 @@ I have the following gene expression data, "leukemiaExp.txt".The file is tab sep
 
 response:
 ```
-# Read the expression data from the file
-expression_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Read the gene expression data
+expression_data <- read.delim("leukemiaExp.txt", sep="\t")
 
-# Calculate the variability of each gene
-gene_variability <- apply(expression_data, 1, var)
+# Calculate the variance of each gene
+gene_variability <- apply(expression_data[, -1], 1, var)
 
-# Sort the gene variability in descending order
-sorted_gene_variability <- sort(gene_variability, decreasing=TRUE)
+# Sort the genes based on their variance
+sorted_genes <- order(gene_variability, decreasing = TRUE)
 
-# Select the top 1000 genes with the highest variability
-top_1000_genes <- head(names(sorted_gene_variability), 1000)
+# Filter the top 1000 most variable genes
+filtered_genes <- sorted_genes[1:1000]
 
-# Filter the expression data to retain only the top 1000 genes
-filtered_expression_data <- expression_data[top_1000_genes, ]
+# Create a new data frame with the filtered genes
+filtered_expression_data <- expression_data[filtered_genes, ]
 
-# Print the filtered expression data
-filtered_expression_data
+# Print the filtered data
+print(filtered_expression_data)
 ```
-Note: Make sure to specify the correct file path in the `read.table` function.

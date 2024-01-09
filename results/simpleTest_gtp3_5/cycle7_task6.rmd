@@ -4,20 +4,24 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Check the number of columns (samples)
-num_samples <- ncol(data)
+# Check the number of samples
+num_samples <- ncol(gene_data)
 
-# Check if there are more than 500 samples
+# If there are more than 500 samples, randomly sample 500 samples
 if (num_samples > 500) {
-  # Randomly sample 500 samples
-  sampled_data <- data[, sample(num_samples, 500)]
+  # Set the seed for reproducibility
+  set.seed(123)
+  
+  # Randomly select 500 sample indices
+  sample_indices <- sample(num_samples, 500)
+  
+  # Subset the gene expression data based on the randomly selected sample indices
+  gene_data_subset <- gene_data[, sample_indices]
 } else {
-  # If there are less than or equal to 500 samples, use the original data
-  sampled_data <- data
+  # If there are less than or equal to 500 samples, keep the original data
+  gene_data_subset <- gene_data
 }
-
-# View the sampled data
-sampled_data
 ```
+Note: Replace "leukemiaExp.txt" with the actual file name and update the separator (sep argument) if necessary.

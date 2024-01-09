@@ -3,49 +3,52 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
 library(readxl)
 library(DESeq2)
 library(ggplot2)
-library(sva)
-library(reshape2)
+library(dplyr)
+library(svglite)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
+# Read annotation data
 annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Transpose the count table to have genes as columns and samples as rows
-count_table <- t(count_table)
+# Set gene names as row names in count table
+gene_names <- count_table[,1]
+count_table <- count_table[,-1]
+rownames(count_table) <- gene_names
 
-# Normalize the counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ 1)
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~1)
 dds <- DESeq(dds)
+norm_counts <- counts(dds, normalized = TRUE)
 
-# Extract normalized counts
-normalized_counts <- counts(dds, normalized = TRUE)
+# Perform PCA with samples color coded by "group"
+pca_group <- prcomp(t(norm_counts))
+group_colors <- annotation_data$group
+pca_plot_group <- ggplot(data = data.frame(pca_group$x), aes(x = PC1, y = PC2, color = group_colors)) + 
+  geom_point() +
+  labs(title = "PCA plot of samples (color coded by 'group')")
 
-# Principal Component Analysis (PCA) plot by group
-df_group <- cbind(normalized_counts, group = annotation_data$group)
-df_group_m <- melt(df_group, id.vars = "group")
-pca_group <- prcomp(t(df_group_m[, -1]))
-pc_group <- as.data.frame(pca_group$x[, 1:2])
-pc_group$group <- df_group_m[, "group"]
-ggplot(pc_group, aes(x = PC1, y = PC2, color = group)) + 
-  geom_point() + 
-  labs(title = "PCA Plot by Group")
+# Perform PCA with samples color coded by "LibrarySelection"
+pca_libraryselection <- prcomp(t(norm_counts))
+libraryselection_colors <- annotation_data$LibrarySelection
+pca_plot_libraryselection <- ggplot(data = data.frame(pca_libraryselection$x), aes(x = PC1, y = PC2, color = libraryselection_colors)) + 
+  geom_point() +
+  labs(title = "PCA plot of samples (color coded by 'LibrarySelection')")
 
-# Principal Component Analysis (PCA) plot by LibrarySelection
-df_library <- cbind(normalized_counts, LibrarySelection = annotation_data$LibrarySelection)
-df_library_m <- melt(df_library, id.vars = "LibrarySelection")
-pca_library <- prcomp(t(df_library_m[, -1]))
-pc_library <- as.data.frame(pca_library$x[, 1:2])
-pc_library$LibrarySelection <- df_library_m[, "LibrarySelection"]
-ggplot(pc_library, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
-  geom_point() + 
-  labs(title = "PCA Plot by LibrarySelection")
-}
+# Save the plots as SVG files
+svg(file = "pca_plot_group.svg")
+print(pca_plot_group)
+dev.off()
+
+svg(file = "pca_plot_libraryselection.svg")
+print(pca_plot_libraryselection)
+dev.off()
 ```
+```
+
+Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file names and paths.

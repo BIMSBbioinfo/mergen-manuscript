@@ -3,36 +3,19 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load necessary libraries
-library(dplyr)
-library(ggplot2)
+# Read the metRmOlWithDbgapIdHeader.txt file
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Read the data from metRmOlWithDbgapIdHeader.txt
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the subjects.txt file
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Read the data from subjects.txt
-subject_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Merge the two datasets based on dbGap ID
+merged_data <- merge(met_data, subjects_data, by.x = "dbGap ID", by.y = "dbGap ID")
 
-# Extract the two oldest subjects based on Age
-oldest_subjects <- subject_data %>%
-  arrange(desc(Age)) %>%
-  head(2)
+# Subset the data to include only the two oldest subjects
+oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
 
-# Select the columns with dbGap ID and corresponding methylation values for the two oldest subjects
-merge_data <- met_data %>%
-  select(1, oldest_subjects$`dbGap ID`)
-
-# Reshape the data to create a single table
-merged_table <- gather(merge_data, dbGapId, Methylation, -CpG_id)
-
-# Merge the subject information based on dbGap ID
-merged_table <- merge(merged_table, subject_data, by.x = "dbGapId", by.y = "dbGap ID")
-
-# Plot the scatter plot
-ggplot(merged_table, aes(x = Age, y = Methylation)) +
-  geom_point() +
-  labs(title = "Scatter plot of CpG Methylation for the two oldest subjects",
-       x = "Age",
-       y = "Methylation")
+# Plot a scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects[,1], oldest_subjects[,2], pch = 16, xlab = "CpG Methylation Values", ylab = "CpG Methylation Values")
 ```
 

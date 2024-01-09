@@ -3,28 +3,18 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Load the gene expression data
+gene_data <- read.delim("leukemiaExp.txt", sep = "\t")
 
-# Calculate the variance of each gene
-variances <- apply(data, 1, var)
+# Calculate the variability of each gene
+gene_var <- apply(gene_data[, -1], 1, var)
 
-# Sort the genes based on their variance
-sorted_genes <- names(variances)[order(variances, decreasing=TRUE)]
+# Get the top 1000 most variable genes
+top_genes <- head(order(gene_var, decreasing = TRUE), 1000)
 
-# Select the top 1000 most variable genes
-selected_genes <- sorted_genes[1:1000]
-
-# Create a subset of the data with the selected genes
-selected_data <- data[selected_genes, ]
-
-# Compute the standard deviation of the selected genes for ordering the scatterplot
-sd_selected_genes <- apply(selected_data, 1, sd)
-
-# Get the names of the two most variable genes
-most_variable_genes <- names(sd_selected_genes)[order(sd_selected_genes, decreasing=TRUE)][1:2]
+# Subset the data to keep only the top 1000 genes and the first two columns
+filtered_data <- gene_data[c(1, top_genes + 1)]
 
 # Create a scatterplot of the two most variable genes
-plot(selected_data[most_variable_genes[1], ], selected_data[most_variable_genes[2], ])
+plot(filtered_data[,2], filtered_data[,3], pch = 16, col = "blue", xlab = "Gene 1", ylab = "Gene 2")
 ```
-

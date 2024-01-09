@@ -5,34 +5,21 @@ response:
 ```
 # Load required libraries
 library(readxl)
-library(tidyr)
-library(dplyr)
 library(ggplot2)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
 
-# Transpose the count table
-count_table <- count_table %>% 
-  mutate(rowid = row_number()) %>%
-  gather(sample, count, -rowid) %>%
-  spread(rowid, count) %>%
-  select(-sample)
+# Merge annotation data and count table based on sample ids
+merged_data <- merge(annotation_data, count_table, by.x = "sample_ids", by.y = 0, all.y = TRUE)
 
-# Merge annotation data and count table
-merged_data <- count_table %>% 
-  left_join(annotation_data, by = c("sample" = "sample_ids"))
-
-# Plot boxplots
-ggplot(merged_data, aes(x = group, y = value, fill = group)) +
-  geom_boxplot() +
-  xlab("Group") +
-  ylab("Gene Expression") +
-  ggtitle("Gene Expression Boxplots per Sample") +
-  theme_bw() +
-  theme(plot.title = element_text(hjust = 0.5))
+# Plot boxplots for gene expression values per sample and color code based on group variable
+ggplot(merged_data, aes(x = group, y = genes)) +
+  geom_boxplot(fill = "group") +
+  labs(x = "Group", y = "Gene Expression") +
+  ggtitle("Gene Expression Boxplots per Sample")
 ```
-```
+Note: Please make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths in your system.

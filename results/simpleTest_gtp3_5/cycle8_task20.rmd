@@ -5,44 +5,51 @@ response:
 ```
 # Load required libraries
 library(DESeq2)
-library(dplyr)
+library(readxl)
 library(ggplot2)
-library(pcaMethods)
 
-# Load count table
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t")
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
 
-# Load annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Create DESeqDataSet object
-dds <- DESeqDataSetFromMatrix(countData = count_table[, -1],
-                              colData = annotation_data,
-                              design = ~ group)
+# Filter count table based on annotation data
+group_specific_genes <- list()
+for (group in unique(annotation_data$group)) {
+  samples <- annotation_data$sample[annotation_data$group == group]
+  group_counts <- count_table[, samples]
+  # Perform statistical test to find group specific genes
+  dds <- DESeqDataSetFromMatrix(countData = group_counts,
+                                colData = annotation_data,
+                                design = ~ group)
+  dds <- DESeq(dds)
+  res <- results(dds)
+  group_specific_genes[[group]] <- rownames(res)[res$padj < 0.05]
+}
 
-# Perform differential expression analysis
-dds <- DESeq(dds)
+# Create a data frame with group specific genes
+specific_genes <- data.frame(Gene = character(),
+                             Group = character(),
+                             stringsAsFactors = FALSE)
 
-# Get results of differential expression analysis
-results <- results(dds)
+for (i in seq_along(unique(annotation_data$group))) {
+  specific_genes <- rbind(specific_genes, 
+                          data.frame(Gene = group_specific_genes[[i]],
+                                     Group = unique(annotation_data$group)[i]))
+}
 
-# Get genes specific for each group
-group_specific_genes <- lapply(levels(annotation_data$group), function(x) {
-  specific_genes <- as.character(rownames(results)[which(results$padj < 0.05 & results$log2FoldChange > 2 & results$group == x)])
-  return(specific_genes)
-})
+# Perform PCA using group specific genes and color code by group
+group_specific_counts <- count_table[specific_genes$Gene, ]
+pca_data <- prcomp(t(group_specific_counts))
+pca_df <- as.data.frame(pca_data$x[, 1:2])
+pca_df <- cbind(pca_df, Group = specific_genes$Group)
 
-# Perform PCA using group-specific genes
-group_specific_counts <- count_table[, c("Gene", unlist(group_specific_genes))]
-rownames(group_specific_counts) <- group_specific_counts[, "Gene"]
-group_specific_counts <- group_specific_counts[, -1]
-pca <- pca(group_specific_counts)
-
-# Plot PCA with color-coded group variable
-pca_df <- as.data.frame(pca$x)
-pca_df$group <- annotation_data$group
-ggplot(pca_df, aes(PC1, PC2, color = group)) +
+# Plot PCA
+ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
   geom_point() +
-  labs(x = "PC1", y = "PC2", color = "Group")
+  labs(x = "PC1",
+       y = "PC2",
+       color = "Group")
 ```
-
+```

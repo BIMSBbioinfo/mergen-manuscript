@@ -4,19 +4,27 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Read the gene expression data
-gene_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Calculate the variance of each gene
-variance <- apply(gene_data[, -1], 1, var)
+# Remove the first column with gene names
+data_without_genes <- data[, -1]
 
-# Sort the genes based on variance in descending order
-sorted_genes <- gene_data[order(variance, decreasing = TRUE), ]
+# Calculate the variability of each gene
+gene_variability <- apply(data_without_genes, 1, var)
 
-# Retain the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000, ]
+# Sort the genes based on their variability in descending order
+sorted_genes <- sort(gene_variability, decreasing=TRUE)
+
+# Get the top 1000 most variable genes
+top_1000_genes <- names(sorted_genes)[1:1000]
+
+# Create a new data frame with only the top 1000 genes
+filtered_data <- data[top_1000_genes, ]
 
 # Create a scatterplot of the two most variable genes
-plot(top_1000_genes[, 2], top_1000_genes[, 3], xlab = "Gene 1", ylab = "Gene 2", main = "Scatterplot of Top 2 Most Variable Genes")
+gene1 <- filtered_data[1, ]
+gene2 <- filtered_data[2, ]
 
+plot(gene1, gene2, xlab="Gene 1", ylab="Gene 2", main="Scatterplot of Two Most Variable Genes")
 ```
-Note: This code assumes that the gene expression data file "leukemiaExp.txt" is present in the current working directory. Adjust the file path if necessary.
+Note: Replace "leukemiaExp.txt" with the actual file name and path.

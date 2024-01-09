@@ -3,28 +3,28 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables and count the number of rows and columns for each, we can use the `read.table()` function in R. Here's the code to accomplish this task:
+To read the tables and count the number of rows and columns for each, you can use the `read.table()` function in R. 
+
+Here's the code to accomplish this task:
 
 ```
-# Read the metRmOlWithDbgapIdHeader.txt file
-met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the "metRmOlWithDbgapIdHeader.txt" file
+metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, row.names = 1)
 
-# Count number of rows and columns
-n_rows_met <- nrow(met_table)
-n_cols_met <- ncol(met_table)
+# Count the number of rows and columns for "metRmOl" table
+nrows_metRmOl <- nrow(metRmOl)
+ncols_metRmOl <- ncol(metRmOl)
 
-# Read the subjects.txt file
-subjects_table <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+# Read the "subjects.txt" file
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Count number of rows and columns
-n_rows_subjects <- nrow(subjects_table)
-n_cols_subjects <- ncol(subjects_table)
+# Count the number of rows and columns for "subjects" table
+nrows_subjects <- nrow(subjects)
+ncols_subjects <- ncol(subjects)
 
-# Print the results
-print(paste("metRmOlWithDbgapIdHeader.txt has", n_rows_met, "rows and", n_cols_met, "columns."))
-print(paste("subjects.txt has", n_rows_subjects, "rows and", n_cols_subjects, "columns."))
+# Print the number of rows and columns for each table
+cat("Number of rows and columns in metRmOl table:", nrows_metRmOl, "rows,", ncols_metRmOl, "columns\n")
+cat("Number of rows and columns in subjects table:", nrows_subjects, "rows,", ncols_subjects, "columns\n")
 ```
 
-Make sure to replace `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file names and their respective paths if they are not in the current working directory.
-
-This code will read both tables, count the number of rows and columns for each, and then print the results showing the number of rows and columns for each dataset.
+Make sure to replace the file names `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file names in your working directory. The result will be printed, showing the number of rows and columns for each table.

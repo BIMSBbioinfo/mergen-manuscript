@@ -3,22 +3,31 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(readxl)
-library(dplyr)
+library(tidyverse)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", sep="\t", header=TRUE)
+# Read annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
 
-# Merge the count table and annotation data based on sample IDs
-merged_data <- merge(count_table, annotation_data, by.x=0, by.y=1)
+# Rename the first column in the annotation data
+colnames(annotation_data)[1] <- "Sample_ID"
+
+# Merge annotation data and count table
+merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = "Sample_ID", all.x = TRUE)
 
 # Calculate the number of columns
 num_columns <- ncol(merged_data)
 
+# Print the number of columns
 num_columns
 ```
 ```
+
+Note:
+- Make sure the necessary libraries are installed and loaded before running the code (library(readxl), library(tidyverse)).
+- Replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths if they are in a different directory.
+- The code assumes that the gene names in the first column of the count table match the sample ids in the annotation data.

@@ -2,48 +2,97 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
 
 response:
-To complete this task, we will first load the gene expression data from the "leukemiaExp.txt" file and perform the necessary data processing steps. We will then filter the genes based on their variability and select the top 1000 most variable genes. Finally, we will plot a heatmap with clustering for these genes and also visualize the samples using PCA.
+To complete this task, you can use the R programming language along with several packages such as `readr`, `dplyr`, `pheatmap`, and `FactoMineR`.
 
-Here is the code to accomplish these tasks:
+Here's a step-by-step guide on how to accomplish the task:
 
+1. Load the required packages:
 ```
-# Load required libraries
-library(gplots)
+library(readr)
+library(dplyr)
 library(pheatmap)
-library(ggplot2)
-library(reshape2)
-library(PCAtools)
-
-# Set the file path for the gene expression data
-file_path <- "leukemiaExp.txt"
-
-# Read the gene expression data into a data frame
-gene_data <- read.delim(file_path, sep = "\t", header = TRUE, row.names = 1)
-
-# Calculate variance across each gene
-variance <- apply(gene_data, 1, var)
-
-# Sort the genes based on their variance in descending order
-sorted_genes <- names(variance)[order(-variance)]
-
-# Select the top 1000 most variable genes
-top_variable_genes <- sorted_genes[1:1000]
-
-# Subset the gene data to retain only the top variable genes
-filtered_data <- gene_data[top_variable_genes, ]
-
-# Generate a heatmap with clustering for the variable genes
-heatmap_data <- as.matrix(filtered_data)  # Convert filtered data to matrix
-heatmap_colors <- colorRampPalette(c("blue", "white", "red"))(n = 100)  # Define heatmap colors
-pheatmap(heatmap_data, color = heatmap_colors)
-
-# Perform PCA on the sample data
-sample_pca <- prcomp(t(gene_data))  # Transpose gene_data to have samples as rows
-plotPCA(sample_pca, metadata = NULL)  # Plot PCA for samples
+library(FactoMineR)
 ```
 
-Make sure to replace "leukemiaExp.txt" with the actual file path to your gene expression data file.
+2. Read the gene expression data from the file "leukemiaExp.txt" and store it in a data frame:
+```
+gene_expression <- read_delim("leukemiaExp.txt", delim = "\t")
+```
 
-This code will load the gene expression data, calculate the variance of each gene, filter the genes to retain the top 1000 most variable ones, and then plot a heatmap with clustering for these genes. It will also perform PCA on the sample data and plot the results.
+3. Rename the columns of the data frame to remove any leading or trailing spaces:
+```
+colnames(gene_expression) <- trimws(colnames(gene_expression))
+```
 
-Note: Please ensure you have the required libraries installed before running the code. You can install them using the `install.packages()` function if needed.
+4. Calculate the variability of each gene by calculating the standard deviation across samples:
+```
+gene_expression <- gene_expression %>%
+  mutate(variability = apply(.[-1], 1, sd))
+```
+
+5. Sort the genes based on their variability in descending order and select the top 1000 most variable genes:
+```
+top_var_genes <- gene_expression %>%
+  arrange(desc(variability)) %>%
+  slice(1:1000)
+```
+
+6. Extract the gene names and expression values for the selected genes:
+```
+gene_names <- top_var_genes$Gene
+expression_values <- data.matrix(top_var_genes[, -c(1, ncol(top_var_genes))])
+```
+
+7. Plot a heatmap of the expression values with clustering:
+```
+pheatmap(expression_values, cluster_rows = TRUE, cluster_cols = TRUE)
+```
+
+8. Perform Principal Component Analysis (PCA) on the samples:
+```
+pca_result <- PCA(expression_values)
+```
+
+9. Plot the PCA results:
+```
+plot.PCA(pca_result, choix="ind", habillage=top_var_genes$Gene, habillage.var = 2)
+```
+
+Complete code:
+```
+library(readr)
+library(dplyr)
+library(pheatmap)
+library(FactoMineR)
+
+# Step 2: Read the gene expression data
+gene_expression <- read_delim("leukemiaExp.txt", delim = "\t")
+
+# Step 3: Rename the columns
+colnames(gene_expression) <- trimws(colnames(gene_expression))
+
+# Step 4: Calculate gene variability
+gene_expression <- gene_expression %>%
+  mutate(variability = apply(.[-1], 1, sd))
+
+# Step 5: Select top 1000 variable genes
+top_var_genes <- gene_expression %>%
+  arrange(desc(variability)) %>%
+  slice(1:1000)
+
+# Step 6: Extract gene names and expression values
+gene_names <- top_var_genes$Gene
+expression_values <- data.matrix(top_var_genes[, -c(1, ncol(top_var_genes))])
+
+# Step 7: Plot heatmap with clustering
+pheatmap(expression_values, cluster_rows = TRUE, cluster_cols = TRUE)
+
+# Step 8: Perform PCA on expression values
+pca_result <- PCA(expression_values)
+
+# Step 9: Plot PCA results
+plot.PCA(pca_result, choix="ind", habillage=top_var_genes$Gene, habillage.var = 2)
+```
+
+Make sure the "leukemiaExp.txt" file is in the same directory as the R script, or provide the correct file path as an argument to `read_delim` function.
+The code will first load the necessary packages and then read the gene expression data from the specified file. It will then calculate the variability of each gene, select the top 1000 variable genes, and plot a heatmap with clustering. Lastly, it will perform PCA on the expression values and plot the PCA results.

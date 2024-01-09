@@ -2,48 +2,51 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes cluster the samples, and extract cluster specific genes for each cluster.
 
 response:
-To complete this task, we will use the R programming language and some bioinformatics packages. Follow the steps below:
+To complete this task, we will follow these steps:
 
-1. Load the required packages:
-```
-      # for reading microarray data
-       # for differential gene expression analysis
-     # for heatmap visualization
-library(Biobase)
-library(DESeq2)
-library(pheatmap)
-```
+1. Read the gene expression data from "leukemiaExp.txt" file.
+2. Calculate the variability of each gene.
+3. Select the top 1000 genes with the highest variability.
+4. Cluster the samples based on these selected genes.
+5. Extract cluster-specific genes for each cluster.
 
-2. Read the gene expression data into R:
-```
-expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
-```
+Here's the code to accomplish this task:
 
-3. Filter genes based on their variability and retain the top 1000 most variable genes using the "DESeq2" package:
 ```
-dds <- DESeqDataSetFromMatrix(countData = expression_data, colData = NULL, design = ~ 1)
-dds <- DESeq(dds)
-vr <- varianceStabilizingTransformation(dds)
-variances <- rowVars(assay(vr))
-top_var_genes <- order(variances, decreasing = TRUE)[1:1000]
-filtered_expression_data <- expression_data[top_var_genes, ]
-```
+# Step 1: Read the gene expression data
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-4. Cluster the samples based on the filtered gene expression data:
-```
-dist_mat <- dist(t(filtered_expression_data))
-hc <- hclust(dist_mat, method = "complete")
-sample_clusters <- cutree(hc, k = 5)  # Assuming we want 5 clusters, change 'k' according to your requirement
-```
+# Step 2: Calculate the variability of each gene
+gene_variability <- apply(gene_exp[, -1], 1, var)
 
-5. Extract cluster-specific genes for each cluster:
-```
-cluster_genes <- list()
-for (i in unique(sample_clusters)) {
-  cluster_genes[[i]] <- rownames(filtered_expression_data)[sample_clusters == i]
+# Step 3: Select the top 1000 genes with the highest variability
+top_genes <- head(order(-gene_variability), 1000)
+
+# Step 4: Cluster the samples based on selected genes
+dist_matrix <- dist(t(gene_exp[top_genes, -1]))
+sample_clusters <- hclust(dist_matrix)
+
+# Step 5: Extract cluster-specific genes for each cluster
+num_clusters <- 5  # Assuming we want to extract genes for 5 clusters
+
+# Cut the dendrogram into clusters
+clusters <- cutree(sample_clusters, k = num_clusters)
+
+# Create a list to store cluster-specific genes
+cluster_specific_genes <- vector("list", num_clusters)
+
+# Iterate over each cluster and extract cluster-specific genes
+for (i in 1:num_clusters) {
+  cluster_genes <- gene_exp[top_genes, -1][, clusters == i]
+  cluster_specific_genes[[i]] <- rownames(cluster_genes)
+}
+
+# Optional: Print the cluster-specific genes
+for (i in 1:num_clusters) {
+  cat("Cluster", i, "specific genes:\n")
+  print(cluster_specific_genes[[i]])
+  cat("\n")
 }
 ```
 
-The code above will filter the genes based on their variability and retain the top 1000 most variable genes. Then, it will cluster the samples based on the filtered gene expression data and extract cluster-specific genes for each cluster.
-
-Note: Adjust the number of clusters (k) according to your specific requirements.
+This code will read the gene expression data from "leukemiaExp.txt" file, calculate the variability of each gene, select the top 1000 genes with the highest variability, cluster the samples based on these selected genes, and extract cluster-specific genes for each cluster. The resulting cluster-specific gene lists will be stored in the `cluster_specific_genes` list.

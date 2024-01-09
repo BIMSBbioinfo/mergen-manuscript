@@ -2,57 +2,70 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
 
 response:
-To filter genes based on their variability and retain the top 1000 most variable genes, we can follow these steps in R:
+To accomplish this task, we will follow these steps:
 
-Step 1: Read the gene expression data file into a data frame.
+1. Read the gene expression data from the file "leukemiaExp.txt" into a matrix.
+2. Calculate the variability of each gene in order to filter the top 1000 most variable genes.
+3. Filter the gene expression matrix to retain only the top 1000 variable genes.
+4. Perform hierarchical clustering on the variable genes and plot a heatmap.
+5. Perform Principal Component Analysis (PCA) on the samples and plot the results.
 
-```
-# Read the gene expression data file
-expression_data <- read.delim("leukemiaExp.txt", sep="\t")
-```
-
-Step 2: Remove the first column containing gene names.
-
-```
-# Remove the first column containing gene names
-expression_data <- expression_data[, -1]
-```
-
-Step 3: Calculate the variance for each gene across samples and select the top 1000 genes with the highest variance.
+Let's start by reading the gene expression data from the file:
 
 ```
-# Calculate variance for each gene
-gene_variances <- apply(expression_data, 1, var)
+# Step 1: Read gene expression data
+gene_expr <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Select top 1000 genes with highest variance
-top_1000_genes <- names(sort(gene_variances, decreasing = TRUE))[1:1000]
-
-# Filter expression data to retain only the top 1000 genes
-filtered_expression_data <- expression_data[top_1000_genes, ]
+# Display the first few rows of the gene expression data
+head(gene_expr)
 ```
 
-Step 4: Plot a heatmap with clustering using the filtered expression data.
+Next, we will calculate the variability of each gene:
 
 ```
-# Load required library
-library(gplots)
+# Step 2: Calculate gene variability
+gene_variability <- apply(gene_expr, 1, var)
 
-# Plot heatmap with clustering
-heatmap.2(as.matrix(filtered_expression_data), dendrogram = "row", scale = "row")
+# Sort the genes based on variability in descending order
+sorted_genes <- names(sort(gene_variability, decreasing = TRUE))
+
+# Display the top 10 genes with highest variability
+head(sorted_genes, 10)
 ```
 
-Step 5: Plot PCA for samples using the filtered expression data.
+Now, let's filter the gene expression matrix to retain only the top 1000 variable genes:
 
 ```
-# Load required library
-library(ggplot2)
-library(ggfortify)
+# Step 3: Filter gene expression matrix
+filtered_genes <- sorted_genes[1:1000]
+filtered_gene_expr <- gene_expr[filtered_genes, ]
 
-# Perform PCA on the filtered expression data
-pca <- prcomp(t(filtered_expression_data), scale = TRUE)
-
-# Plot PCA
-autoplot(pca, data = expression_data, colour = "Sample_ID")
+# Display the filtered gene expression matrix
+head(filtered_gene_expr)
 ```
 
-Please make sure to install the required R packages (gplots, ggplot2, ggfortify) before running the code. Let me know if you have any questions or need further assistance!
+We will now perform hierarchical clustering on the variable genes and plot a heatmap:
+
+```
+# Step 4: Hierarchical clustering and heatmap
+heatmap_data <- filtered_gene_expr
+heatmap_clustered_data <- heatmap_data[rowMeans(heatmap_data) >= quantile(rowMeans(heatmap_data), 0.1), ]
+heatmap_clusters <- hclust(dist(t(heatmap_clustered_data)))
+heatmap_ordered_data <- heatmap_clustered_data[heatmap_clusters$order, ]
+
+# Plot the heatmap
+heatmap(heatmap_ordered_data, scale = "row", main = "Gene Expression Heatmap")
+```
+
+Finally, let's perform Principal Component Analysis (PCA) on the samples and plot the results:
+
+```
+# Step 5: PCA on samples
+pca_data <- t(filtered_gene_expr)
+pca_result <- prcomp(pca_data, scale = TRUE)
+
+# Plot the PCA results
+plot(pca_result$x[, 1], pca_result$x[, 2], xlab = "PC1", ylab = "PC2", main = "PCA Plot")
+```
+
+By following these steps, you should now have a heatmap with clustering based on the top 1000 most variable genes, as well as a PCA plot for the samples.

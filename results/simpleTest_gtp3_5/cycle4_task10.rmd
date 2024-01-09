@@ -3,37 +3,54 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
+# Load the required libraries
+library(cluster)
+library(gplots)
+library(ggplot2)
 
-# Calculate the variability for each gene using the standard deviation
-variability <- apply(data[, -1], 1, sd)
+# Read the gene expression data
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Calculate the variability of each gene
+gene_variability <- apply(gene_data, 1, var)
 
 # Sort the genes based on their variability in descending order
-sorted_genes <- data.frame(gene = data[, 1], variability = variability)
-sorted_genes <- sorted_genes[order(-sorted_genes$variability), ]
+sorted_genes <- gene_data[order(gene_variability, decreasing = TRUE), ]
 
 # Select the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000, ]
+top_variable_genes <- sorted_genes[1:1000, ]
 
-# Cluster the samples based on the selected genes
-clustered_samples <- hclust(dist(data[top_genes$gene, -1]))
+# Calculate the distances between samples using the Euclidean distance measure
+sample_distances <- dist(t(top_variable_genes), method = "euclidean")
 
-# Cut the dendrogram into clusters
-clusters <- cutree(clustered_samples, k = <number_of_clusters>)  # Replace <number_of_clusters> with the desired number of clusters
+# Perform hierarchical clustering on the samples
+sample_clusters <- hclust(sample_distances, method = "complete")
 
-# Create a list to store cluster specific genes
-cluster_specific_genes <- vector("list", length(unique(clusters)))
-
-# Extract cluster specific genes for each cluster
-for (i in 1:length(cluster_specific_genes)) {
-  cluster_specific_genes[[i]] <- top_genes[top_genes$gene %in% data[clusters == i, 1], ]
+# Determine the best number of clusters using the silhouette method
+silhouette_vals <- c()
+for (k in 2:10) {
+  sample_cluster_assignment <- cutree(sample_clusters, k = k)
+  silhouette_vals[k] <- silhouette(sample_cluster_assignment, sample_distances)$avg.width
 }
+best_num_clusters <- which.max(silhouette_vals)
 
-# Print the cluster specific genes for each cluster
-for (i in 1:length(cluster_specific_genes)) {
-  cat("Cluster", i, "specific genes:\n")
-  print(cluster_specific_genes[[i]])
+# Cut the dendrogram to get the final sample clusters
+final_sample_clusters <- cutree(sample_clusters, k = best_num_clusters)
+
+# Plot the sample dendrogram with colors representing the clusters
+plot(sample_clusters, labels = FALSE, hang = 0.05, main = "Sample Clustering", sub = paste("Number of Clusters:", best_num_clusters))
+rect.hclust(sample_clusters, k = best_num_clusters, border = 2:best_num_clusters)
+
+# Create a data frame with the sample labels and the cluster assignment
+sample_labels <- data.frame(Sample = colnames(top_variable_genes), Cluster = final_sample_clusters)
+
+# Split the genes into their respective clusters
+cluster_specific_genes <- split(top_variable_genes, f = final_sample_clusters)
+
+# Print the cluster-specific genes for each cluster
+for (i in 1:best_num_clusters) {
+  print(paste("Cluster", i))
+  print(row.names(cluster_specific_genes[[i]]))
 }
 ```
-Note: Replace `<number_of_clusters>` in line 15 with the desired number of clusters you want to create from the data.
+Note: Replace "leukemiaExp.txt" with the actual file name of your gene expression data file.

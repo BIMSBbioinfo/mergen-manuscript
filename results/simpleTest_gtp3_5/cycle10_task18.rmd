@@ -3,24 +3,29 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Read the data from the metRmOlWithDbgapIdHeader.txt file
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+# Read the metRmOlWithDbgapIdHeader.txt file
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
-# Read the data from the subjects.txt file
-subjects_data <- read.table("subjects.txt", header = TRUE)
+# Read the subjects.txt file
+subjects <- read.table("subjects.txt", header = TRUE)
 
-# Select the columns of interest from the subjects_data
-subjects_subset <- subjects_data[, c("dbGap ID", "Age", "sex", "Race")]
+# Match the dbGap ID column in subjects with the first row of methylation
+matched_ids <- intersect(subjects$dbGap.ID, colnames(methylation))
 
-# Merge the subjects_subset with methylation_data based on the dbGap ID
-merged_data <- merge(subjects_subset, methylation_data, by.x = "dbGap ID", by.y = "DBGapId")
+# Subset the methylation table to include only the matched individuals
+matched_methylation <- methylation[, matched_ids]
 
-# Filter the CpGs associated with Age but not with sex or Race
-age_cpgs <- merged_data[rowSums(is.na(merged_data[, c("Age", "sex", "Race")])) == 0, ]
-age_cpgs <- age_cpgs[is.na(age_cpgs$sex) & is.na(age_cpgs$Race), ]
+# Find all CpGs associated with Age but not with sex or Race
+cpgs <- rownames(matched_methylation) # Get all CpG IDs
+
+age_cpgs <- cpgs[rowSums(matched_methylation[, subjects$Age_colname] > 0) > 0] # CpGs associated with Age
+sex_cpgs <- cpgs[rowSums(matched_methylation[, subjects$Sex_colname] > 0) > 0] # CpGs associated with sex
+race_cpgs <- cpgs[rowSums(matched_methylation[, subjects$Race_colname] > 0) > 0] # CpGs associated with Race
+
+age_only_cpgs <- setdiff(age_cpgs, union(sex_cpgs, race_cpgs)) # CpGs associated with Age only
 
 # Display top 20 CpGs
-top_20_cpgs <- head(age_cpgs[, -c(1:4)], 20)
+top_20_cpgs <- age_only_cpgs[1:20]
 top_20_cpgs
 ```
-Note: Make sure to replace the file names ("metRmOlWithDbgapIdHeader.txt" and "subjects.txt") in the code with the actual names of the files you have.
+

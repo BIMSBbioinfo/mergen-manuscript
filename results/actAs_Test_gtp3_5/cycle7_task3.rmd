@@ -2,27 +2,24 @@ prompt:
 I have the following gene expression data as an excel sheet,  "Supplementary_Table_1_exp.xlsx". Each row is a gene and each column is a distinct sample. First column contains gene names. How many genes and samples does the dataset have?
 
 response:
-To find out the number of genes and samples in the dataset, we can use the `readxl` package in R to read the gene expression data from the Excel file and then count the number of rows and columns in the dataset.
+To determine the number of genes and samples in the dataset, we can use the `readxl` package in R to read the Excel file and then calculate the dimensions of the resulting data frame.
 
-Here is the code to accomplish this task:
+Here's the code to accomplish this task:
 
 ```
-# Install and load the 'readxl' package
+# Install and load the readxl package
 
 library(readxl)
 
-# Read the gene expression data from the Excel file
-expression_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the Excel file
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Count the number of rows (genes) and columns (samples) in the dataset
-num_genes <- nrow(expression_data)
-num_samples <- ncol(expression_data)
+# Check the dimensions of the data frame
+num_genes <- nrow(data)
+num_samples <- ncol(data)
 
 # Print the results
-cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples, "\n")
+cat("The dataset contains", num_genes, "genes and", num_samples, "samples.")
 ```
 
-Make sure to replace "Supplementary_Table_1_exp.xlsx" with the correct file path/name of your Excel file.
-
-The code first installs and loads the `readxl` package, then reads the gene expression data from the Excel file using the `read_excel()` function. It then counts the number of rows using `nrow()` and assigns it to `num_genes`, and counts the number of columns using `ncol()` and assigns it to `num_samples`. Finally, it prints the results of the counts.
+Make sure to replace "Supplementary_Table_1_exp.xlsx" with the actual file path of your Excel file.

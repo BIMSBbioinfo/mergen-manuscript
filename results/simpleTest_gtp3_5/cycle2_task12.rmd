@@ -3,25 +3,27 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load required packages
-library(readxl)
+# Load necessary libraries
+library(openxlsx)
 
-# Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Load count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Get number of rows and columns in count table
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
 
-# Get the number of rows and columns for the count table
-num_rows_count_table <- nrow(count_table)
-num_cols_count_table <- ncol(count_table)
+# Load annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
 
-# Get the number of rows and columns for the annotation data
-num_rows_annotation_data <- nrow(annotation_data)
-num_cols_annotation_data <- ncol(annotation_data)
+# Get number of rows and columns in annotation data
+annotation_rows <- nrow(annotation_data)
+annotation_cols <- ncol(annotation_data)
 
-# Print the number of rows and columns for each table
-cat("Count Table: Number of rows:", num_rows_count_table, "and Number of columns:", num_cols_count_table, "\n")
-cat("Annotation Data: Number of rows:", num_rows_annotation_data, "and Number of columns:", num_cols_annotation_data)
+# Print the number of rows and columns for count table and annotation data
+print(paste("Count table rows:", count_rows))
+print(paste("Count table columns:", count_cols))
+print(paste("Annotation data rows:", annotation_rows))
+print(paste("Annotation data columns:", annotation_cols))
 ```
-
+```

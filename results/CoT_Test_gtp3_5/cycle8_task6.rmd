@@ -2,34 +2,40 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample.  If there are more samples than 500 then randomly sample the samples column and create a subset of the data
 
 response:
-To load and process the gene expression data from the "leukemiaExp.txt" file, we can use the following steps:
+To read the gene expression data from the "leukemiaExp.txt" file and then randomly sample the columns (samples) if there are more than 500, you can follow these steps:
 
-Step 1: Load the required R libraries.
+1. Load the required packages:
 ```
+# Install and load the readr package
+
 library(readr)
 ```
 
-Step 2: Read the gene expression data from the file.
+2. Read the data from the "leukemiaExp.txt" file:
 ```
-gene_data <- read_delim("leukemiaExp.txt", delim = "\t")
-```
-
-Step 3: Check the number of columns (samples) in the gene expression data.
-```
-num_samples <- ncol(gene_data)
+# Read the gene expression data from the file
+gene_exp_data <- read_delim("leukemiaExp.txt", delim = "\t")
 ```
 
-Step 4: If the number of samples is greater than 500, randomly select 500 samples.
+3. Check the number of columns (samples) in the data:
 ```
+# Get the number of columns
+num_samples <- ncol(gene_exp_data)
+
+# Check if the number of samples is greater than 500
 if (num_samples > 500) {
-  set.seed(42)  # Set seed for reproducibility
-  selected_samples <- sample(num_samples, 500)
-  gene_data_subset <- gene_data[, selected_samples]
+  # Randomly sample 500 columns
+  sampled_columns <- sample(1:num_samples, size = 500)
+  
+  # Create a subset of the data with the sampled columns
+  gene_exp_subset <- gene_exp_data[, sampled_columns]
+  
+  # Print the subsetted data
+  print(gene_exp_subset)
 } else {
-  gene_data_subset <- gene_data
+  # If the number of samples is less than or equal to 500, use the original data
+  print(gene_exp_data)
 }
 ```
 
-The variable `gene_data_subset` now contains the subset of gene expression data with either the full data or a randomly selected 500 samples, depending on the initial number of samples.
-
-Please note that this code assumes that the gene expression data file is tab-delimited. If the file is in a different format, you may need to adjust the `delim` argument in the `read_delim()` function accordingly.
+Please note that the above code assumes that the file "leukemiaExp.txt" is located in the current working directory. If the file is located in a different directory, you will need to provide the full file path in the `read_delim()` function.

@@ -3,39 +3,47 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load necessary packages
+# Load required libraries
+library(tidyverse)
+library(ranger)
 library(caret)
-library(randomForest)
 
-# Read the methylation dataset
-methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header=TRUE, sep="\t")
+# Read the methylation data
+methData <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Read the subjects dataset
-subjects_data <- read.table("subjects.txt", header=TRUE, sep="\t")
+# Transpose the methylation data
+methDataT <- t(methData)
 
-# Remove the first row (DBGapId) from the methylation dataset
-methylation_data <- methylation_data[-1,]
+# Remove the first row (DBGapId)
+methDataT <- methDataT[-1, ]
 
-# Merge the methylation dataset with the subjects dataset based on DBGapId
-merged_data <- merge(methylation_data, subjects_data, by.x="DBGapId", by.y="dbGap ID")
+# Read the subjects data
+subjectsData <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Convert Age to numerical
-merged_data$Age <- as.numeric(as.character(merged_data$Age))
+# Subset the subjects data to only include relevant columns
+subjectsDataSubset <- subjectsData[, c("dbGap ID", "Age")]
+
+# Rename the columns
+colnames(subjectsDataSubset) <- c("DBGapId", "Age")
+
+# Merge the methylation and subjects data based on DBGapId
+mergedData <- merge(methDataT, subjectsDataSubset, by = "DBGapId")
+
+# Convert the methylation values to numeric
+mergedData[, 1:ncol(mergedData) - 1] <- sapply(mergedData[, 1:ncol(mergedData) - 1], as.numeric)
+
+# Set the seed for reproducibility
+set.seed(123)
 
 # Split the data into training and testing sets
-set.seed(123)
-train_indices <- createDataPartition(y = merged_data$Age, p = 0.7, list = FALSE)
-train_data <- merged_data[train_indices, ]
-test_data <- merged_data[-train_indices, ]
+trainIndex <- createDataPartition(mergedData$Age, p = 0.7, list = FALSE)
+trainData <- mergedData[trainIndex, ]
+testData <- mergedData[-trainIndex, ]
 
-# Remove unnecessary columns
-train_data <- train_data[, -c(1, ncol(train_data))]
-test_data <- test_data[, -c(1, ncol(test_data))]
+# Create the predictive model
+model <- train(Age ~., data = trainData, method = "ranger")
 
-# Build a random forest model
-model <- randomForest(Age ~ ., data = train_data)
-
-# Display the most important variables
+# Print the important variables
 varImp(model)
 ```
 ```

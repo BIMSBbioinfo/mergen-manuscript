@@ -6,19 +6,20 @@ response:
 # Read the gene expression data
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
+# Remove the first column containing gene names
+# Assuming the first column is named "Gene"
+data <- data[, -1]
+
 # Calculate the variance for each gene
-variances <- apply(data[, -1], 1, var)
+variances <- apply(data, 1, var)
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- sort(variances, decreasing = TRUE)
+# Get the indices of the top 1000 most variable genes
+top_1000 <- order(variances, decreasing = TRUE)[1:1000]
 
-# Retain the top 1000 most variable genes
-top_1000_genes <- names(sorted_genes)[1:1000]
-
-# Filter the gene expression data to keep only the most variable genes
-filtered_data <- data[c(top_1000_genes, "Gene"), ]
+# Filter the data to retain only the top 1000 genes
+filtered_data <- data[top_1000, ]
 
 # Print the filtered data
 print(filtered_data)
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path and name of your gene expression data file. The filtered data will include the gene names in the first column as well (assuming they are in a column named "Gene"). Adjust the code accordingly if the gene names are in a different column.
+Note: Make sure to replace "leukemiaExp.txt" with the actual file name of your gene expression data.

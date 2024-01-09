@@ -3,41 +3,50 @@ I have the following count table for an RNA-seq experiment, rows are genes and c
 
 response:
 ```
-# Load necessary packages
-library("readxl")
-library("DESeq2")
-library("ggplot2")
+# Load required libraries
+library(DESeq2)
+library(readxl)
+library(ggplot2)
+library(dplyr)
 
-# Read the count table
-count_table <- read_xlsx("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation <- read.delim("SRP021193.colData.tsv", sep="\t", header = TRUE)
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Set row names of the count table as gene names
-rownames(count_table) <- count_table[,1]
-count_table <- count_table[,-1]
+# Set row names of count table as gene names
+rownames(count_table) <- count_table[, 1]
 
-# Transpose the count table
+# Remove the first column (gene names) from count table
+count_table <- count_table[, -1]
+
+# Transpose count table to have samples as rows and genes as columns
 count_table <- t(count_table)
 
-# Create DESeqDataSet object for further analysis
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation, design = ~ 1)
-
-# Normalize counts using DESeq2 method
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ 1)
 dds <- DESeq(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
 
-# Perform PCA analysis on normalized counts
-pca <- prcomp(t(assay(dds, normalized=TRUE)), scale.=TRUE)
+# Perform PCA based on sample group
+pca_group <- prcomp(t(normalized_counts))
+pca_group$data <- data.frame(pca_group$x, group = annotation_data$group)
+plot_group <- ggplot(data = pca_group$data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA Plot: Samples color coded by Group")
 
-# Extract PCA scores
-pca_scores <- data.frame(pca$x[,c(1,2)])
-colnames(pca_scores) <- c("PC1", "PC2")
+# Perform PCA based on library selection
+pca_library <- prcomp(t(normalized_counts))
+pca_library$data <- data.frame(pca_library$x, library_selection = annotation_data$LibrarySelection)
+plot_library <- ggplot(data = pca_library$data, aes(x = PC1, y = PC2, color = library_selection)) +
+  geom_point() +
+  labs(title = "PCA Plot: Samples color coded by Library Selection")
 
-# Plot PCA color coded by "group"
-ggplot(pca_scores, aes(x=PC1, y=PC2, color=group)) + geom_point() + labs(x="PC1", y="PC2") + theme_minimal()
-
-# Plot PCA color coded by "LibrarySelection"
-ggplot(pca_scores, aes(x=PC1, y=PC2, color=LibrarySelection)) + geom_point() + labs(x="PC1", y="PC2") + theme_minimal()
+# Display the PCA plots
+plot_group
+plot_library
 ```
-Note: This code assumes that you have already installed the necessary packages `readxl`, `DESeq2`, and `ggplot2`.
+```

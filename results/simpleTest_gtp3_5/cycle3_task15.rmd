@@ -4,17 +4,23 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 response:
 ```
 # Read the "metRmOlWithDbgapIdHeader.txt" file
-met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
+methylation <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
 
 # Read the "subjects.txt" file
-subjects_data <- read.table("subjects.txt", header = TRUE)
+subjects <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Merge the two datasets based on dbGap ID
-merged_data <- merge(met_data, subjects_data, by.x = "dbGap ID", by.y = "dbGap ID")
+# Identify the two oldest subjects
+oldest_subjects <- subjects[order(subjects$Age, decreasing = TRUE), ][1:2, "dbGap ID"]
 
-# Get the two oldest subjects
-oldest_subjects <- merged_data[order(merged_data$Age, decreasing = TRUE), ][1:2, ]
+# Merge the two datasets based on dbGapId
+merged_data <- merge(methylation, subjects, by.x = "dbGapId", by.y = "dbGap ID")
 
-# Scatter plot of CpG methylation values for the two oldest subjects
-plot(oldest_subjects$CpG_id, oldest_subjects$Methylation, pch = 19, xlab = "CpG ID", ylab = "Methylation Values")
+# Filter the merged dataset for the two oldest subjects
+oldest_subjects_data <- merged_data[merged_data$dbGapId %in% oldest_subjects, ]
+
+# Plot a scatter plot of CpG methylation values for the two oldest subjects
+plot(oldest_subjects_data$CpG_id, oldest_subjects_data$Methylation, 
+     main = "Scatter Plot of CpG Methylation Values",
+     xlab = "CpG ID", ylab = "Methylation Value",
+     col = "blue", pch = 16)
 ```

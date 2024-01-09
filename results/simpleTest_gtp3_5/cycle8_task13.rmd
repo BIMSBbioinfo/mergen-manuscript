@@ -5,19 +5,21 @@ response:
 ```
 # Load required packages
 library(readxl)
+library(dplyr)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Merge count table and annotation data based on sample ids
-merged_data <- merge(count_table, annotation_data, by.x = "Samples", by.y = "Sample_ID")
+# Rename the first column of annotation data to match the sample ids in count table
+colnames(annotation_data)[1] <- "Sample_ID"
 
-# Calculate number of columns
+# Merge annotation data and count table based on sample ids
+merged_data <- merge(count_table, annotation_data, by = "Sample_ID")
+
+# Calculate the number of columns in the merged data
 num_columns <- ncol(merged_data)
-
-# Print number of columns
-num_columns
+```
 ```

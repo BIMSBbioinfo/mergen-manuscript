@@ -2,37 +2,38 @@ prompt:
 I have the following gene expression data, "leukemiaExp.txt". The file is tab separated. The table has gene names on the first column. Each row is a gene and each column is a distinct sample. Filter genes based on their variability so we retain the most variable top 1000 genes. Based on these variable genes, plot a heatmap with clustering. Also plot PCA for samples.
 
 response:
-To complete this task, we will use the `matrixStats` and `pheatmap` packages in R. First, we will read the gene expression data from the "leukemiaExp.txt" file and calculate the variability for each gene. Then, we will select the top 1000 most variable genes and create a heatmap with clustering. Finally, we will plot the PCA for the samples.
+To complete this task, we will use the `read.table()` function to read the data from the "leukemiaExp.txt" file into a data frame in R. Then we will calculate the variability of each gene using the `var()` function and select the top 1000 most variable genes. We will use the `heatmap()` function to plot a heatmap of these genes with clustering. Finally, we will use the `prcomp()` function to perform PCA on the samples and plot the results. 
 
-Here's the code to accomplish this task:
+Here is the code to accomplish these tasks:
 
 ```
-# Load required libraries
-library(matrixStats)
-library(pheatmap)
+# Read the gene expression data from file
+gene_expression <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Read gene expression data from file
-gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Calculate the variability of each gene
+gene_variability <- apply(gene_expression[, -1], 1, var)
 
-# Calculate gene variability
-gene_variability <- rowVars(gene_exp)
+# Select the top 1000 most variable genes
+top_genes <- names(sort(gene_variability, decreasing = TRUE))[1:1000]
 
-# Select top 1000 most variable genes
-top_var_genes <- rownames(gene_exp)[order(gene_variability, decreasing = TRUE)][1:1000]
+# Subset the gene expression data based on the top variable genes
+selected_expression <- gene_expression[c("Gene", top_genes)]
 
-# Subset gene expression data to retain only the top variable genes
-gene_exp_subset <- gene_exp[top_var_genes, ]
+# Remove the "Gene" column as it is not needed for plotting
+selected_expression <- selected_expression[, -1]
 
-# Create heatmap with clustering
-pheatmap(gene_exp_subset, cluster_rows = TRUE, cluster_cols = TRUE)
+# Compute the distance matrix and perform hierarchical clustering
+distance_matrix <- dist(t(selected_expression))
+hc_result <- hclust(distance_matrix)
 
-# Perform PCA on the gene expression data
-pca <- prcomp(t(gene_exp_subset))
+# Plot the heatmap with clustering
+heatmap(selected_expression, Rowv = as.dendrogram(hc_result), Colv = NA)
 
-# Plot PCA for samples
-plot(pca$x[, 1], pca$x[, 2], xlab = "PC1", ylab = "PC2", main = "PCA for Samples")
+# Perform PCA on the samples
+pca_result <- prcomp(t(selected_expression))
+
+# Plot the PCA results
+plot(pca_result$x[,1], pca_result$x[,2], xlab = "PC1", ylab = "PC2", main = "PCA plot")
 ```
 
-This code will read the gene expression data from the "leukemiaExp.txt" file, calculate the variability for each gene, select the top 1000 most variable genes, create a heatmap with hierarchical clustering, and plot the PCA for samples.
-
-Note: Make sure to install the `matrixStats` and `pheatmap` packages if they are not already installed, by running `` and `` before running the code.
+Make sure to replace "leukemiaExp.txt" with the actual path or filename of your data file.

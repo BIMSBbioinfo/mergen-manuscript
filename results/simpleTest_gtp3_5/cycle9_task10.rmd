@@ -4,22 +4,48 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 response:
 ```
 # Read the gene expression data
-gene_expression <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
-# Calculate the variance of each gene
-gene_variance <- apply(gene_expression, 1, var)
-# Sort genes based on variance in descending order
-sorted_genes <- gene_expression[order(gene_variance, decreasing=TRUE), ]
-# Retain the top 1000 genes with highest variance
-top_var_genes <- sorted_genes[1:1000, ]
-# Cluster the samples based on the expression of variable genes
-sample_clusters <- kmeans(t(top_var_genes), centers=5)  # Assuming we want 5 clusters
-# Extract cluster specific genes for each cluster
+expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Calculate the variability for each gene
+gene_variability <- apply(expression_data, 1, var)
+
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(gene_variability)[order(gene_variability, decreasing = TRUE)]
+
+# Select the top 1000 most variable genes
+top_variable_genes <- sorted_genes[1:1000]
+
+# Subset the expression data for the top variable genes
+expression_data_top_variable <- expression_data[top_variable_genes, ]
+
+# Cluster the samples
+sample_clusters <- hclust(dist(t(expression_data_top_variable)))
+
+# Cut the dendrogram into 5 clusters
+clusters <- cutree(sample_clusters, k = 5)
+
+# Initialize a list to store cluster specific genes for each cluster
 cluster_specific_genes <- list()
-for (i in 1:5) {
-  cluster_samples <- which(sample_clusters$cluster == i)
-  cluster_expression <- gene_expression[, cluster_samples]
-  cluster_variance <- apply(cluster_expression, 1, var)
-  sorted_genes <- gene_expression[order(cluster_variance, decreasing=TRUE), ]
-  cluster_specific_genes[[i]] <- sorted_genes[1:100, ]  # Assuming we want top 100 cluster specific genes
+
+# For each cluster, extract the cluster specific genes
+for (i in 1:max(clusters)) {
+  # Get the samples belonging to the current cluster
+  cluster_samples <- which(clusters == i)
+  
+  # Calculate the mean expression for each gene in the current cluster
+  mean_expression <- apply(expression_data_top_variable[, cluster_samples], 1, mean)
+  
+  # Sort the genes based on their mean expression in descending order
+  sorted_cluster_genes <- names(mean_expression)[order(mean_expression, decreasing = TRUE)]
+  
+  # Select the top 100 cluster specific genes
+  cluster_specific_genes[[i]] <- sorted_cluster_genes[1:100]
+}
+
+# Print the cluster specific genes for each cluster
+for (i in 1:max(clusters)) {
+  cat("Cluster", i, "specific genes:")
+  cat(cluster_specific_genes[[i]], "\n")
 }
 ```
+NOTE: This code assumes that you already have the necessary packages (e.g., stats) installed and loaded in the R environment.

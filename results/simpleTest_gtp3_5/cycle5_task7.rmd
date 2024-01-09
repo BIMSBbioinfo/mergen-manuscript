@@ -3,34 +3,22 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load the required library
-library(ggplot2)
+# Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Read the gene expression datafile
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Check the number of columns
+num_samples <- ncol(data)
 
-# Check the number of samples/columns
-num_samples <- ncol(gene_data)
-
-# Check if there are more than 500 samples
+# If there are more than 500 samples
 if (num_samples > 500) {
   # Randomly sample 500 samples
-  set.seed(123)  # Set seed for reproducibility
-  sampled_samples <- sample(num_samples, size = 500)
+  sampled_columns <- sample(1:num_samples, size=500, replace=FALSE)
   
-  # Subset the data with the sampled samples
-  gene_data_subset <- gene_data[, sampled_samples]
-} else {
-  gene_data_subset <- gene_data  # No need for subsetting
+  # Subset the data with the sampled columns
+  data <- data[, sampled_columns]
 }
 
-# Create a boxplot of the columns using ggplot2
-boxplot_data <- reshape2::melt(gene_data_subset)
-
-ggplot(boxplot_data, aes(x = variable, y = value)) +
-  geom_boxplot() +
-  xlab("Samples") +
-  ylab("Gene Expression") +
-  ggtitle("Boxplot of Gene Expression")
+# Create a boxplot of the columns
+boxplot(data, main="Gene Expression Data", xlab="Samples", ylab="Expression Level")
 ```
-Note: Don't forget to replace "leukemiaExp.txt" with the actual file path of your gene expression data.
+Note: Make sure to replace "leukemiaExp.txt" with the correct file path to your data. Also, customize the main title, xlabel, and ylabel according to your preference.

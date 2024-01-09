@@ -3,32 +3,21 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Load the required library
-library(ggplot2)
+# Read the gene expression data from the file
+gene_exp <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Read the data from the "leukemiaExp.txt" file
-data <- read.delim("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Calculate the variance for each gene
+gene_var <- apply(gene_exp[,-1], 1, var)
 
-# Remove the first column (gene names) from the data
-data <- data[, -1]
+# Sort the genes based on their variance in descending order
+sorted_genes <- gene_exp[order(gene_var, decreasing=TRUE), ]
 
-# Calculate the variability of each gene
-variability <- apply(data, 1, function(x) var(x))
-
-# Sort the genes based on their variability in descending order
-sorted_genes <- names(variability)[order(variability, decreasing = TRUE)]
-
-# Select the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000]
-
-# Subset the original data to keep only the most variable genes
-filtered_data <- data[top_1000_genes, ]
+# Take the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000, ]
 
 # Create a scatterplot of the two most variable genes
-ggplot(filtered_data, aes(x = filtered_data[, 1], y = filtered_data[, 2])) +
-  geom_point() +
-  xlab("Gene 1") +
-  ylab("Gene 2") +
-  ggtitle("Scatterplot of the Two Most Variable Genes")
+plot(top_genes[,2], top_genes[,3], pch=16, col="blue",
+     xlab="Gene 2 Expression", ylab="Gene 3 Expression",
+     main="Scatterplot of Most Variable Genes")
 ```
-
+Note: Replace "leukemiaExp.txt" with the actual file path and name of the gene expression data file. Adjust the column numbers in the plot function (top_genes[,2], top_genes[,3]) based on the columns containing the gene expression values for the two genes you want to plot.

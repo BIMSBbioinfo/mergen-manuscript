@@ -3,30 +3,21 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 
 response:
 ```
-# Load necessary libraries
-library(dplyr)
-
 # Read the datasets
-metRmOl <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
-subjects <- read.table("subjects.txt", header = TRUE)
+met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, sep = "\t")
+subjects_data <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Transpose the metRmOl dataset
-metRmOl <- t(metRmOl)
+# Get the DBGap IDs from subjects_data that have information on Age but not on sex or Race
+matching_ids <- subjects_data$`dbGap ID`[which(!is.na(subjects_data$Age) & is.na(subjects_data$sex) & is.na(subjects_data$Race))]
 
-# Rename the first row of the metRmOl dataset with the column names from subjects dataset
-colnames(metRmOl) <- subjects$dbGap_ID
+# Get the column indices of the matching DBGap IDs in met_data
+matching_cols <- which(colnames(met_data) %in% matching_ids)
 
-# Filter CpGs associated with Age but not with sex or Race
-filtered_cpgs <- metRmOl %>% 
-  filter(row.names(.) %in% colnames(subjects) & 
-           colnames(.) %in% subjects$dbGap_ID & 
-           !colnames(.) %in% c("sex", "Race")) %>%
-  select(row.names(.))
+# Get the CpGs associated with Age but not with sex or Race
+matching_cpgs <- rownames(met_data)[which(rowSums(met_data[, matching_cols]) > 0 & rowSums(met_data[, -matching_cols]) == 0)]
 
-# Display top 20 CpGs
-top20_cpgs <- head(filtered_cpgs, 20)
-
-# Print the top 20 CpGs
-print(top20_cpgs)
+# Display the top 20 CpGs
+top_20_cpgs <- head(matching_cpgs, 20)
+top_20_cpgs
 ```
-Note: Replace "metRmOlWithDbgapIdHeader.txt" and "subjects.txt" with the actual file paths of the datasets in your local machine.
+```

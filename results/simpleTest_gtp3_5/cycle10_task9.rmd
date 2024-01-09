@@ -3,41 +3,38 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-library(readr)
-library(dplyr)
-library(ggplot2)
-library(pheatmap)
+# Load required libraries
 library(gplots)
-library(heatmaply)
-library(RColorBrewer)
-library(ape)
-library(gridExtra)
+library(pheatmap)
+library(ggplot2)
+library(prcomp)
 
 # Read the gene expression data
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance of each gene
-variances <- apply(data, 1, var)
+# Remove first column of gene names
+data <- data[, -1]
 
-# Sort the genes based on their variance and select the top 1000 most variable genes
-top_1000_genes <- head(order(variances, decreasing=TRUE), 1000)
+# Calculate the variance for each gene
+variance <- apply(data, 1, var)
 
-# Subset the data to include only the top 1000 most variable genes
-filtered_data <- data[top_1000_genes, ]
+# Get the indices of the top 1000 most variable genes
+top_genes <- order(variance, decreasing = TRUE)[1:1000]
 
-# Perform clustering on the filtered data
-cluster_data <- t(filtered_data)
-distance_matrix <- dist(cluster_data)
-cluster_result <- hclust(distance_matrix)
-heatmap_data <- cluster_data[rev(cluster_result$order), ]
+# Subset the data to retain only the top 1000 variable genes
+filtered_data <- data[top_genes, ]
 
-# Plot the heatmap with clustering
-heatmap(heatmap_data, col = heat.colors(256), scale="row")
+# Perform clustering on the filtered data and create a heatmap
+heatmap_data <- as.matrix(filtered_data)
+heatmap(heatmap_data, Colv = NA, Rowv = NA, scale = "row", main = "Gene Expression Heatmap")
 
-# Perform PCA on the filtered data
-pca_data <- prcomp(t(filtered_data))
+# Perform Principal Component Analysis (PCA)
+pca <- prcomp(filtered_data, scale = TRUE)
 
-# Plot the PCA for samples
-plot(pca_data$x[,1], pca_data$x[,2], xlab="PC1", ylab="PC2")
+# Plot the PCA results
+pca_data <- as.data.frame(pca$x[, 1:2])
+pca_plot <- ggplot(pca_data, aes(x = PC1, y = PC2)) + geom_point() + labs(x = "PC1", y = "PC2") + ggtitle("PCA")
+pca_plot
 
 ```
+Note: Replace "leukemiaExp.txt" with the actual file name and path if it is located in a different directory.

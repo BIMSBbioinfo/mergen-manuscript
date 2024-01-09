@@ -3,24 +3,28 @@ I have the following gene expression data, "leukemiaExp.txt". The file is tab se
 
 response:
 ```
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+# Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Check the number of samples
 num_samples <- ncol(data)
 
-# Check if there are more than 500 samples
+# If there are more than 500 samples, randomly sample the columns
 if (num_samples > 500) {
   # Set the seed for reproducibility
   set.seed(123)
   
-  # Randomly sample 500 columns
-  sampled_data <- data[, sample(num_samples, 500)]
+  # Select a random subset of columns
+  sample_cols <- sample(1:num_samples, size = 500, replace = FALSE)
+  
+  # Subset the data based on the randomly selected columns
+  subset_data <- data[, sample_cols]
 } else {
-  sampled_data <- data
+  # If there are less than or equal to 500 samples, use the original data
+  subset_data <- data
 }
 
-# Print the sampled data
-sampled_data
+# Print the subsetted gene expression data
+subset_data
 ```
-Note: Replace "leukemiaExp.txt" with the actual file name of your gene expression data file.
+Note: The code assumes that the file "leukemiaExp.txt" is in the current working directory and that the file has a header row. If the file is in a different directory, provide the full file path in the `read.table()` function. If the file does not have a header row, set `header = FALSE` in the `read.table()` function.

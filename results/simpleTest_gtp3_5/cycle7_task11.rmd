@@ -4,24 +4,24 @@ Read the tables count number of rows and columns for each.
 
 response:
 ```
-# Read the "metRmOlWithDbgapIdHeader.txt" file
+# Read the metRmOlWithDbgapIdHeader.txt file
 met_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Count the number of rows and columns in met_data
-nrows_met_data <- nrow(met_data)
-ncols_met_data <- ncol(met_data)
-
-# Read the "subjects.txt" file
+# Read the subjects.txt file
 subjects_data <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
 
-# Count the number of rows and columns in subjects_data
-nrows_subjects_data <- nrow(subjects_data)
-ncols_subjects_data <- ncol(subjects_data)
+# Count number of rows and columns in met_data
+row_count_met <- nrow(met_data)
+col_count_met <- ncol(met_data)
+
+# Count number of rows and columns in subjects_data
+row_count_subjects <- nrow(subjects_data)
+col_count_subjects <- ncol(subjects_data)
 
 # Print the counts
-print(paste("Number of rows in met_data:", nrows_met_data))
-print(paste("Number of columns in met_data:", ncols_met_data))
-print(paste("Number of rows in subjects_data:", nrows_subjects_data))
-print(paste("Number of columns in subjects_data:", ncols_subjects_data))
+print(paste("Number of rows in met_data:", row_count_met))
+print(paste("Number of columns in met_data:", col_count_met))
+print(paste("Number of rows in subjects_data:", row_count_subjects))
+print(paste("Number of columns in subjects_data:", col_count_subjects))
 ```
 

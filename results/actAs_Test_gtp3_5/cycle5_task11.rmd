@@ -3,28 +3,28 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 Read the tables count number of rows and columns for each.
 
 response:
-To read the tables, count the number of rows and columns for each dataset, you can use the read.table() function in R. Here's the code to accomplish this task:
+To read the tables, count the number of rows and columns for each dataset, and perform the task using R, you can follow the code below:
 
 ```
 # Read the "metRmOlWithDbgapIdHeader.txt" file
-met_table <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE, stringsAsFactors = FALSE)
-
-# Count the number of rows and columns in met_table
-met_rows <- nrow(met_table)
-met_cols <- ncol(met_table)
+methylation_data <- read.table("metRmOlWithDbgapIdHeader.txt", header = TRUE)
 
 # Read the "subjects.txt" file
-subject_table <- read.table("subjects.txt", header = TRUE, stringsAsFactors = FALSE)
+subjects_data <- read.table("subjects.txt", header = TRUE)
 
-# Count the number of rows and columns in subject_table
-subject_rows <- nrow(subject_table)
-subject_cols <- ncol(subject_table)
+# Count number of rows and columns for the "metRmOlWithDbgapIdHeader.txt" dataset
+num_rows_methylation <- nrow(methylation_data)
+num_cols_methylation <- ncol(methylation_data)
+
+# Count number of rows and columns for the "subjects.txt" dataset
+num_rows_subjects <- nrow(subjects_data)
+num_cols_subjects <- ncol(subjects_data)
 
 # Print the results
-cat("met_table Rows:", met_rows, "\n")
-cat("met_table Columns:", met_cols, "\n")
-cat("subject_table Rows:", subject_rows, "\n")
-cat("subject_table Columns:", subject_cols, "\n")
+cat("Number of rows in 'metRmOlWithDbgapIdHeader.txt':", num_rows_methylation, "\n")
+cat("Number of columns in 'metRmOlWithDbgapIdHeader.txt':", num_cols_methylation, "\n")
+cat("Number of rows in 'subjects.txt':", num_rows_subjects, "\n")
+cat("Number of columns in 'subjects.txt':", num_cols_subjects, "\n")
 ```
 
-This code will read the two files "metRmOlWithDbgapIdHeader.txt" and "subjects.txt", and store them in the variables `met_table` and `subject_table`, respectively. Then the number of rows and columns for each dataset will be counted and stored in the variables `met_rows`, `met_cols`, `subject_rows`, and `subject_cols`. Finally, the results will be printed to the console.
+Make sure to replace the file names `"metRmOlWithDbgapIdHeader.txt"` and `"subjects.txt"` with the actual file names and paths if they are located in a different directory.

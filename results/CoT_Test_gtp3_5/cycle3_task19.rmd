@@ -2,40 +2,76 @@ prompt:
 I have the following count table for an RNA-seq experiment, rows are genes and columns are samples, "Supplementary_Table_1_exp.xlsx". The first column of the file is my gene names and the rest of the columns are samples. My annotation data is here  "SRP021193.colData.tsv", it contains sample annotations and rows of this matches the columns of count table, first column is the sample ids. Normalize counts, make two PCA plots for samples, one color coded samples by "group" and the other color coded by "LibrarySelection" in my annotation data.
 
 response:
-To solve this task, we will use the following steps:
+To complete this task, we will need to use the R programming language and some bioinformatics packages. Here is the step-by-step process to normalize the counts, create PCA plots, and color code them based on the sample annotation data.
 
-1. Load the count table and annotation data.
-2. Normalize the counts.
-3. Perform PCA analysis on the count table.
-4. Create two PCA plots, one color-coded by "group" and the other color-coded by "LibrarySelection".
-
-Here is the code to accomplish these steps:
-
+Step 1: Load the required R packages
 ```
-# Step 1: Load the count table and annotation data
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, row.names = 1)
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+# Install the required packages if not already installed
 
-# Step 2: Normalize the counts
-normalized_counts <- scale(count_table)
 
-# Step 3: Perform PCA analysis
-pca <- prcomp(normalized_counts)
-
-# Step 4: Create PCA plots
+# Load the required packages
+library(readxl)
+library(DESeq2)
+library(dplyr)
 library(ggplot2)
-
-# Color-coded by "group"
-ggplot(data = annotation_data, aes(x = pca$x[,1], y = pca$x[,2], color = group)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2", title = "PCA Plot - Color-coded by group")
-
-# Color-coded by "LibrarySelection"
-ggplot(data = annotation_data, aes(x = pca$x[,1], y = pca$x[,2], color = LibrarySelection)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2", title = "PCA Plot - Color-coded by LibrarySelection")
 ```
 
-Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths for your data.
+Step 2: Read the count table and annotation data
+```
+# Read the count table from the Excel file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-Note: We assume that the count table and annotation data have the same sample order, so that the rows in the count table correspond to the same samples as the rows in the annotation data.
+# Read the annotation data from the TSV file
+annotation_data <- read.delim("SRP021193.colData.tsv")
+```
+
+Step 3: Normalize the counts using DESeq2
+```
+# Convert the count table to DESeqDataSet object
+dds <- DESeqDataSetFromMatrix(countData = count_table[, -1], colData = annotation_data, design = ~1)
+
+# Perform size factor normalization
+dds <- estimateSizeFactors(dds)
+
+# Perform variance stabilizing transformation (VST)
+# This step is optional, but often improves the analysis
+dds <- vst(dds, blind=FALSE)
+
+# Extract normalized counts
+normalized_counts <- counts(dds, normalized = TRUE)
+```
+
+Step 4: Perform PCA on the normalized counts
+```
+# Calculate sample-wise Euclidean distances based on the normalized counts
+distances <- dist(t(normalized_counts))
+
+# Perform PCA on the distances
+pca <- prcomp(distances, scale = TRUE)
+
+# Extract the PC scores
+pca_scores <- pca$x
+```
+
+Step 5: Create the first PCA plot color-coded by group
+```
+# Merge the PCA scores with the annotation data
+pca_data <- cbind(pca_scores, annotation_data)
+
+# Create the first PCA plot color-coded by group
+ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "group") +
+  theme_minimal()
+```
+
+Step 6: Create the second PCA plot color-coded by LibrarySelection
+```
+# Create the second PCA plot color-coded by LibrarySelection
+ggplot(pca_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2", color = "LibrarySelection") +
+  theme_minimal()
+```
+
+That's it! Following the provided steps and executing the code will normalize the counts, create two PCA plots, and color code them based on the sample annotations specified in the annotation data.
