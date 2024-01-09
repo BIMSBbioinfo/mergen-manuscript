@@ -10,73 +10,64 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-The following is the R code to perform the tasks mentioned:
-
 ```
-# Load required packages
-library(readxl)
+# Load required libraries
+library(openxlsx)
 library(dplyr)
-library(edgeR)
 library(ggplot2)
-library(plotly)
+library(sva)
 
-# Read the count table from the XLSX file
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data from the TSV file
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
 
-# Transpose the count table and remove the 'Genes' column
-count_table <- t(count_table[, -1])
+# Extract gene names from count table
+gene_names <- count_table$Genes
 
-# Set the row names of the count table as the gene names
-rownames(count_table) <- count_table[, 1]
+# Remove the first column (gene names) from count table
 count_table <- count_table[, -1]
 
-# Transpose the annotation data and set the row names as sample ids
-annotation_data <- t(annotation_data)
-rownames(annotation_data) <- annotation_data[, 1]
-annotation_data <- annotation_data[, -1]
+# Transpose the count table
+count_table <- t(count_table)
 
-# Perform statistical tests (e.g., edgeR) to find genes specific for each group
-groups <- unique(annotation_data[2, ])
-group_specific_genes <- list()
-for (group in groups) {
-  group_samples <- annotation_data[, annotation_data[2, ] == group]
-  group_counts <- count_table[, colnames(count_table) %in% rownames(group_samples)]
-  
-  # Perform statistical test using edgeR or other appropriate method
-  # Include the code for the statistical test here
-  
-  # Store the group-specific genes in a list
-  group_specific_genes[[group]] <- # Store the group-specific genes here
-}
+# Rename the rows of count table to match the sample ids in annotation data
+row.names(count_table) <- annotation_data$Sample_ID
 
-# Combine all group-specific genes into a single dataframe
-combined_genes <- do.call(rbind, group_specific_genes)
+# Add group information to count table
+count_table$group <- annotation_data$group
 
-# Perform PCA using the group-specific genes
-pca <- prcomp(combined_genes)
+# Perform statistical test to find genes specific for each group
+group_specific_genes <- lapply(unique(annotation_data$group), function(x) {
+  group_counts <- count_table[count_table$group == x, -ncol(count_table)]
+  group_specific <- apply(group_counts, 1, function(y) {
+    t.test(y[group_counts$group != x], y[group_counts$group == x])$p.value < 0.05
+  })
+  gene_names[group_specific]
+})
 
-# Extract the PC scores from the PCA output
-pc_scores <- as.data.frame(pca$x)
+# Combine the group specific genes into a single vector
+group_specific_genes <- unlist(group_specific_genes)
 
-# Add the 'group' variable from the annotation data to the PC scores dataframe
-pc_scores$group <- annotation_data[2, colnames(annotation_data) %in% rownames(combined_genes)]
+# Filter count table to include only group specific genes
+count_table_filtered <- count_table[, c(group_specific_genes, "group")]
 
-# Plot PCA with color-coded groups using ggplot2
-ggplot(pc_scores, aes(x = PC1, y = PC2, color = group)) + 
+# Run PCA on the filtered count table
+pca_result <- prcomp(count_table_filtered[, -ncol(count_table_filtered)], scale = TRUE)
+
+# Create PCA plot and color code by group variable
+pca_plot <- ggplot(data.frame(pca_result$x[, 1:2], group = count_table_filtered$group),
+                   aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
-  labs(x = "PC1", y = "PC2", title = "PCA Plot")
+  labs(title = "PCA Plot", x = "PC1", y = "PC2")
 
-# Plot interactive PCA with color-coded groups using plotly
-plot_ly(pc_scores, x = ~PC1, y = ~PC2, color = ~group, type = "scatter", mode = "markers") %>%
-  layout(xaxis = list(title = "PC1"), yaxis = list(title = "PC2"), title = "PCA Plot")
+# Print the PCA plot
+print(pca_plot)
 ```
-
-Note: Replace the comment `# Perform statistical test using edgeR or other appropriate method` with the appropriate code to perform statistical testing using edgeR or any other method you prefer.
+Note: Make sure to install the required libraries before running the code using the `install.packages()` function.

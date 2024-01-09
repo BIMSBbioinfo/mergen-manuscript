@@ -11,33 +11,31 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Select only the columns with the sample data
-sample_data <- data[, -1]
+# Calculate the variability of each gene
+gene_variability <- apply(gene_exp[, -1], 1, var)
 
-# Calculate the variability for each gene
-variability <- apply(sample_data, 1, var)
+# Sort the genes based on their variability in descending order
+sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
 
-# Sort the genes based on their variability
-sorted_genes <- data[order(variability, decreasing = TRUE), ]
+# Retrieve the most variable top 1000 genes
+top_1000_genes <- sorted_genes[1:1000, ]
 
-# Select the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000, ]
-
-# Perform clustering on the samples
-sample_clusters <- hclust(dist(t(sample_data)))
-
-# Determine the cluster labels for each sample
-cluster_labels <- cutree(sample_clusters, k = 5)
+# Cluster the samples
+sample_clusters <- kmeans(top_1000_genes[, -1], centers = 5)  # Assuming 5 clusters
 
 # Extract cluster specific genes for each cluster
-cluster_specific_genes <- lapply(1:max(cluster_labels), function(cluster) {
-  cluster_genes <- top_genes[cluster_labels == cluster, ]
-  return(cluster_genes)
-})
+cluster_specific_genes <- list()
+for (i in 1:max(sample_clusters$cluster)) {
+  cluster_specific_genes[[i]] <- top_1000_genes[sample_clusters$cluster == i, ]
+}
 
-# Show the final results
+# Print the code
+print("Top 1000 variable genes:")
+print(top_1000_genes)
+print("Sample clusters:")
+print(sample_clusters)
+print("Cluster specific genes:")
 print(cluster_specific_genes)
 ```
-Note: The code assumes that the file "leukemiaExp.txt" is in the working directory. You may need to provide the full file path if it is located elsewhere. The code performs hierarchical clustering on the samples using the Euclidean distance and then assigns cluster labels to each sample. It then extracts the cluster-specific genes based on the top 1000 most variable genes. The final result is a list containing the cluster-specific genes for each cluster.

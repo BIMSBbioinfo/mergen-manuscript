@@ -17,12 +17,11 @@ library(readxl)
 # Read the excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Find the number of genes (rows) and samples (columns) in the dataset
-num_genes <- nrow(data) - 1   # Subtract 1 to exclude the header row
-num_samples <- ncol(data) - 1 # Subtract 1 to exclude the first column (gene names)
+# Determine the number of genes and samples
+num_genes <- nrow(data) - 1 # Subtracting 1 to exclude the header row with gene names
+num_samples <- ncol(data) - 1 # Subtracting 1 to exclude the first column with gene names
 
-# Print the results
+# Print the result
 num_genes
 num_samples
 ```
-Note: Make sure to install and load the "readxl" package before running the code.

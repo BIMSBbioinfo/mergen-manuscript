@@ -11,30 +11,35 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability for each gene
-variability <- apply(data, 1, var)
+# Remove the first column (gene names)
+expression <- data[, -1]
 
-# Select the top 1000 genes with the highest variability
-top_genes <- names(sort(variability, decreasing=TRUE)[1:1000])
+# Calculate the variability of each gene
+variability <- apply(expression, 1, var)
 
-# Filter the data to retain only the top variable genes
-data_filtered <- data[top_genes, ]
+# Get the indices of the top 1000 most variable genes
+top_genes <- order(variability, decreasing = TRUE)[1:1000]
 
-# Perform clustering of the samples
-clusters <- kmeans(t(data_filtered), centers=4)
+# Filter the expression data to retain only the top variable genes
+filtered_expression <- expression[top_genes, ]
 
-# Extract the cluster-specific genes for each cluster
-cluster_genes <- list()
-for (i in 1:4) {
-  cluster_genes[[i]] <- row.names(data_filtered)[clusters$cluster == i]
-}
+# Perform clustering on the samples using k-means
+clusters <- kmeans(t(filtered_expression), centers = 5)
+
+# Extract cluster-specific genes for each cluster
+cluster_genes <- lapply(1:5, function(cluster) {
+  cluster_samples <- which(clusters$cluster == cluster)
+  cluster_expression <- filtered_expression[, cluster_samples]
+  mean_expression <- apply(cluster_expression, 1, mean)
+  top_cluster_genes <- order(mean_expression, decreasing = TRUE)[1:100]
+  rownames(filtered_expression)[top_cluster_genes]
+})
 
 # Print the cluster-specific genes for each cluster
-for (i in 1:4) {
-  cat("Cluster", i, "genes:")
-  cat(cluster_genes[[i]], sep="\n")
+for (i in 1:5) {
+  cat("Cluster", i, "genes:", "\n")
+  cat(paste(cluster_genes[[i]], collapse = ", "), "\n\n")
 }
-
 ```

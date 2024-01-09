@@ -11,41 +11,28 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data
-leukemia_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Remove the first column with gene names
-gene_exp <- leukemia_exp[, -1]
+# Calculate the variability of each gene
+variance <- apply(gene_data[, -1], 1, var)
 
-# Calculate the variance of each gene
-gene_variance <- apply(gene_exp, 1, var)
+# Sort the genes based on their variability in decreasing order
+sorted_genes <- gene_data[order(variance, decreasing=TRUE), ]
 
-# Get the top 1000 genes with highest variance
-top_genes <- order(gene_variance, decreasing = TRUE)[1:1000]
+# Select the top 1000 most variable genes
+variable_genes <- sorted_genes[1:1000, ]
 
-# Select the top variable genes
-variable_genes <- leukemia_exp[top_genes, ]
+# Perform clustering on the samples using the variable genes
+sample_clusters <- hclust(dist(t(variable_genes[, -1])))
 
-# Perform clustering of the samples
-cluster <- kmeans(variable_genes[, -1], centers = 5)
+# Cut the dendrogram into clusters
+clusters <- cutree(sample_clusters, k=5)
 
-# Get the cluster assignments for each sample
-cluster_assignments <- cluster$cluster
+# Extract the genes specific to each cluster
+cluster_specific_genes <- list()
 
-# Create a list to store the cluster-specific genes
-cluster_genes <- list()
-
-# Iterate over each cluster
-for (i in 1:max(cluster_assignments)) {
-  # Get the indices of samples belonging to the current cluster
-  indices <- which(cluster_assignments == i)
-  
-  # Extract the gene expression data for the current cluster
-  current_cluster_genes <- variable_genes[, indices]
-  
-  # Store the gene expression data for the current cluster
-  cluster_genes[[i]] <- current_cluster_genes
+for (i in 1:max(clusters)) {
+  cluster_specific_genes[[i]] <- variable_genes[clusters == i, ]
 }
-
-# The cluster_genes list will contain cluster-specific gene expression data for each cluster
 ```
 

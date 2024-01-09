@@ -11,33 +11,41 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-expression_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Create a matrix of gene expression values
-expression_matrix <- as.matrix(expression_data[, -1])
+# Calculate the variability for each gene (standard deviation)
+gene_variability <- apply(data[, -1], 1, sd)
 
-# Calculate the variance of each gene
-gene_variability <- apply(expression_matrix, 1, var)
-
-# Order the genes by their variability in descending order
-ordered_genes <- order(gene_variability, decreasing=TRUE)
+# Sort the genes based on their variability in descending order
+sorted_genes <- sort(gene_variability, decreasing=TRUE)
 
 # Select the top 1000 most variable genes
-top_genes <- ordered_genes[1:1000]
+top_genes <- names(sorted_genes)[1:1000]
 
-# Filter the expression matrix to retain only the top variable genes
-filtered_expression_matrix <- expression_matrix[top_genes, ]
+# Filter the data to retain only the most variable genes
+filtered_data <- data[c("Gene", top_genes)]
 
-# Cluster the samples based on the gene expression values
-cluster_samples <- hclust(dist(t(filtered_expression_matrix)))
+# Cluster the samples
+sample_clusters <- hclust(dist(t(filtered_data[, -1])))
 
-# Extract the cluster assignments for each sample
-sample_clusters <- cutree(cluster_samples, k=3)
+# Extract the cluster labels for each sample
+sample_labels <- cutree(sample_clusters, k=5)
 
-# Extract cluster-specific genes for each cluster
-cluster_genes <- lapply(1:max(sample_clusters), function(cluster){
-  cluster_genes <- top_genes[sample_clusters == cluster]
-  return(cluster_genes)
-})
+# Create a list to store the cluster specific genes
+cluster_specific_genes <- vector("list", length(unique(sample_labels)))
+
+# Loop through each cluster and extract the cluster specific genes
+for (i in 1:length(cluster_specific_genes)) {
+  cluster_samples <- which(sample_labels == i)
+  cluster_genes <- colnames(filtered_data)[-1][cluster_samples]
+  cluster_specific_genes[[i]] <- c("Gene", cluster_genes)
+}
+
+# Print the cluster specific genes for each cluster
+for (i in 1:length(cluster_specific_genes)) {
+  print(paste("Cluster", i))
+  print(cluster_specific_genes[[i]])
+}
 ```
-Note: In this code, I assumed that you want the samples to be clustered into 3 clusters. The cluster assignments for each sample are stored in the `sample_clusters` variable. The cluster-specific genes for each cluster are stored in the `cluster_genes` list.
+
+Note: In this code, it is assumed that the first column in the input file is the gene names and the remaining columns are the samples. The code creates a dendrogram and performs hierarchical clustering on the samples based on the most variable genes. It then extracts the cluster labels for each sample and stores the cluster specific genes in a list. Finally, it prints the cluster specific genes for each cluster.

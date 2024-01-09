@@ -10,36 +10,28 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
+# Load required libraries
+library(gplots)      # for heatmap
+library(factoextra)  # for PCA
+library(readr)       # for reading data
+
 # Read the gene expression data
-data <- read.delim("leukemiaExp.txt", sep="\t")
+data <- read_delim("leukemiaExp.txt", delim = "\t", col_names = TRUE)
 
-# Remove the first column (gene names) from the data
-data <- data[,-1]
+# Filter genes based on variability
+variability <- apply(data[, -1], 1, var)
+top_genes <- head(order(variability, decreasing = TRUE), 1000)
+filtered_data <- data[c(1, top_genes + 1)]
 
-# Calculate the variability of each gene
-variability <- apply(data, 1, var)
+# Convert data to matrix
+data_matrix <- as.matrix(filtered_data[-1])
 
-# Sort the genes based on their variability
-sorted_genes <- order(variability, decreasing=TRUE)
+# Plot heatmap with clustering
+heatmap(data_matrix, Colv = NA, scale = "row", main = "Heatmap of Gene Expression")
 
-# Retain the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000]
-
-# Filter the data to include only the top 1000 genes
-filtered_data <- data[top_1000_genes, ]
-
-# Perform hierarchical clustering on the filtered data
-heatmap_data <- as.matrix(filtered_data)
-heatmap_data <- t(heatmap_data)
-heatmap_data <- scale(heatmap_data)
-
-# Plot the heatmap
-heatmap(heatmap_data, scale="row")
-
-# Perform PCA on the filtered data
-pca_result <- prcomp(filtered_data)
-
-# Plot PCA
-plot(pca_result$x[,1], pca_result$x[,2])
+# Perform PCA on samples
+pca <- prcomp(t(data_matrix), scale = TRUE)
+fviz_pca_ind(pca, col.var = "contrib", col.ind = "cos2", gradient.cols = c("#FF0000", "#0000FF"), repel = TRUE)
 ```
 
+Note: The error was mainly due to incorrect indexing and not converting the filtered data to a matrix before performing the heatmap. The `top_genes` indexes should start from 1 (instead of 0) since the first column in `filtered_data` is the gene names column. Additionally, to perform PCA on samples, we need to take the transpose of the data matrix using `t(data_matrix)`.

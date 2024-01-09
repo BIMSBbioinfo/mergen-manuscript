@@ -10,26 +10,32 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary packages
-library(openxlsx)
+# Load required libraries
+library(readxl)
 
-# Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1, colNames = TRUE)
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+num_rows_count <- nrow(count_table)
+num_cols_count <- ncol(count_table)
 
-# Read annotation data
-annotations <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t", header=TRUE)
+num_rows_annotation <- nrow(annotation_data)
+num_cols_annotation <- ncol(annotation_data)
 
-# Get the number of rows and columns in the count table
-count_rows <- nrow(count_table)
-count_cols <- ncol(count_table)
+# Print the number of rows and columns for each table
+print("Count Table:")
+print(paste("Number of rows:", num_rows_count))
+print(paste("Number of columns:", num_cols_count))
 
-# Get the number of rows and columns in the annotation data
-anno_rows <- nrow(annotations)
-anno_cols <- ncol(annotations)
+print("Annotation Data:")
+print(paste("Number of rows:", num_rows_annotation))
+print(paste("Number of columns:", num_cols_annotation))
 ```
+Note: Make sure to replace the file paths with the actual paths to the files on your system.

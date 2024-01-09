@@ -10,28 +10,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from file
-data <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Calculate the variability of each gene
+# Calculate the variance for each gene and select the top 1000 most variable genes
 variance <- apply(data[, -1], 1, var)
+top_genes <- names(variance)[order(variance, decreasing = TRUE)][1:1000]
 
-# Sort the genes based on their variability in descending order
-sorted_genes <- sort(variance, decreasing = TRUE)
+# Select the gene expression data for the top 1000 genes (excluding the first column with gene names)
+selected_data <- data.frame(Gene = data[, 1], data[, top_genes])
 
-# Retain the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000]
+# Convert the data from character to numeric
+selected_data[, -1] <- apply(selected_data[, -1], 2, as.numeric)
 
-# Filter the data based on the top 1000 genes
-filtered_data <- data[data[, 1] %in% names(top_1000_genes), ]
-
-# Check if the filtered data has at least two genes
-if (nrow(filtered_data) >= 2) {
-  # Create a scatterplot of the two most variable genes
-  gene1 <- filtered_data[, 2]
-  gene2 <- filtered_data[, 3]
-  plot(gene1, gene2, xlab = "Gene 1", ylab = "Gene 2", main = "Scatterplot of Two Most Variable Genes")
-} else {
-  print("Not enough genes to create a scatterplot.")
-}
+# Create a scatterplot of the two most variable genes
+gene1 <- selected_data[, top_genes[1]]
+gene2 <- selected_data[, top_genes[2]]
+plot(gene1, gene2, main = "Scatterplot of the two most variable genes", xlab = top_genes[1], ylab = top_genes[2])
 ```
+Note: The code assumes that the first column of the data file contains the gene names and the remaining columns contain the sample data. If your data file has a different structure, please adjust the code accordingly. Additionally, if any of the values in the gene expression data are non-numeric, you may need to preprocess the data accordingly.

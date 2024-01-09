@@ -10,17 +10,17 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 response:
 ```
-# Read the count table
-count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+# Read the count table file
+count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
-# Count the number of genes
-num_genes <- dim(count_table)[1]
+# Get the number of genes in the dataset
+num_genes <- nrow(count_table)
 
-# Count the number of samples
-num_samples <- dim(count_table)[2] - 2
+# Get the number of samples in the dataset
+num_samples <- ncol(count_table) - 2  # Subtract 2 to exclude the first gene name column and last gene length column
 
-# Print the results
+# Print the number of genes and samples
 cat("Number of genes:", num_genes, "\n")
 cat("Number of samples:", num_samples, "\n")
 ```
-Note: In the code above, I assumed that the file "SRP021193.raw_counts.tsv" is in the current working directory. If it is in a different directory, you need to provide the full path to the file in the `read.table()` function.
+```

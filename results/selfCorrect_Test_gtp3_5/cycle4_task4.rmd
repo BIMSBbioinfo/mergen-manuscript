@@ -13,15 +13,13 @@ response:
 # Read the count table file
 count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Get the number of genes
+# Number of genes
 num_genes <- nrow(count_table)
 
-# Get the number of samples
-num_samples <- ncol(count_table) - 2
+# Number of samples
+num_samples <- ncol(count_table) - 2 # Subtract 2 to exclude the first and last columns
 
-# Display the number of genes and samples
+# Print the number of genes and samples
 num_genes
 num_samples
 ```
-
-Note: In this code, it is assumed that the count table file is in the same directory as the R script. If the file is in a different directory, please provide the full file path in the `read.table()` function.

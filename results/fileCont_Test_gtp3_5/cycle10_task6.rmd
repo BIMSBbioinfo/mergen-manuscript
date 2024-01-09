@@ -10,21 +10,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from the file
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Check the number of columns in the data
-num_columns <- ncol(data)
+num_samples <- ncol(gene_data)
 
 # If there are more than 500 columns, randomly sample 500 columns
-if (num_columns > 500) {
-  sample_columns <- sample(2:num_columns, 500)
-  subset_data <- data[, c(1, sample_columns)]
+if (num_samples > 500) {
+  sample_columns <- sample(2:num_samples, 500)
+  gene_data_subset <- gene_data[, c(1, sample_columns)]
 } else {
-  subset_data <- data
+  gene_data_subset <- gene_data
 }
 
-# Print the subsetted data
-print(subset_data)
+# Display the subset of the data
+gene_data_subset
 ```
-

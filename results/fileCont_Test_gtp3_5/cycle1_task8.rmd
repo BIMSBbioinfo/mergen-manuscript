@@ -10,21 +10,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from the file
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column (gene names)
-data <- data[, -1]
+# Calculate the variability of each gene
+gene_variability <- apply(gene_exp[, -1], 1, var)
 
-# Calculate the variance for each gene
-variance <- apply(data, 1, var)
+# Sort the genes based on variability in descending order
+sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
+ 
+# Select the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000, ]
 
-# Sort the genes by variance in descending order
-sorted_genes <- head(order(variance, decreasing = TRUE), 1000)
-
-# Keep only the most variable genes
-filtered_data <- data[sorted_genes, ]
+# Select the two most variable genes
+most_variable_genes <- top_genes[1:2, ]
 
 # Create a scatterplot of the two most variable genes
-plot(filtered_data[1, ], filtered_data[2, ], xlab = "Gene 1", ylab = "Gene 2", main = "Scatterplot of Two Most Variable Genes")
+plot(most_variable_genes[, 2], most_variable_genes[, 3], xlab = "Gene 1", ylab = "Gene 2")
 ```
+Note: Make sure to adjust the column indices in `most_variable_genes[, 2]` and `most_variable_genes[, 3]` based on the actual column indices of the two genes in your dataset.

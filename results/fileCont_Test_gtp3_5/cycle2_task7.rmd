@@ -10,18 +10,19 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the data from the file
+data <- read.delim("leukemiaExp.txt", sep="\t")
 
-# Check if there are more than 500 samples
-if (ncol(data) > 500) {
-  # Randomly sample 500 columns
-  sampled_data <- data[, sample(ncol(data), 500)]
-} else {
-  sampled_data <- data
+# Check the number of columns
+num_columns <- ncol(data)
+
+# If there are more than 500 columns, randomly sample 500 columns
+if(num_columns > 500) {
+  set.seed(123)  # Set a seed for reproducibility
+  sample_columns <- sample(seq_len(num_columns), 500)
+  data <- data[, sample_columns]
 }
 
 # Create a boxplot of the columns
-boxplot(sampled_data[, -1], col = "lightblue")
+boxplot(data)
 ```
-Note: The header argument in the read.table function is set to TRUE because the first row contains column names. The sep argument is set to "\t" because the file is tab-separated. The boxplot function is used to create the boxplot, and the -1 is used to exclude the first column (gene names) from the boxplot. The col argument is set to "lightblue" to color the boxes.

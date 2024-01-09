@@ -10,7 +10,7 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
@@ -19,24 +19,31 @@ response:
 # Load necessary libraries
 library(readxl)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Rename columns in the annotation data
-colnames(annotation_data)[1] <- "sample_ids"
+# Set the row names of the count table as the gene names
+row.names(count_table) <- count_table[,1]
+# Remove the first column from the count table
+count_table <- count_table[, -1]
 
-# Make sure both the count table and annotation data have the same sample ids as columns
-sample_ids <- intersect(colnames(count_table)[-1], annotation_data$sample_ids)
-count_table <- count_table[, c("Genes", sample_ids)]
-annotation_data <- annotation_data[annotation_data$sample_ids %in% sample_ids, ]
+# Set the row names of the annotation data as the sample ids
+row.names(annotation_data) <- annotation_data[,1]
+# Remove the first column from the annotation data
+annotation_data <- annotation_data[, -1]
 
-# Merge the count table and annotation data based on sample ids
-merged_data <- merge(count_table, annotation_data, by = "sample_ids")
+# Merge the count table and annotation data based on matching sample ids
+merged_data <- merge(count_table, annotation_data, by = "row.names")
 
-# Plot boxplots for gene expression values per sample and color code based on "group" variable
+# Set the row names of the merged data as the sample ids
+rownames(merged_data) <- merged_data[,1]
+# Remove the first column from the merged data
+merged_data <- merged_data[, -1]
+
+# Plot boxplots for gene expression values per sample and color code based on the "group" variable
 boxplot(merged_data[, 2:ncol(merged_data)], col = merged_data$group)
 ```
 ```

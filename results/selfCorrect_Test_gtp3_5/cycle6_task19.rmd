@@ -10,48 +10,49 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Apologies for the errors. Here's the fixed code:
-
 ```
 # Load required libraries
-library(openxlsx)
-library(dplyr)
-library(ggplot2)
-library(pcaMethods)
+library(readxl)
+library(Seurat)
 
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 1, colNames = TRUE)
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Remove first column (gene names)
+count_table <- count_table[, -1]
+
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Create Seurat object
+seurat_obj <- CreateSeuratObject(counts = count_table)
+
+# Add metadata to Seurat object
+seurat_obj$sample_ids <- rownames(annotation_data)
+seurat_obj$group <- annotation_data$group
+seurat_obj$library_selection <- annotation_data$LibrarySelection
 
 # Normalize counts
-normalized_counts <- count_table[, -1] / rowSums(count_table[, -1]) * 10^6
+seurat_obj <- NormalizeData(seurat_obj)
 
-# Handle missing values
-normalized_counts[is.na(normalized_counts)] <- 0
+# Identify variable features
+seurat_obj <- FindVariableFeatures(seurat_obj)
+
+# Perform scaling of data
+seurat_obj <- ScaleData(seurat_obj)
 
 # Perform PCA
-pca_data <- prcomp(t(normalized_counts))
+seurat_obj <- RunPCA(seurat_obj)
 
-# Add sample annotations to PCA data
-sample_ids <- colnames(count_table)[-1]
-pca_data$sample_ids <- sample_ids
-pca_data$group <- annotation_data$group[match(sample_ids, annotation_data$diagnosis)]
-pca_data$LibrarySelection <- annotation_data$LibrarySelection[match(sample_ids, annotation_data$diagnosis)]
+# Plot PCA colored by "group"
+PCAPlot(seurat_obj, group.by = "group")
 
-# Plot PCA color coded by group
-ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
-  geom_point()
-
-# Plot PCA color coded by LibrarySelection
-ggplot(pca_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
-  geom_point()
+# Plot PCA colored by "LibrarySelection"
+PCAPlot(seurat_obj, group.by = "library_selection")
 ```
-
-Please ensure that the file paths for "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" are correct and accessible in your system.
+```

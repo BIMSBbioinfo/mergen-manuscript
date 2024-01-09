@@ -10,56 +10,57 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
 library(openxlsx)
-library(dplyr)
-library(vegan)
+library(reshape2)
+library(stats)
 library(ggplot2)
+library(ggfortify)
 
-# Read the count table and annotation data
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2)
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+# Transpose count table to have samples as rows and genes as columns
+count_table <- t(count_table)
+# Exclude the first column which contains gene names
+count_table <- count_table[,-1]
 
-# Extract gene names from the count table
-genes <- count_table[, 1]
+# Read annotation data
+annotation_data <- read.csv("SRP021193.colData.tsv", sep = "\t", row.names = 1)
 
-# Extract group variable from the annotation data
-group <- annotation_data$group
+# Filter count table based on group
+group_genes <- list()
+groups <- unique(annotation_data$group)
+for (group in groups) {
+  samples <- annotation_data[annotation_data$group == group, row.names(annotation_data)]
+  group_genes[[group]] <- row.names(count_table[,samples])
+}
 
-# Filter count table and annotation data to include only group-specific genes
-group_specific_genes <- apply(count_table[, -1], 2, function(x) {
-  groups <- unique(group)
-  group_pvalues <- sapply(groups, function(group_name) {
-    group_samples <- count_table[, -1][, group == group_name]
-    other_samples <- count_table[, -1][, group != group_name]
-    p_value <- t.test(group_samples, other_samples)$p.value
-    p_value
+# Perform statistical tests for each group
+group_specific_genes <- list()
+for (group in groups) {
+  samples <- annotation_data[annotation_data$group == group, row.names(annotation_data)]
+  group_counts <- count_table[,samples]
+  p_values <- apply(group_counts, 1, function(x) {
+    t.test(x ~ group)$p.value
   })
-  p_value_threshold <- 0.05
-  group_specific_genes <- genes[group_pvalues < p_value_threshold]
-  group_specific_genes
-})
+  group_specific_genes[[group]] <- row.names(count_table)[p_values < 0.05]
+}
 
-# Create a data frame with group-specific genes and group labels
-group_specific_genes_df <- data.frame(Genes = unlist(group_specific_genes), Group = group[match(names(unlist(group_specific_genes)), genes)])
+# Extract group-specific genes from count table
+group_specific_counts <- count_table[group_specific_genes[[groups[1]]],]
+for (i in 2:length(groups)) {
+  group_specific_counts <- rbind(group_specific_counts, count_table[group_specific_genes[[groups[i]]],])
+}
 
-# Convert count table into a matrix
-count_matrix <- as.matrix(count_table[, -1])
+# Perform PCA on group-specific genes
+pca <- prcomp(t(group_specific_counts))
 
-# Perform PCA using group-specific genes
-pca <- rda(count_matrix[row.names(count_matrix) %in% group_specific_genes_df$Genes, ])
-
-# Plot PCA with color-coded groups
-ggplot(data = as.data.frame(scores(pca)), aes(x = Dim1, y = Dim2, color = Group)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2") +
-  scale_color_brewer(palette = "Set1")
+# Plot PCA and color code by group
+autoplot(pca, data = annotation_data, colour = "group")
 ```
-
-Please make sure to install the required libraries (`openxlsx`, `dplyr`, `vegan`, `ggplot2`) before running the code.
+```

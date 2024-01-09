@@ -10,73 +10,62 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
 library(readxl)
 library(dplyr)
-library(stats)
 library(ggplot2)
+library(pcaMethods)
 
 # Read count table
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1, col_names = TRUE)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+annotation <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", row.names = 1)
 
-# Remove unnecessary columns from annotation data
-annotation_data <- annotation_data %>% select(diagnosis, group)
+# Transpose count table
+count_table <- t(count_table)
 
-# Transpose count data to have samples as rows and genes as columns
-count_data <- t(count_data)
+# Add sample IDs as a new column in annotation data
+annotation$sample_id <- row.names(annotation)
 
-# Set row names as gene names from the count data
-row.names(count_data) <- count_data[,1]
+# Perform statistical tests to find genes specific for each group
+group_specific_genes <- count_table %>%
+  rownames_to_column(var = "Genes") %>%
+  left_join(annotation, by = c("Genes" = "sample_id"))
 
-# Remove gene names column from count data
-count_data <- count_data[,-1]
-
-# Convert count data to matrix
-count_data <- as.matrix(count_data)
-
-# Join count data with annotation data based on sample ids
-data <- left_join(as.data.frame(count_data), annotation_data, by = c("row.names" = "diagnosis"))
-
-# Identify groups in annotation data
-groups <- unique(data$group)
-
-# Perform statistical test for each group
-group_specific_genes <- list()
-for (group in groups) {
-  # Subset data for the specific group
-  group_data <- data %>% filter(group == group)
-
-  # Remove group column from group_data
-  group_data <- group_data %>% select(-group)
-
-  # Perform statistical test (you can choose appropriate test based on your data)
-  p_values <- apply(group_data, 2, function(x) t.test(x ~ 1)$p.value)
-
-  # Select genes with significant p-values (you can choose appropriate threshold)
-  specific_genes <- names(p_values[p_values < 0.05])
-
-  # Store group specific genes
-  group_specific_genes[[group]] <- specific_genes
+# Define function to filter genes specific to each group
+get_specific_genes <- function(group) {
+  group_specific_genes %>%
+    filter(group == {{group}}) %>%
+    select(-group) %>%
+    summarise(across(where(is.numeric), ~ sum(. > 0) == n())) %>%
+    filter_all(any_vars(.)) %>%
+    row.names()
 }
 
-# Extract group specific genes from count data
-group_specific_count_data <- count_data[, colnames(count_data) %in% unlist(group_specific_genes)]
+# Find genes specific to each group
+CASE_genes <- get_specific_genes("CASE")
+CTRL_genes <- get_specific_genes("CTRL")
 
-# Perform PCA using group specific count data
-pca <- prcomp(group_specific_count_data)
+# Combine genes specific to each group
+group_specific_genes <- union(CASE_genes, CTRL_genes)
 
-# Plot PCA with color-coded groups
-ggplot(data.frame(pca$x), aes(x = PC1, y = PC2, color = factor(data$group))) +
+# Perform PCA using group specific genes
+pca_data <- count_table[group_specific_genes, ] %>%
+  t() %>%
+  prcomp()
+
+# Plot PCA colored by group
+ggplot(data = pca_data$x, aes(x = PC1, y = PC2, color = annotation$group)) +
   geom_point() +
-  labs(color = "Group")
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
 ```
-Note: I have made changes to the code to address the error. Specifically, I added `as.data.frame()` when joining the count data with the annotation data to ensure the "row.names" column is recognized.
+
+In the updated code, I have fixed the error and modified the approach to find group-specific genes. The `get_specific_genes()` function is defined to filter genes specific to each group based on the condition of gene expression. The specific genes for each group (CASE and CTRL) are then combined and used for PCA and plotting.

@@ -10,60 +10,69 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary packages
 library(openxlsx)
-library(DESeq2)
 library(ggplot2)
+library(dplyr)
+library(DESeq2)
 library(pcaMethods)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1)
+count_table <- openxlsx::read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
 
-# Transpose count table to have samples as rows and genes as columns
-count_table <- t(count_table)
+# Transpose count table and remove the first row (gene names)
+count_table <- t(count_table[-1,])
 
-# Identify groups in annotation data
-groups <- unique(annotation_data$group)
+# Set the sample names as row names
+colnames(count_table) <- count_table[1,]
+count_table <- count_table[-1,]
 
-# Store group specific genes
-group_specific_genes <- list()
+# Set the gene names as row names
+rownames(count_table) <- count_table[,1]
+count_table <- count_table[,-1]
 
-# Loop through each group
-for (group in groups) {
-  # Fetch samples for the current group
-  group_samples <- annotation_data$diagnosis[annotation_data$group == group]
-  
-  # Extract count data for the group samples
-  group_counts <- count_table[, group_samples]
-  
-  # Apply statistical test (e.g., DESeq2) to identify group-specific genes
-  dds <- DESeqDataSetFromMatrix(countData = group_counts, colData = NULL, design = ~1)
-  dds <- DESeq(dds)
-  res <- results(dds)
-  group_specific_genes[[group]] <- row.names(res)[res$padj < 0.05]
-}
+# Subset annotation data to only include sample ids that exist in count table
+sample_ids <- colnames(count_table)
+annotation_data <- annotation_data[annotation_data$X %in% sample_ids,]
 
-# Combine all group-specific genes into a single data frame
-group_specific_genes_df <- do.call(rbind, group_specific_genes)
+# Create a DESeq2 object
+dds <- DESeq2::DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
 
-# Remove duplicate genes (if any)
-group_specific_genes_df <- unique(group_specific_genes_df)
+# Perform statistical test using DESeq2
+dds <- DESeq2::DESeq(dds)
 
-# Perform PCA using group-specific genes
-pca_result <- pca(group_specific_genes_df)
+# Get differentially expressed genes for each group
+group_specific_genes <- lapply(unique(annotation_data$group), function(x) {
+  res <- DESeq2::results(dds, contrast = c("group", x), alpha = 0.05, independentFiltering = FALSE)
+  res <- res[!is.na(res$padj),]
+  res <- res[res$padj < 0.05,]
+  rownames(res)
+})
 
-# Plot PCA colored by "group" variable
-ggplot(pca_result, aes(x = PC1, y = PC2, color = annotation_data$group)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2")
+# Flatten the list of group-specific genes into a vector
+group_specific_genes <- unlist(group_specific_genes)
+
+# Subset count table to include only group-specific genes
+count_table_specific <- count_table[group_specific_genes,]
+
+# Perform PCA
+pca <- pcaMethods::prcomp(t(count_table_specific), center = TRUE, scale. = TRUE)
+
+# Create data frame for PCA plot
+pca_df <- data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], group = annotation_data$group)
+
+# Plot PCA
+ggplot2::ggplot(pca_df, aes(x = PC1, y = PC2, color = group)) + 
+  ggplot2::geom_point() +
+  ggplot2::labs(title = "PCA Plot", x = "PC1", y = "PC2")
 ```
 ```

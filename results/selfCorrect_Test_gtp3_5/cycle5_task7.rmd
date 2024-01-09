@@ -10,20 +10,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
+# Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Check the number of columns in the data
 num_samples <- ncol(data)
 
-# If there are more than 500 samples, randomly sample 500 samples
+# Check if there are more than 500 samples
 if (num_samples > 500) {
-  set.seed(123)  # Set seed for reproducibility
-  sampled_indices <- sample(2:num_samples, 500)  # Exclude the first column (gene names)
-  data <- data[, c(1, sampled_indices)]  # Subset the data with sampled indices
+  # Randomly sample 500 columns
+  sample_columns <- sample(2:num_samples, 500, replace = FALSE)
+  
+  # Create a subset of the data using the sampled columns
+  data_subset <- data[, sample_columns]
+} else {
+  # If there are less than or equal to 500 samples, use the original data
+  data_subset <- data
 }
 
-# Create a boxplot of the columns
-boxplot(data[, -1], main = "Gene Expression Boxplot")
+# Convert the subsetted data to numeric
+data_subset <- as.data.frame(sapply(data_subset, as.numeric))
+
+# Create a boxplot of the columns in the data
+boxplot(data_subset)
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path if the file is not in the current working directory.

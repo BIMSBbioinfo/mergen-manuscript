@@ -10,53 +10,26 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load required libraries
-library(gplots)
-library(RColorBrewer)
-library(stats)
-library(factoextra)
-
-# Read the gene expression data
+# Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column (gene names) from the data
-data <- data[-1]
+# Remove the first column (gene names)
+data <- data[, -1]
 
-# Calculate the variability of each gene
+# Calculate the variance of each gene
 variances <- apply(data, 1, var)
 
-# Sort the genes based on their variability in descending order
-sorted_genes <- names(sort(variances, decreasing = TRUE))
+# Sort the variances in descending order and get the indexes of the top 1000 variable genes
+top_genes <- order(variances, decreasing = TRUE)[1:1000]
 
-# Retain the top 1000 most variable genes
-top_variable_genes <- sorted_genes[1:1000]
+# Subset the data to retain only the top 1000 variable genes
+filtered_data <- data[top_genes, ]
 
-# Subset the data to only include the top variable genes
-filtered_data <- data[top_variable_genes]
+# Perform clustering analysis and plot a heatmap of the filtered data
+heatmap(filtered_data)
 
-# Cluster the genes and samples
-gene_clusters <- hclust(dist(filtered_data))
-sample_clusters <- hclust(dist(t(filtered_data)))
-
-# Plot a heatmap with clustering
-heatmap.2(as.matrix(filtered_data), 
-          col = colorRampPalette(rev(brewer.pal(9, "RdBu")))(256),
-          scale = "row", 
-          dendrogram = "both",
-          trace = "none",
-          key = TRUE,
-          main = "Heatmap with Clustering")
-
-# Perform PCA on the data
-pca <- prcomp(filtered_data, scale = TRUE)
-
-# Plot the PCA plot
-fviz_pca_ind(pca, 
-             geom.ind = "point", 
-             col.ind = "blue",
-             addEllipses = TRUE,
-             legend.title = "Samples",
-             ggtheme = theme_classic(),
-             main = "PCA Plot for Samples")
-}
+# Perform PCA on the data and plot the results
+pca <- prcomp(filtered_data)
+plot(pca)
 ```
+

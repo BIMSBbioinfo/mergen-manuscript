@@ -10,51 +10,50 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(openxlsx)
-library(magrittr)
-library(DESeq2)
-library(ggplot2)
+# Load necessary libraries
+library(readxl)
+library(Seurat)
 
-# Read count table and annotation data
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", skipEmptyRows = TRUE)
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Extract gene names from count table
-genes <- count_table$Genes
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", sep = "\t", header = TRUE, row.names = 1)
 
-# Remove gene names column from count table
-count_table <- count_table %>% select(-Genes)
+# Transpose the count table
+count_table <- t(count_table[, -1])
 
-# Transpose count table to have samples as rows and genes as columns
-count_table_t <- t(count_table)
+# Create a Seurat object with counts
+seurat_object <- CreateSeuratObject(counts = count_table)
 
-# Remove row names from count table
-rownames(count_table_t) <- NULL
+# Add metadata to the Seurat object
+seurat_object$diagnosis <- annotation_data$diagnosis
+seurat_object$group <- annotation_data$group
+seurat_object$LibrarySelection <- annotation_data$LibrarySelection
 
-# Remove row names from annotation data
-rownames(annotation_data) <- NULL
+# Find variable features
+seurat_object <- FindVariableFeatures(seurat_object)
 
-# Convert count table to DESeq2-friendly format
-dds <- DESeqDataSetFromMatrix(countData = count_table_t, colData = annotation_data, design = ~ LibrarySelection)
+# Normalize data
+seurat_object <- NormalizeData(seurat_object)
 
-# Normalize counts
-dds_norm <- counts(dds, normalized = TRUE)
+# Scale data
+seurat_object <- ScaleData(seurat_object)
 
-# Perform PCA on normalized counts
-pca_norm <- prcomp(t(dds_norm))
+# Run PCA
+seurat_object <- RunPCA(seurat_object)
 
-# Create PCA plot color coded by "group"
-plot(pca_norm$x[, 1:2], col = annotation_data$group, pch = 16, xlab = "PC1", ylab = "PC2")
+# Plot PCA colored by "group"
+PCAPlot(seurat_object, group.by = "group")
 
-# Create PCA plot color coded by "LibrarySelection"
-plot(pca_norm$x[, 1:2], col = annotation_data$LibrarySelection, pch = 16, xlab = "PC1", ylab = "PC2")
+# Plot PCA colored by "LibrarySelection"
+PCAPlot(seurat_object, group.by = "LibrarySelection")
 ```
 
-Note: The error `ncol(countData) == nrow(colData) is not TRUE` suggests that the number of samples in the count data does not match the number of rows in the annotation data. I removed the row names from both the count table and the annotation data to ensure that the dimensions match. Please check if the error still persists.
+Note: The updated code includes the step of finding variable features before normalizing and scaling the data. This is necessary to avoid the error related to no variable features.

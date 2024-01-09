@@ -10,40 +10,36 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load necessary libraries
-library(readxl)
-library(dplyr)
+library(tidyverse)
+library(openxlsx)
 
-# Read count table
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
 
-# Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", sep = "\t", header = TRUE)
+# Read the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Rename the first column of annotation data to match the column in count table
+# Rename the first column of the annotation data to match the column names in the count table
 colnames(annotation_data)[1] <- "Genes"
 
-# Merge count table and annotation data
-merged_data <- count_data %>%
-  left_join(annotation_data, by = "Genes")
+# Merge annotation data and gene expression tables
+merged_data <- count_table %>%
+  inner_join(annotation_data, by = "Genes")
 
-# Remove redundant columns and rename remaining columns
-merged_data <- merged_data[, -1]
-colnames(merged_data) <- c("Genes", colnames(count_data)[-1], "diagnosis", "group", "LibrarySelection")
-
-# Plot boxplots for gene expression values per sample
-library(ggplot2)
-ggplot(merged_data, aes(x = group, y = CASE_1, fill = group)) +
+# Plot boxplots for gene expression values per sample and color code boxplots based on "group" variable
+merged_data %>%
+  pivot_longer(cols = -c(Genes, diagnosis, group, LibrarySelection), names_to = "Samples", values_to = "Expression") %>%
+  ggplot(aes(x = Samples, y = Expression, fill = group)) +
   geom_boxplot() +
-  xlab("Group") +
-  ylab("Gene Expression Value") +
-  ggtitle("Boxplots of Gene Expression Values per Sample")
+  ggtitle("Gene Expression Boxplots by Sample") +
+  xlab("Samples") +
+  ylab("Expression Values")
 ```
-
-Note: Make sure to install the necessary libraries (e.g., readxl, dplyr, ggplot2) if you haven't already.
+```

@@ -11,22 +11,26 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-gene_exp <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+leukemia_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability of each gene
-gene_variability <- apply(gene_exp, 1, sd)
+# Calculate the variability for each gene
+variability <- apply(leukemia_exp[, -1], 1, var)
 
-# Select the top 1000 most variable genes
-top_genes <- head(order(gene_variability, decreasing=TRUE), 1000)
-variable_genes <- gene_exp[top_genes, ]
+# Get the indices of the top 1000 genes with highest variability
+top_genes <- order(variability, decreasing = TRUE)[1:1000]
 
-# Plot a heatmap with hierarchical clustering
-heatmap(variable_genes, Colv=NA, scale="row", main="Heatmap of Variable Genes")
+# Filter the gene expression data based on the top variable genes
+filtered_leukemia_exp <- leukemia_exp[c(1, top_genes + 1)]
+
+# Create a heatmap with clustering
+heatmap_data <- as.matrix(filtered_leukemia_exp[, -1])
+heatmap(heatmap_data, main = "Gene Expression Heatmap", xlab = "Samples", ylab = "Genes", col = rev(heat.colors(10)))
 
 # Perform PCA on the samples
-pca <- prcomp(t(gene_exp))
+pca_data <- prcomp(t(filtered_leukemia_exp[, -1]))
+pca_result <- pca_data$x
 
-# Plot the first two principal components
-plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", main="PCA of Samples")
+# Plot PCA for samples
+plot(pca_result[, 1], pca_result[, 2], main = "PCA", xlab = "PC1", ylab = "PC2")
 ```
-
+Note: Make sure to adjust the file path if the "leukemiaExp.txt" file is in a different directory.

@@ -10,70 +10,57 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load necessary libraries
-library(readxl)
 library(dplyr)
-library(matrixStats)
+library(readxl)
+library(ggplot2)
+library(pcaExplorer)
 
-# Read the count table
+# Load count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Drop missing values and extract gene names
-gene_names <- count_table$Genes
+# Load annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Remove the first column (gene names) from the count table
+# Transpose count table
+count_table <- t(count_table)
+
+# Rename rows with gene names
+rownames(count_table) <- count_table[, 1]
 count_table <- count_table[, -1]
 
-# Read the annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Select relevant columns from annotation data
+annotation_data <- annotation_data[, c("diagnosis", "group")]
 
-# Merge the count table and annotation data based on sample ids
-merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = 1)
+# Perform statistical tests to find group-specific genes
+group_specific_genes <- lapply(unique(annotation_data$group), function(g) {
+  group_samples <- rownames(count_table)[annotation_data$diagnosis == g]
+  group_count_table <- count_table[group_samples, , drop = FALSE]
+  p_values <- apply(group_count_table, 1, function(x) {
+    t.test(x ~ g)$p.value
+  })
+  adjusted_p_values <- p.adjust(p_values, method = "fdr")
+  significant_genes <- names(adjusted_p_values[adjusted_p_values < 0.05])
+  return(significant_genes)
+})
 
-# Get unique groups from annotation data
-unique_groups <- unique(merged_data$group)
+# Filter count table to include group-specific genes
+group_specific_genes <- unlist(group_specific_genes)
+count_table_filtered <- count_table[group_specific_genes, ]
 
-# Create a list to store results
-group_specific_genes <- list()
+# Perform PCA on filtered count table
+pca_result <- prcomp(count_table_filtered)
 
-# Loop through each group
-for (group in unique_groups) {
-  # Subset the merged data for the current group
-  group_data <- subset(merged_data, group == group)
-  
-  # Remove unnecessary columns (gene names, sample ids, group)
-  group_data <- group_data[, -c(1, ncol(group_data), ncol(group_data) - 1)]
-  
-  # Loop through each gene
-  for (i in 1:nrow(group_data)) {
-    # Get the expression values for the current gene
-    expression_values <- as.numeric(group_data[i, -1])
-    
-    # Perform statistical tests (e.g., t-test, ANOVA) to compare the expression values across groups
-    # You would need to choose an appropriate statistical test based on your specific experimental design and assumptions
-    p_value <- YOUR_STATISTICAL_TEST(expression_values)
-    
-    # If the gene is specific to the current group (based on statistical test results), add it to the list
-    if (p_value < 0.05) {
-      group_specific_genes[[group]] <- c(group_specific_genes[[group]], gene_names[i])
-    }
-  }
-}
-
-# Filter count table to include only group-specific genes
-group_specific_counts <- count_table[gene_names %in% unlist(group_specific_genes), ]
-
-# Perform PCA using only the group-specific genes
-pca <- prcomp(t(group_specific_counts))
-
-# Plot the PCA results, color-coded by group variable
-plot(pca$x, col = merged_data$group)
+# Plot PCA with color code for groups
+ggplot(data = data.frame(pca_result$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
+  geom_point() +
+  theme_minimal()
 ```
 
-Note: In the code, you need to replace `YOUR_STATISTICAL_TEST` with the appropriate statistical test function that compares the expression values across groups (e.g., t-test, ANOVA) based on your specific experimental design and assumptions. Additionally, make sure that the count table and annotation data are properly formatted and that there are no missing or zero values in the count data.
+Note: Please make sure to change the file paths ("Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv") in the code to match the actual file paths in your system.

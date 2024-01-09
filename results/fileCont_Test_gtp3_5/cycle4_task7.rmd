@@ -10,24 +10,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load the required library
-library(readr)
-
 # Read the data from the file
-data <- read_delim("leukemiaExp.txt", delim = "\t")
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
 # Check the number of columns in the data
-num_samples <- ncol(data) - 1
+num_samples <- ncol(data)
 
-# Check if there are more than 500 samples
-if (num_samples > 500) {
-  # Randomly sample 500 columns
-  sample_columns <- sample(seq_len(num_samples), 500)
+# Randomly subset the data if there are more than 500 samples
+if(num_samples > 500) {
+  # Set the seed for reproducibility
+  set.seed(1)
   
-  # Create a subset of the data using the sampled columns
-  data <- data[, c(1, sample_columns + 1)]
+  # Randomly sample 500 samples' columns
+  sampled_data <- data[, sample(num_samples, 500)]
+  
+  # Create a boxplot of the sampled data
+  boxplot(sampled_data, main="Boxplot of Gene Expression Data")
+} else {
+  # Create a boxplot of the original data
+  boxplot(data, main="Boxplot of Gene Expression Data")
 }
-
-# Create a boxplot of the columns
-boxplot(data[, -1], main = "Boxplot of Gene Expression", xlab = "Sample", ylab = "Expression")
 ```

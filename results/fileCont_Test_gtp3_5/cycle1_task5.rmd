@@ -11,18 +11,14 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance for each gene
-variance <- apply(data[, -1], 1, var)
+# Remove the first column (gene names) and calculate the variability of each gene
+gene_variability <- apply(gene_exp[, -1], 1, var)
 
-# Sort the genes based on their variance in descending order
-sorted_genes <- data[order(variance, decreasing = TRUE), ]
+# Sort genes based on their variability in descending order
+sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
 
-# Filter the top 1000 genes with the highest variance
-filtered_genes <- sorted_genes[1:1000, ]
-
-# View the filtered genes
-filtered_genes
+# Select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
 ```
-Note: This code assumes that the gene expression data file ("leukemiaExp.txt") is in the same directory as the R script. If the file is located in a different directory, you would need to provide the full file path.

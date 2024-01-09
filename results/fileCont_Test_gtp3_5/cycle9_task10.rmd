@@ -10,49 +10,34 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from the file
+data <- read.delim("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance for each gene
-gene_var <- apply(data[, -1], 1, var)
+# Remove the first column (gene names)
+data <- data[, -1]
 
-# Get the indices of the top 1000 most variable genes
-top_genes <- order(gene_var, decreasing = TRUE)[1:1000]
+# Calculate the standard deviation for each gene
+gene_sd <- apply(data, 1, sd)
 
-# Filter the data to retain only the top 1000 genes
+# Sort the genes based on their standard deviation in descending order
+sorted_genes <- sort(gene_sd, decreasing = TRUE)
+
+# Retrieve the top 1000 genes with the highest standard deviation
+top_genes <- names(sorted_genes)[1:1000]
+
+# Filter the data to include only the top 1000 genes
 filtered_data <- data[top_genes, ]
 
-# Perform hierarchical clustering on the filtered data (samples)
-cluster_results <- hclust(dist(filtered_data[, -1]))
+# Cluster the samples
+sample_clusters <- hclust(dist(t(filtered_data)))$order
 
-# Cut the dendrogram to create clusters
-clusters <- cutree(cluster_results, k = 3)
+# Extract cluster specific genes for each cluster
+clusters <- cutree(hclust(dist(t(filtered_data))), k = 5)
 
-# Initialize a list to store cluster-specific genes
-cluster_genes <- list()
+cluster_specific_genes <- list()
 
-# Loop over each cluster
-for (i in unique(clusters)) {
-  # Get the indices of samples belonging to the current cluster
-  cluster_samples <- which(clusters == i)
-  
-  # Extract the gene expression values for the current cluster
-  cluster_expression <- filtered_data[, cluster_samples]
-  
-  # Calculate the variance for each gene within the current cluster
-  cluster_gene_var <- apply(cluster_expression, 1, var)
-  
-  # Get the indices of the top 100 variable genes within the current cluster
-  cluster_top_genes <- order(cluster_gene_var, decreasing = TRUE)[1:100]
-  
-  # Store the gene names of the cluster-specific genes
-  cluster_genes[[i]] <- rownames(filtered_data)[cluster_top_genes]
-}
-
-# Print the cluster-specific genes for each cluster
-for (i in unique(clusters)) {
-  cat("Cluster", i, "specific genes:\n")
-  print(cluster_genes[[i]])
+for (i in 1:max(clusters)) {
+  cluster_specific_genes[[i]] <- top_genes[clusters == i]
 }
 ```
-Note: This code assumes that the gene names are stored in the first column of the data file and the sample names are stored in the remaining columns. Adjust the code accordingly if your data has a different structure.
+

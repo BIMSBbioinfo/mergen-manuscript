@@ -10,24 +10,29 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
+# Load necessary packages
 library(readxl)
 
-# Read the count table
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table_rows <- nrow(count_table)
+count_table_cols <- ncol(count_table)
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+annotation_data_rows <- nrow(annotation_data)
+annotation_data_cols <- ncol(annotation_data)
 
-# Count the number of rows and columns for each table
-count_rows <- nrow(count_table)
-count_cols <- ncol(count_table)
-annotation_rows <- nrow(annotation_data)
-annotation_cols <- ncol(annotation_data)
+# Print number of rows and columns for count table and annotation data
+cat("Count Table Rows:", count_table_rows, "\n")
+cat("Count Table Columns:", count_table_cols, "\n")
+cat("Annotation Data Rows:", annotation_data_rows, "\n")
+cat("Annotation Data Columns:", annotation_data_cols, "\n")
+```
 ```

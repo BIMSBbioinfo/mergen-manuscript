@@ -10,68 +10,71 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load necessary libraries
-library("readxl")
-library("tidyverse")
-library("edgeR")
-library("limma")
+library(readxl)
+library(dplyr)
+library(DESeq2)
+library(ggplot2)
 
-# Read count table and annotation data
+# Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Extract gene names and sample ids
-gene_names <- count_table$Genes
-sample_ids <- annotation_data$diagnosis
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Remove unwanted columns (gene names and sample ids) from count table and annotation data
-count_table <- count_table[,-1]
-annotation_data <- annotation_data[,-1]
+# Transpose count table
+count_table <- as.data.frame(t(count_table))
 
-# Perform statistical tests to find genes specific for each group
-group_specific_genes <- apply(count_table, 2, function(x) {
-  group <- annotation_data$sampid
-  groups <- unique(group)
-  p_values <- vector()
-  
-  for (g in groups) {
-    group_samples <- which(group == g)
-    group_counts <- x[group_samples]
-    other_samples <- which(group != g)
-    other_counts <- x[other_samples]
-    
-    # Perform statistical test
-    result <- exactTest(group_counts, other_counts)
-    
-    # Get p-value
-    p_value <- result$table$PValue[1]
-    
-    # Append p-value to vector
-    p_values <- c(p_values, p_value)
-  }
-  
-  # Check if any p-value is significant (p < 0.05)
-  if (any(p_values < 0.05)) {
-    return(1) # 1 indicates that the gene is specific for at least one group
-  } else {
-    return(0) # 0 indicates that the gene is not specific for any group
-  }
-})
+# Rename the first column of count table to "Genes"
+colnames(count_table)[1] <- "Genes"
 
-# Filter count table to include only group-specific genes
-group_specific_count_table <- count_table[rowSums(group_specific_genes) > 0, ]
+# Merge count table and annotation data based on sample ids
+merged_data <- inner_join(count_table, annotation_data, by = c("Genes" = "Row.names"))
+
+# Set the first column as row names
+rownames(merged_data) <- merged_data$Genes
+merged_data <- merged_data[, -1]
+
+# Perform differential expression analysis using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = merged_data[, 1:12],
+                              colData = merged_data[, 13:15],
+                              design = ~ group)
+
+dds <- DESeq(dds)
+
+# Get genes specific for each group using statistical tests
+group_specific_genes <- list()
+
+groups <- unique(merged_data$group)
+for (group in groups) {
+  group_data <- merged_data[merged_data$group == group, ]
+  group_dds <- DESeqDataSetFromMatrix(countData = group_data[, 1:12],
+                                      colData = group_data[, 13:15],
+                                      design = ~ 1)
+  group_dds <- DESeq(group_dds)
+  group_specific_genes[[group]] <- rownames(adjusted(contrast(group_dds)))
+}
+
+# Subset count table with group-specific genes
+group_specific_count_table <- count_table[c("Genes", unlist(group_specific_genes))]
 
 # Perform PCA using group-specific genes
-pca <- prcomp(t(group_specific_count_table))
+pca_data <- group_specific_count_table[, -1]
+pca_result <- prcomp(pca_data, scale = TRUE)
 
-# Color code PCA plot by group variable in annotation data
-groups <- annotation_data$group
-plot(pca$x[,1:2], col = groups, pch = 16, xlab = "PC1", ylab = "PC2")
+# Plot PCA with color-coded groups
+pc1 <- pca_result$x[, 1]
+pc2 <- pca_result$x[, 2]
+group <- merged_data$group
+ggplot(data = NULL, aes(x = pc1, y = pc2, color = group)) +
+  geom_point() +
+  labs(x = "PC1", y = "PC2") +
+  theme_minimal()
 ```
-```
+

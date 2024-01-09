@@ -23,4 +23,3 @@ num_samples <- ncol(count_table) - 2
 num_genes
 num_samples
 ```
-```

@@ -10,76 +10,72 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Apologies for the errors. Here's the revised code:
-
 ```
 # Load necessary libraries
-library(readxl)
+library(openxlsx)
 library(dplyr)
+library(stats)
 library(ggplot2)
-library(DESeq2)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read count data
+count_data <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 2, colNames = TRUE)
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
+annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Extract sample names from count table
-sample_names <- colnames(count_table)[-1]
+# Remove empty columns from count data
+count_data <- count_data[, colSums(count_data[-1]) > 0]
 
-# Extract group names from annotation data
-group_names <- unique(annotation_data$group)
-
-# Create a list to store group-specific genes
+# Get group-specific genes using statistical tests
 group_specific_genes <- list()
 
-# Perform statistical test for each group
-for (i in 1:length(group_names)) {
-  # Get the sample ids for the current group
-  group_samples <- which(annotation_data$group == group_names[i])
-  
-  # Subset the count table to include only the current group samples
-  group_count_table <- count_table[, c("Genes", sample_names[group_samples])]
-  
-  # Convert the count data to matrix
-  count_matrix <- as.matrix(group_count_table[,-1])
-  
-  # Create a DESeqDataSet object
-  dds <- DESeqDataSetFromMatrix(countData = count_matrix,
-                               colData = data.frame(condition = group_names[i]),
-                               design = ~condition)
-  
-  # Perform differential expression analysis using DESeq2
-  dds <- DESeq(dds)
-  
-  # Get the differentially expressed genes for the current group
-  group_de_genes <- rownames(dds[results(dds)$padj < 0.05,])
-  
-  # Store the group-specific genes in the list
-  group_specific_genes[[group_names[i]]] <- group_de_genes
+groups <- unique(annotation_data$group)
+for (group in groups) {
+  group_samples <- annotation_data$group == group
+  group_counts <- count_data[, group_samples]
+
+  # Check if there are enough observations for statistical tests
+  if (sum(group_samples) > 0 && sum(!group_samples) > 0) {
+
+    # Perform statistical tests (e.g., t-test, ANOVA) to identify group-specific genes
+    group_specific_genes[[group]] <- apply(group_counts, 1, function(x) {
+      if (length(unique(x)) > 1) {
+        p_value <- try(t.test(x[group_samples], x[!group_samples])$p.value, silent = TRUE)
+        if (!is.na(p_value) && p_value < 0.05) {
+          return(names(x))
+        }
+      }
+    })
+
+  }
 }
 
-# Combine all group-specific genes into a single vector
-all_group_specific_genes <- unlist(group_specific_genes)
+# Combine group-specific genes into a single vector
+group_specific_genes <- unlist(group_specific_genes, use.names = FALSE)
 
-# Subset the count table to include only the group-specific genes
-group_specific_count_table <- count_table %>% filter(Genes %in% all_group_specific_genes)
+# Filter count data using group-specific genes
+filtered_count_data <- count_data[group_specific_genes, ]
 
-# Perform PCA using the group-specific genes
-pca_data <- prcomp(t(group_specific_count_table[,-1]))
+# Perform PCA using filtered count data
+if (ncol(filtered_count_data) > 1) {
+  pca_data <- prcomp(t(filtered_count_data[, -1]))
 
-# Add group information to the PCA data
-pca_data$group <- annotation_data$group
+  # Create PCA plot
+  pca_plot <- ggplot(data = as.data.frame(pca_data$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
+    geom_point() +
+    labs(x = "PC1", y = "PC2", color = "Group") +
+    theme_minimal()
 
-# Plot PCA with color-coded groups
-ggplot(data = as.data.frame(pca_data$x), aes(x = PC1, y = PC2, color = group)) + 
-  geom_point()
+  # Print PCA plot
+  print(pca_plot)
+} else {
+  print("Not enough samples for PCA analysis")
+}
 ```
 
-Note: Please make sure to replace the file paths `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the correct paths in your system.
+Note: I have added an additional check to ensure that there are enough samples for performing PCA analysis. If there are not enough samples, the code will display a message instead of raising an error.

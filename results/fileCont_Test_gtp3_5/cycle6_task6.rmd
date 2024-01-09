@@ -11,21 +11,19 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_names <- data[, 1] # Extract gene names from the first column
 
-# Check the number of samples
-num_samples <- ncol(gene_data) - 1
-
-# If there are more than 500 samples
-if (num_samples > 500) {
-  # Randomly sample 500 samples
-  sample_indices <- sample(2:ncol(gene_data), 500)
-  
-  # Create subset of the data using the sampled indices
-  subset_data <- gene_data[, c(1, sample_indices)]
+# If there are more than 500 samples, randomly sample 500 samples
+if (ncol(data) > 500) {
+  set.seed(123) # Set seed for reproducibility
+  random_samples <- sample(2:ncol(data), size = 500, replace = FALSE) # Randomly select 500 column indices
+  subset_data <- data[, c(1, random_samples)] # Subset the data using the random samples
 } else {
-  # Use the original data
-  subset_data <- gene_data
+  subset_data <- data # Use the original data if there are less than or equal to 500 samples
 }
+
+# Print the subsetted data
+subset_data
 ```
-```
+Note: Change the file path in `read.table()` function to the correct path of the "leukemiaExp.txt" file in your system.

@@ -10,32 +10,36 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load required libraries
-library(openxlsx)
-library(dplyr)
-library(ggplot2)
+library(readxl)
 
-# Read the count table and annotation data
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Read the annotation data
 annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Rename the first column of count table as "Genes"
-colnames(count_table)[1] <- "Genes"
+# Set the row names of count_table to be the gene names from the first column
+row.names(count_table) <- count_table$Genes
 
-# Merge count table and annotation data based on sample ids
-merged_data <- inner_join(count_table, annotation_data, by = c("Genes" = "Sample_ID"))
+# Transpose the count table
+count_table <- t(count_table)
 
-# Create a boxplot for each sample with colored boxplots based on "group" variable
-ggplot(merged_data, aes(x = variable, y = value, fill = group)) +
-  geom_boxplot() +
-  labs(x = "Sample", y = "Gene Expression Value") +
-  ggtitle("Boxplots of Gene Expression Values per Sample") +
-  theme_minimal()
+# Get the sample ids from annotation_data
+sample_ids <- annotation_data$diagnosis
+
+# Subset the count table and annotation_data to only include the matching sample ids
+count_table <- count_table[, sample_ids]
+annotation_data <- annotation_data[sample_ids, ]
+
+# Plot boxplots for gene expression values per sample and color code based on group
+color_palette <- c("red", "blue") # Change the colors as needed
+boxplot(count_table, col = color_palette[annotation_data$group])
 ```
 ```

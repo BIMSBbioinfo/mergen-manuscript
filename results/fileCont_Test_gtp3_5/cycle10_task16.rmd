@@ -10,34 +10,38 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load required packages
-library(readxl)
+library(openxlsx)
 library(dplyr)
 library(ggplot2)
 
-# Read count table and annotation data
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 1, colNames = TRUE)
 
-# Rename the first column of count table to "Genes"
-colnames(count_table)[1] <- "Genes"
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Merge count table and annotation data using sample ids
-merged_data <- count_table %>% 
-  left_join(annotation_data, by = c("Genes" = "sample"))
+# Rename columns in count table to match sample ids in annotation data
+colnames(count_table)[-1] <- annotation_data$diagnosis
 
-# Plot boxplots for gene expression values per sample
-p <- ggplot(merged_data, aes(x = group, y = CASE_1)) +
-  geom_boxplot(fill = "grey", color = "black") +
-  labs(x = "Group", y = "Gene Expression")
+# Merge annotation data and count table
+merged_data <- left_join(annotation_data, count_table, by = "diagnosis")
 
-# Print the plot
-print(p)
+# Reshape data to long format for plotting
+long_data <- merged_data %>%
+  select(-group, -LibrarySelection) %>%
+  tidyr::pivot_longer(cols = -c(diagnosis, Genes), names_to = "Sample", values_to = "Expression")
+
+# Plot boxplots
+ggplot(long_data, aes(x = Sample, y = Expression, fill = group)) +
+  geom_boxplot() +
+  labs(title = "Gene Expression Boxplots", x = "Sample", y = "Expression") +
+  scale_fill_manual(values = c(case = "blue", ctrl = "green"))
 ```
-Note: Assuming the "CASE_1" column in the count table represents the gene expression values for the sample named "CASE_1". Adjust the column name in the ggplot function if the column name in your count table is different.
+```

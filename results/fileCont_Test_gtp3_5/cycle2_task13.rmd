@@ -10,25 +10,26 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(openxlsx)
+# Load required libraries
+library(readxl)
 
-# Load count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
-count_table <- count_table[, -1] # Remove the first column of gene names
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Load annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
-annotation_data <- annotation_data[, c("diagnosis", "group", "LibrarySelection")]
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Merge count table and annotation data
-merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = "diagnosis", all.x = TRUE)
+# Rename the first column of annotation data to match with the columns of count table
+colnames(annotation_data)[1] <- "Genes"
+
+# Merge annotation data and count table based on the common column "Genes"
+merged_data <- merge(count_table, annotation_data, by = "Genes")
 
 # Calculate the number of columns
 num_columns <- ncol(merged_data)

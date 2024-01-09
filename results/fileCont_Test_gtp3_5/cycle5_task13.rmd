@@ -10,35 +10,28 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(readxl)
+# Load necessary libraries
+library(openxlsx)
 
-# Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2)
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Set the row names of count table as the gene names
-rownames(count_table) <- count_table$Genes
+# Rename the first column of annotation data to match with count table
+colnames(annotation_data)[1] <- "Genes"
 
-# Remove the "Genes" column from count table
-count_table <- count_table[, -1]
-
-# Merge annotation data and count table based on sample ids
-merged_data <- merge(annotation_data, count_table, by.x = "diagnosis", by.y = "row.names", all.x = TRUE)
+# Merge count table with annotation data based on the matching sample ids
+merged_data <- merge(count_table, annotation_data, by = "Genes", all.x = TRUE)
 
 # Calculate the number of columns in the merged data
 num_columns <- ncol(merged_data)
-
-# Display the number of columns
-num_columns
 ```
-
-Note: Make sure to also install and load the `readxl` library before running the code. You can do this by running `` and `library(readxl)`.
+```

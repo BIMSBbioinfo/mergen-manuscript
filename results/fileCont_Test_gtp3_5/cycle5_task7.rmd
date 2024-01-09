@@ -11,20 +11,21 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check the number of columns in the data
-num_columns <- ncol(data)
+# Check the number of columns (samples)
+num_samples <- ncol(expression_data)
 
-# If there are more than 500 samples, randomly sample 500 columns and create a subset of the data
-if(num_columns > 500) {
-  sampled_columns <- sample(2:num_columns, 500, replace = FALSE)
-  subset_data <- data[, c(1, sampled_columns)]
-} else {
-  subset_data <- data
+# If there are more than 500 samples
+if (num_samples > 500) {
+  # Generate a random sample of 500 column indices
+  sample_indices <- sample(1:num_samples, 500)
+  
+  # Subset the expression data to include only the randomly sampled columns
+  expression_data <- expression_data[, sample_indices]
 }
 
-# Create a boxplot of the columns in the subset data
-boxplot(subset_data[-1], main = "Gene Expression Data", ylab = "Expression Level")
+# Create a boxplot of the columns
+boxplot(expression_data, col = "skyblue", main = "Gene Expression Data", xlab = "Samples", ylab = "Expression Levels")
 ```
-Note: This code assumes that the first column in the file contains the gene names and the remaining columns contain the expression values. The `read.table` function is used to read the data from the file into a data frame. The `sample` function is used to randomly sample 500 column indices (excluding the first column) if there are more than 500 samples. The subset of data is then created by selecting the first column (gene names) and the sampled columns. Finally, the `boxplot` function is used to create a boxplot of the expression levels in the subset of data.
+

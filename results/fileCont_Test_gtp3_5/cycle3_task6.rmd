@@ -10,18 +10,23 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the data from leukemiaExp.txt
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Check the number of columns in the data
+# Check the number of samples
 num_samples <- ncol(data) - 1
-
-# Check if there are more than 500 samples
 if (num_samples > 500) {
-  # Randomly sample 500 columns
-  sampled_data <- data[, sample(2:ncol(data), 500)]
+  # Randomly sample 500 of the samples
+  set.seed(123)
+  sample_indices <- sample(2:(num_samples + 1), 500, replace = FALSE)
+  
+  # Create subset of the data with the sampled columns
+  subset_data <- data[, c(1, sample_indices)]
 } else {
-  sampled_data <- data
+  # No need to sample, use the whole data
+  subset_data <- data
 }
-```
 
+# Print the subset_data
+subset_data
+```

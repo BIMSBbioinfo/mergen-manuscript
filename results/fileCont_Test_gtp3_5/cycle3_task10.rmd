@@ -10,27 +10,49 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
+# Read the gene expression data
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability of each gene
-variance <- apply(data[, -1], 1, var)
+# Remove the first column with gene names
+data <- data[, -1]
 
-# Filter the genes based on their variability
-top_genes <- head(data[order(variance, decreasing = TRUE), ], 1000)
+# Calculate the variability of each gene
+variances <- apply(data, 1, var)
+
+# Sort the genes by their variability
+sorted_genes <- names(variances)[order(variances, decreasing = TRUE)]
+
+# Filter the top 1000 variable genes
+top_variable_genes <- sorted_genes[1:1000]
+
+# Select the variable genes from the data
+variable_data <- data[top_variable_genes]
 
 # Cluster the samples
-samples <- t(top_genes[, -1])
-clusters <- kmeans(samples, centers = 3)  # Assuming 3 clusters, change the value as per requirement
+sample_clusters <- hclust(dist(t(variable_data)))
 
-# Extract cluster-specific genes for each cluster
-cluster_genes <- list()
-for (i in 1:clusters$centers) {
-  indices <- which(clusters$cluster == i)
-  cluster_genes[[i]] <- colnames(samples)[indices]
+# Cut the dendrogram into clusters
+cut_clusters <- cutree(sample_clusters, k = 5)
+
+# Create a list to store the cluster specific genes
+cluster_specific_genes <- list()
+
+# Extract cluster specific genes for each cluster
+for (i in unique(cut_clusters)) {
+  # Select samples from the current cluster
+  cluster_samples <- variable_data[, cut_clusters == i]
+  
+  # Calculate the average expression for each gene in the current cluster
+  avg_expression <- rowMeans(cluster_samples)
+  
+  # Find the top 10 genes with highest average expression in the current cluster
+  top_genes <- names(avg_expression)[order(avg_expression, decreasing = TRUE)][1:10]
+  
+  # Store the top genes for the current cluster
+  cluster_specific_genes[[paste0("Cluster_", i)]] <- top_genes
 }
 
-# Print the cluster-specific genes
-cluster_genes
+# Print the cluster specific genes
+cluster_specific_genes
 ```
-Note: Replace `'leukemiaExp.txt'` with the path to the actual file location. Adjust the value in `centers = 3` to the desired number of clusters.
+Note: This code assumes that the file "leukemiaExp.txt" is in the same directory as your R script. Make sure to modify the file path if it is in a different location.

@@ -10,33 +10,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load required libraries
-library(gplots)
-library(pcaMethods)
-
-# Read the gene expression data
+# Read the data from file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Calculate gene variability
-gene_variability <- apply(data, 1, var)
+# Calculate the variability for each gene
+variance <- apply(data, 1, var)
 
-# Get the top 1000 most variable genes
-top_genes <- names(sort(gene_variability, decreasing = TRUE)[1:1000])
+# Get the top 1000 genes with highest variability
+top_genes <- names(sort(variance, decreasing = TRUE))[1:1000]
 
-# Subset the data with the top variable genes
-filtered_data <- data[top_genes,]
+# Filter the data to retain only the top variable genes
+filtered_data <- data[top_genes, ]
 
-# Calculate the Z-scores of the filtered data
-filtered_data_zscore <- scale(filtered_data)
+# Plot a heatmap with clustering
+heatmap(filtered_data, Colv = NA)
 
-# Perform hierarchical clustering on the filtered data
-heatmap(filtered_data_zscore, col = cm.colors(256), scale = "row",
-        main = "Heatmap of Gene Expression (Top 1000 Variable Genes)")
+# Perform PCA on the samples
+pca <- prcomp(t(filtered_data))
 
-# Perform PCA on the filtered data
-pca_data <- pca(filtered_data_zscore)
-
-# Plot PCA for samples
-plotPCA(pca_data, group = NULL)
+# Plot the PCA
+plot(pca, type = "l")
 ```
-Note: This code assumes that the necessary libraries, gplots and pcaMethods, have been installed and loaded into the R environment.

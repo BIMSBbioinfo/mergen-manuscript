@@ -10,38 +10,40 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(tidyverse)
+# Import necessary libraries
 library(readxl)
+library(tidyverse)
 
-# Read the count table and annotation data
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
-annotation_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Rename the first column in the count table to match the annotation data
-colnames(count_table)[1] <- "diagnosis"
+# Read annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
 
-# Remove any leading and trailing whitespace in the diagnosis column
-merged_data$diagnosis <- str_trim(merged_data$diagnosis)
+# Rename the first column of annotation data as "Samples"
+colnames(annotation_data)[1] <- "Samples"
+
+# Merge count table and annotation data
+merged_data <- merge(count_table, annotation_data, by.x = "Genes", by.y = "Samples")
+
+# Extract the group variable from annotation data
+group_variable <- merged_data$group
+
+# Convert count table to long format
+long_table <- merged_data %>%
+  pivot_longer(cols = -c(Genes, group), names_to = "Samples", values_to = "Expression")
+
+# Convert group variable to character type
+group_variable <- as.character(group_variable)
 
 # Plot boxplots for gene expression values per sample
-boxplot_data <- merged_data %>%
-  gather(sample, expression, -diagnosis) %>%
-  mutate(sample_type = ifelse(str_detect(sample, "CASE"), "CASE", "CTRL")) %>%
-  mutate(group = factor(group, levels = unique(group))) %>%
-  mutate(sample_type = factor(sample_type, levels = c("CASE", "CTRL")))
-
-ggplot(boxplot_data, aes(x = group, y = as.numeric(expression), fill = group)) +
-  geom_boxplot() +
-  facet_wrap(~ sample_type) +
-  labs(x = "Group", y = "Gene Expression") +
-  theme_bw()
+boxplot(Expression ~ Samples, data = long_table, main = "Gene Expression Values per Sample", 
+        xlab = "Sample", ylab = "Expression", col = group_variable)
 ```
-
-Note: The code assumes that the required libraries are already installed. If they are not, you can install them using the `install.packages()` function before loading them with `library()`.
+```

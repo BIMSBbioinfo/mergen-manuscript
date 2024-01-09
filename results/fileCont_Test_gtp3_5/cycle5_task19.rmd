@@ -10,45 +10,70 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
+# Install required packages
+
+
+
+
+
+
+
 # Load required libraries
 library(readxl)
 library(limma)
+library(ggplot2)
+library(tidyverse)
+library(dplyr)
+library(PCAtools)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Remove first column of count table (gene names)
+# Remove any rows with NA values
+count_table <- count_table[complete.cases(count_table), ]
+
+# Remove the first column (gene names) from the count table
 count_table <- count_table[, -1]
 
-# Normalize counts using total count normalization (TMM)
-tpm_counts <- voom(count_table)
+# Transpose the count table to have samples as rows and genes as columns
+count_table <- t(count_table)
 
-# Subset annotation data to match count table columns
-annotation_data <- annotation_data[, colnames(count_table)]
+# Normalize the counts using the voom function from limma package
+normalized_counts <- voom(count_table)
 
-# Perform PCA for color coding by "group"
-group_pca <- prcomp(t(tpm_counts), scale = TRUE)
-group_scores <- group_pca$x[, 1:2]
-group_annotations <- annotation_data$group
+# Extract the sample annotations from the annotation data
+sample_annotations <- annotation_data[match(colnames(count_table), annotation_data$diagnosis), ]
 
-# Perform PCA for color coding by "LibrarySelection"
-library_pca <- prcomp(t(tpm_counts), scale = TRUE)
-library_scores <- library_pca$x[, 1:2]
-library_annotations <- annotation_data$LibrarySelection 
+# Perform PCA analysis
+pca_results <- prcomp(t(normalized_counts))
 
-# Plot PCA for color coded by "group"
-plot(group_scores, col = group_annotations)
+# Create a PCA plot color coded by "group"
+pca_plot_group <- ggplot(data = as.data.frame(pca_results$x),
+                         aes(x = PC1, y = PC2, color = sample_annotations$group)) +
+  geom_point(size = 3) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot - Color coded by group")
 
-# Plot PCA for color coded by "LibrarySelection"
-plot(library_scores, col = library_annotations)
+# Create a PCA plot color coded by "LibrarySelection"
+pca_plot_library <- ggplot(data = as.data.frame(pca_results$x),
+                           aes(x = PC1, y = PC2, color = sample_annotations$LibrarySelection)) +
+  geom_point(size = 3) +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA Plot - Color coded by LibrarySelection")
+
+# Print the PCA plots
+print(pca_plot_group)
+print(pca_plot_library)
 ```
 ```

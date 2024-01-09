@@ -11,21 +11,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-gene_data <- read.delim("leukemiaExp.txt", sep="\t", header=TRUE)
-
-# Select only the gene expression values (excluding the first column)
-expression_values <- gene_data[, -1]
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Calculate the variance for each gene
-gene_variances <- apply(expression_values, 1, var)
+variances <- apply(data[, -1], 2, var)
 
-# Sort the gene variances in descending order and select the top 1000 genes
-top_genes <- head(sort(gene_variances, decreasing=TRUE), 1000)
+# Sort the variances in descending order
+sorted_variances <- sort(variances, decreasing = TRUE)
 
-# Filter the gene expression data to retain only the top 1000 genes
-filtered_gene_data <- gene_data[gene_variances %in% top_genes, ]
+# Get the indices of the top 1000 genes with the highest variability
+top_genes_indices <- order(variances, decreasing = TRUE)[1:1000]
 
-# Print the filtered gene expression data
-filtered_gene_data
+# Filter the data to only keep the top 1000 genes
+filtered_data <- data[c(1, top_genes_indices + 1)]
+
+# Print the filtered data
+filtered_data
 ```
-

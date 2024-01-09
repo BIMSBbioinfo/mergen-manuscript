@@ -10,42 +10,39 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load necessary libraries
-library(openxlsx)
-library(dplyr)
-library(ggplot2)
+library(readxl)
 
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx",
-                         sheet = 1,
-                         colNames = TRUE,
-                         skipEmptyRows = TRUE)
+# Read count table from "Supplementary_Table_1_exp.xlsx" file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Transpose the count table to have genes as rows and samples as columns
-count_table <- t(count_table)
+# Read annotation data from "SRP021193.colData.tsv" file
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv",
-                              header = TRUE,
-                              sep = "\t")
+# Merge annotation data and count table
+merged_data <- merge(annotation_data, count_table, by.x = "diagnosis", by.y = "Genes")
 
-# Rename the first column of the annotation data to match the sample ids
-colnames(annotation_data)[1] <- "Sample_ID"
+# Plot boxplots for gene expression values per sample
+boxplot(merged_data[, 4:ncol(merged_data)], 
+        main = "Gene Expression Values per Sample", 
+        xlab = "Sample", 
+        ylab = "Gene Expression",
+        ylim = c(0, max(merged_data[, 4:ncol(merged_data)], na.rm = TRUE)))
 
-# Merge the annotation data and count table based on sample ids
-merged_data <- inner_join(annotation_data, count_table, by = "Sample_ID")
+# Create a color palette for the "group" variable in the annotation data
+group_colors <- c("CASE" = "red", "CTRL" = "blue")
 
-# Plot boxplots for gene expression values per sample, color coded by the "group" variable
-ggplot(merged_data, aes(x = group, y = TSPAN6)) +
-  geom_boxplot(fill = "lightblue") +
-  xlab("Group") +
-  ylab("Gene Expression") +
-  ggtitle("Boxplots of Gene Expression per Sample (TSPAN6)")
+# Color code boxplots based on the "group" variable in the annotation data
+boxplot(merged_data[, 4:ncol(merged_data)], 
+        main = "Gene Expression Values per Sample", 
+        xlab = "Sample", 
+        ylab = "Gene Expression",
+        col = group_colors[merged_data$group])
 ```
 ```

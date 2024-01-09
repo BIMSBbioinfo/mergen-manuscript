@@ -10,25 +10,29 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Load the data
+data <- read.delim("leukemiaExp.txt", sep = "\t")
 
-# Check the number of samples
+# Check the number of samples/columns
 num_samples <- ncol(data) - 1
 
-# If there are more than 500 samples
+# If there are more than 500 samples, randomly sample 500 samples
 if (num_samples > 500) {
-  # Randomly select 500 samples
-  set.seed(1)
-  selected_samples <- sample(2:num_samples, 500, replace=FALSE)
-  
-  # Create subset of the data with selected samples
-  subset_data <- data[, c(1, selected_samples+1)]
+  set.seed(123)  # Set a seed for reproducibility
+  sample_columns <- sample(2:(num_samples + 1), 500)
+  subset_data <- data[, c(1, sample_columns)]
 } else {
   subset_data <- data
 }
 
-# Create boxplot of the columns
-boxplot(subset_data[, -1], main="Boxplot of Gene Expression Data", xlab="Samples", ylab="Gene Expression")
+# Remove any column without a header
+subset_data <- subset_data[, colnames(subset_data) != ""]
+
+# Reset column names to improve plot readability
+colnames(subset_data)[-1] <- c(1:(ncol(subset_data) - 1))
+
+# Create a boxplot of the columns
+boxplot(subset_data[, -1], names = subset_data[, 1])
 ```
-Note: The code assumes that the first row of the file contains the column names. If there are no column names in the file, you can remove the "header=TRUE" argument when reading the data.
+
+Note: I added a step to reset column names (excluding the first one) to improve plot readability.

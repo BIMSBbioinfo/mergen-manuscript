@@ -10,13 +10,16 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+# Read the gene expression data from file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Get the number of genes and samples
+# Count the number of genes (rows)
 num_genes <- nrow(data)
+
+# Count the number of samples (columns) - excluding the first column (gene names)
 num_samples <- ncol(data) - 1
 
-num_genes
-num_samples
+# Print the results
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```

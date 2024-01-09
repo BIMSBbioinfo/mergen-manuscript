@@ -10,52 +10,72 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(openxlsx)
-library(edgeR)
+# Load necessary packages
+library(readxl)
+library(dplyr)
 library(ggplot2)
+library(ggrepel)
+library(scales)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", skipEmptyRows = FALSE)
-count_table <- count_table[, -1]  # Remove first column
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation <- read.delim("SRP021193.colData.tsv", row.names = 1)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
 
-# Normalize count table using edgeR's TMM method
-counts <- as.matrix(count_table[, -1])  # excluding the gene names column
-group_labels <- annotation$group
-y <- DGEList(counts = counts)
-y <- calcNormFactors(y)
-normalized_counts <- cpm(y, log = TRUE)
+# Transpose count table
+count_table <- t(count_table)
 
-# Perform PCA on normalized counts
-pca_normalized <- prcomp(t(normalized_counts), scale. = TRUE)
+# Rename the first column of count table to "Genes"
+colnames(count_table) <- c("Genes", colnames(count_table)[-1])
 
-# Create PCA plot colored by "group"
-group_colors <- c("CASE" = "blue", "CTRL" = "red")  # Add more colors if needed
-pca_plot_group <- ggplot(data.frame(pca_normalized$x), aes(x = PC1, y = PC2, color = factor(group_labels))) +
-  geom_point() +
-  scale_color_manual(values = group_colors) +
-  labs(title = "PCA Plot - Samples colored by 'group'")
+# Set row names of count table as sample IDs
+rownames(count_table) <- count_table[, "Genes"]
+count_table <- count_table[, -1]
 
-# Create PCA plot colored by "LibrarySelection"
-selection_colors <- c("cDNA" = "green", "RNA" = "orange")  # Add more colors if needed
-selection_labels <- annotation$LibrarySelection
-pca_plot_selection <- ggplot(data.frame(pca_normalized$x), aes(x = PC1, y = PC2, color = factor(selection_labels))) +
-  geom_point() +
-  scale_color_manual(values = selection_colors) +
-  labs(title = "PCA Plot - Samples colored by 'LibrarySelection'")
+# Merge count table with annotation data based on sample IDs
+merged_data <- merge(count_table, annotation_data, by.x = "row.names", by.y = "diagnosis", all.x = TRUE)
 
-# Display PCA plots
-pca_plot_group
-pca_plot_selection
+# Normalize counts using the edgeR package
+library(edgeR)
+counts <- DGEList(counts = merged_data[, -ncol(merged_data)])
+rpkm <- rpkm(counts)
+
+# Perform PCA for "group" colored samples
+pca_group <- prcomp(t(rpkm[, -(ncol(rpkm)-2)]))
+pca_group_df <- as.data.frame(pca_group$x)
+pca_group_df$sample <- rownames(pca_group_df)
+pca_group_df$group <- merged_data$group
+
+# Perform PCA for "LibrarySelection" colored samples
+pca_library <- prcomp(t(rpkm[, -(ncol(rpkm)-1)]))
+pca_library_df <- as.data.frame(pca_library$x)
+pca_library_df$sample <- rownames(pca_library_df)
+pca_library_df$library_selection <- merged_data$LibrarySelection
+
+# Create PCA plots
+pca_group_plot <- ggplot(pca_group_df, aes(x = PC1, y = PC2, color = group)) +
+  geom_point(size = 4, alpha = 0.8) +
+  geom_text_repel(aes(label = sample), size = 3, force = 2) +
+  scale_color_manual(values = c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00")) +
+  labs(title = "PCA Plot of Samples (Color-coded by Group)",
+       x = "PC1", y = "PC2")
+
+pca_library_plot <- ggplot(pca_library_df, aes(x = PC1, y = PC2, color = library_selection)) +
+  geom_point(size = 4, alpha = 0.8) +
+  geom_text_repel(aes(label = sample), size = 3, force = 2) +
+  labs(title = "PCA Plot of Samples (Color-coded by Library Selection)",
+       x = "PC1", y = "PC2")
+
+# Print PCA plots
+print(pca_group_plot)
+print(pca_library_plot)
 ```
 
-Note: Make sure to install the required libraries if you don't have them already. You can install them using the `install.packages()` function, e.g., ``. Also, please ensure that the column names in the count table and the annotation table match exactly as shown in the provided examples.
+Make sure you have the necessary packages (readxl, dplyr, ggplot2, ggrepel, scales, edgeR) installed and the input files are in the correct location.

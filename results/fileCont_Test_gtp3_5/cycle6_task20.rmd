@@ -10,59 +10,71 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(openxlsx)
-library(edgeR)
-library(apeglm)
+# Load required packages
+library(readxl)
+library(dplyr)
+library(data.table)
 library(ggplot2)
 library(ggrepel)
-library(gplots)
-library(RColorBrewer)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
-genes <- count_table[, 1] # Gene names
-counts <- count_table[, -1] # Count data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation <- read.delim("SRP021193.colData.tsv", sep = "\t")
-group <- annotation$group # Group variable
+annotation_data <- fread("SRP021193.colData.tsv")
 
-# Perform statistical test using edgeR
-dge <- DGEList(counts)
-dge <- calcNormFactors(dge)
-group_design <- model.matrix(~group)
-dge <- estimateDisp(dge, group_design)
-fit <- glmQLFit(dge, group_design)
-qlf <- glmQLFTest(fit, contrast = c("group", "non-ischemic cardiomyopathy", "CASE"))
+# Transpose count table
+count_table <- t(count_table)
 
-# Find genes specific for each group
-sig_genes <- topTags(qlf)$table
-specific_genes <- split(sig_genes$genes, sig_genes$logFC > 0)
+# Rename columns of count table to match sample ids in annotation data
+colnames(count_table) <- annotation_data$V1
 
-# Filter count table for specific genes
-filtered_counts <- counts[rownames(counts) %in% unlist(specific_genes), ]
+# Add group information to count table
+count_table$group <- annotation_data$group
 
-# Perform PCA using filtered counts
-pca <- prcomp(t(filtered_counts))
+# Function to identify specific genes for each group
+find_specific_genes <- function(table) {
+  result <- lapply(unique(table$group), function(group){
+    group_counts <- table[table$group == group, -ncol(table)]
+    specific_genes <- apply(group_counts, 1, function(row){
+      if (sum(row > 0) == length(row)) {
+        return(row.names(group_counts)[which.max(row)])
+      } else {
+        return(NA)
+      }
+    })
+    return(data.frame(group = group, specific_genes = specific_genes))
+  })
+  return(do.call(rbind, result))
+}
 
-# Plot PCA with color-coded groups
-sample_names <- colnames(counts)[-1]
-pca_df <- data.frame(sample = sample_names, pca$x)
-pca_df$group <- group
-color_palette <- brewer.pal(nlevels(factor(group)), "Set1")
-pca_plot <- ggplot(pca_df, aes(PC1, PC2, color = group)) +
-  geom_point(size = 3) +
-  scale_color_manual(values = color_palette) +
-  theme_minimal()+
-  geom_text_repel(aes(label=sample, color = NULL), size = 3) +
-  labs(x = "PC1", y = "PC2")
-print(pca_plot)
+# Find specific genes for each group
+specific_genes <- find_specific_genes(count_table)
+
+# Filter count table to include only specific genes
+specific_count_table <- count_table[row.names(count_table) %in% unique(specific_genes$specific_genes), ]
+
+# Scale count table
+scaled_count_table <- scale(specific_count_table[, -ncol(specific_count_table)])
+
+# Perform PCA
+pca <- prcomp(scaled_count_table)
+
+# Plot PCA using group specific genes
+pca_plot <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2, label = row.names(scaled_count_table))) +
+  geom_point() +
+  geom_text_repel(nudge_x = 0.1, nudge_y = 0.1) +
+  labs(title = "PCA Plot of Group Specific Genes", x = "PC1", y = "PC2") +
+  scale_color_manual(values = c("non-ischemic cardiomyopathy" = "red", "other" = "blue")) +
+  theme_minimal()
+
+# Display PCA plot
+pca_plot
 ```
 ```

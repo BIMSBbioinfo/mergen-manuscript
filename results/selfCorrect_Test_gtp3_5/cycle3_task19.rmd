@@ -10,55 +10,45 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(readxl)
+# Load necessary packages
+library(openxlsx)
+library(dplyr)
+library(tidyr)
 library(DESeq2)
 library(ggplot2)
-library(dplyr)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
-
-# Extract gene names from count table
-genes <- count_table$Genes
-
-# Remove the 'Genes' column from count table
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2, colNames = TRUE)
+gene_names <- count_table$Genes
 count_table <- count_table[, -1]
 
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ 1)
-dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", row.names = 1)
 
-# Perform PCA analysis
-pca <- prcomp(t(normalized_counts), scale. = TRUE, center = TRUE, na.action = na.exclude)
+# Transpose count_table to match annotation_data
+count_table <- t(count_table)
 
-# Create a data frame for PCA results
-pca_data <- as.data.frame(pca$x)
-pca_data$group <- annotation_data$group
-pca_data$LibrarySelection <- annotation_data$LibrarySelection
+# Normalize counts
+normalized_counts <- DESeq2::counts(DESeq2::DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data), normalized=TRUE)
 
-# Create two PCA plots, one color coded by 'group' and the other by 'LibrarySelection'
-pca_plot_group <- ggplot(pca_data, aes(PC1, PC2, color = group)) + 
-  geom_point() +
-  labs(title = "PCA Plot - Color Coded by Group")
+# Perform PCA and color code by "group" in annotation data
+pca1 <- prcomp(t(normalized_counts))
+pca1_df <- as.data.frame(pca1$x[, c("PC1", "PC2")])
+pca1_df$Sample <- rownames(pca1_df)
+pca1_df <- merge(pca1_df, annotation_data, by.x = "Sample", by.y = "row.names")
+ggplot(pca1_df, aes(x = PC1, y = PC2, color = group)) + geom_point()
 
-pca_plot_library <- ggplot(pca_data, aes(PC1, PC2, color = LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA Plot - Color Coded by Library Selection")
-
-# Display the PCA plots
-pca_plot_group
-pca_plot_library
+# Perform PCA and color code by "LibrarySelection" in annotation data
+pca2 <- prcomp(t(normalized_counts))
+pca2_df <- as.data.frame(pca2$x[, c("PC1", "PC2")])
+pca2_df$Sample <- rownames(pca2_df)
+pca2_df <- merge(pca2_df, annotation_data, by.x = "Sample", by.y = "row.names")
+ggplot(pca2_df, aes(x = PC1, y = PC2, color = LibrarySelection)) + geom_point()
 ```
-
-Note: The error message "cannot rescale a constant/zero column to unit variance" occurred because there was at least one column in the count table that contained only zeros. I changed the `na.action` argument in the `prcomp` function to `na.exclude` to exclude the constant/zero columns from the scaling step. This should fix the error and provide the desired PCA plots.
+```

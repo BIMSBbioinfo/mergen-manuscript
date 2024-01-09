@@ -10,44 +10,36 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(openxlsx)
-library(ggplot2)
+# Load required libraries
+library(readxl)
 
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, detectDates = FALSE)
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read the annotation data
+# Read annotation data
 annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Extract sample ids from the annotation data
-sample_ids <- annotation_data$diagnosis
+# Rename the first column of annotation data to match the sample names in count table
+colnames(annotation_data)[1] <- "Sample"
 
-# Rename the first column of annotation_data to match count_table
-colnames(annotation_data)[1] <- "Genes"
+# Merge count table and annotation data based on sample names
+merged_data <- merge(count_table, annotation_data, by.x = "Genes", by.y = "Sample")
 
-# Merge count table and annotation data based on sample ids
-merged_data <- merge(count_table, annotation_data, by = "Genes")
+# Exclude the "group" column from the boxplot data
+boxplot_data <- merged_data[, -which(names(merged_data) == "group")]
 
-# Remove spaces and hyphens from the factor levels in the "group" column
-merged_data$group <- gsub(" ", "", merged_data$group)
-merged_data$group <- gsub("-", "", merged_data$group)
-
-# Prepare the data for plotting
-plot_data <- reshape2::melt(merged_data, id.vars = c("Genes", "group"), measure.vars = sample_ids, variable.name = "Sample", value.name = "Expression")
-
-# Plot boxplots with color-coded groups
-ggplot(plot_data, aes(x = group, y = Expression, fill = group)) +
-  geom_boxplot() +
-  xlab("Group") +
-  ylab("Gene Expression") +
-  ggtitle("Gene Expression Boxplots") +
-  theme_minimal()
+# Plot boxplots for gene expression per sample and color code based on the "group" variable
+boxplot(boxplot_data, 
+        col = ifelse(merged_data$group == "CASE", "blue", "red"), 
+        main = "Gene Expression Values",
+        xlab = "Sample",
+        ylab = "Expression Value",
+        ylim = c(0, max(boxplot_data, na.rm = TRUE), finite = TRUE))
 ```
 ```

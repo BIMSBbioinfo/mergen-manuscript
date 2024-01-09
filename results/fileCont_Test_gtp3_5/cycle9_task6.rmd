@@ -11,27 +11,18 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Check the number of columns (samples)
-num_samples <- ncol(gene_data)
+# Check the number of samples
+num_samples <- ncol(gene_data) - 1
 
-# If there are more than 500 samples, randomly sample 500 columns
-if(num_samples > 500) {
-  # Set seed for reproducibility
-  set.seed(123)
-  
-  # Randomly sample 500 column indices
-  sample_indices <- sample(2:num_samples, 500)
-  
-  # Create subset of the data with sampled columns
-  sampled_data <- gene_data[, c(1, sample_indices)]
+# If there are more than 500 samples
+if(num_samples > 500){
+  # Randomly sample 500 samples
+  sampled_data <- gene_data[, c(1, sample(2:num_samples, 500))]
 } else {
-  # If there are less than or equal to 500 samples, keep the original data as is
+  # Keep the original data as it is
   sampled_data <- gene_data
 }
-
-# Print the sampled gene expression data
-sampled_data
 ```
-Note: In the code above, it is assumed that the first column contains gene names and the remaining columns contain the sample data. Adjust the column indices accordingly if this is not the case.
+```

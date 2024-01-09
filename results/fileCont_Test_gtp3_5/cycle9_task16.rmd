@@ -10,43 +10,38 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(openxlsx)
 library(dplyr)
 library(ggplot2)
 
-# Read the count table
-counts <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+# Read count table
+count_table <- read.xlsx("path/to/Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 2)
 
-# Read the annotation data
-annotations <- read.delim("SRP021193.colData.tsv")
+# Read annotation data
+annotation_data <- read.table("path/to/SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Rename the first column in annotation data as "sample"
-colnames(annotations)[1] <- "sample"
+# Rename the first column in annotation data to match sample ids in count table
+colnames(annotation_data)[1] <- "Samples"
 
-# Merge annotation data and count table based on sample IDs
-merged_data <- merge(counts, annotations, by = "sample")
+# Merge annotation data and count table based on sample ids
+merged_data <- merge(count_table, annotation_data, by = "Samples")
 
-# Create a function to plot boxplots for gene expression values per sample
-plot_boxplots <- function(data, x_variable){
-  ggplot(data, aes(x = .data[[x_variable]], y = value)) +
-    geom_boxplot() +
-    labs(x = x_variable, y = "Gene Expression")
-}
+# Reshape the data to a long format for plotting
+merged_data_long <- tidyr::gather(merged_data, key = "Gene", value = "Count", -c(Samples, diagnosis, group, LibrarySelection))
 
-# Get the list of unique groups in annotation data
-groups <- unique(merged_data$group)
-
-# Plot boxplots for gene expression values per sample and color code based on groups
-for(group in groups){
-  filtered_data <- merged_data %>% filter(group == group)
-  plot <- plot_boxplots(filtered_data, "sample")
-  print(plot)
-}
+# Plot boxplots of gene expression values per sample and color code based on the "group" variable
+ggplot(merged_data_long, aes(x = Samples, y = Count, fill = group)) +
+  geom_boxplot() +
+  xlab("Sample") +
+  ylab("Gene Expression Count") +
+  labs(fill = "Group") +
+  theme_bw()
+```
 ```

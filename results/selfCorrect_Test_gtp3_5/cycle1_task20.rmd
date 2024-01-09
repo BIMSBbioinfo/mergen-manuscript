@@ -10,80 +10,67 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(readxl)
-library(dplyr)
-library(tidyr)
+library(DESeq2)
 library(ggplot2)
-library(ggsignif)
+library(cowplot)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
-
-# Extract gene names from count table
 gene_names <- count_table$Genes
+count_table <- count_table[, -1] # Exclude the gene names column
 
-# Remove "Genes" column from count table
-count_table <- count_table[, -1]
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Transpose count table
-count_table <- t(count_table)
+# Find genes specific for each group using statistical tests
+# Perform differential expression analysis using DESeq2
 
-# Set row names of count table as sample ids
-rownames(count_table) <- colnames(count_table)
+# Convert the count table to DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ group)
 
-# Join count table and annotation data by sample ids
-joined_data <- count_table %>%
-  as.data.frame() %>%
-  rownames_to_column(var = "Sample_ID") %>%
-  left_join(annotation_data, by = c("Sample_ID" = "diagnosis"))
+# Run the DESeq2 analysis
+dds <- DESeq(dds)
 
-# Filter joined data for group-specific genes
-group_specific_genes <- joined_data %>%
-  group_by(group) %>%
-  summarize()
+# Get the results of differential expression analysis
+results <- results(dds)
 
-# Perform statistical test for each group
-p_values <- lapply(group_specific_genes$group, function(group){
-  group_count_table <- joined_data %>%
-    filter(group == group) %>%
-    select(-c(group, LibrarySelection))
+# Filter the genes specific for each group
+group_specific_genes <- list()
 
-  # Perform statistical test (e.g., DESeq2) for this group
-  # ...
-  # Replace the above line with your statistical test code
-})
+# Loop through each group and find specific genes
+unique_groups <- unique(annotation_data$group)
+for (group in unique_groups) {
+  differential_genes <- results$log2FoldChange[results$padj < 0.05 & results$group == group]
+  group_specific_genes[[group]] <- gene_names[differential_genes[!is.na(differential_genes)]]
+}
 
-# Adjust p-values for multiple testing
-adjusted_p_values <- lapply(p_values, function(p_value){
-  # Adjust p-values (e.g., with Benjamini-Hochberg correction)
-  p.adjust(p_value, method = "BH")
-})
+# Plot PCA using group specific genes and color code by group variable
+# Extract group specific genes from count table
+group_specific_genes <- unlist(group_specific_genes)
+group_specific_count_table <- count_table[gene_names %in% group_specific_genes, ]
 
-# Extract significant genes based on adjusted p-values (e.g., using a threshold of 0.05)
-significant_genes <- lapply(adjusted_p_values, function(adj_p_value){
-  # Extract significant genes
-  gene_names[adj_p_value < 0.05]
-})
+# Perform PCA on the count table
+pca <- prcomp(t(group_specific_count_table), scale = TRUE)
 
-# Extract group-specific gene names
-group_specific_gene_names <- sapply(significant_genes, function(genes){
-  # Extract gene names
-  paste(genes, collapse = " ")
-})
+# Create a data frame with PCA results and group information
+pca_data <- data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], group = annotation_data$group)
 
-# Plot PCA using group-specific genes
-# ...
+# Create a PCA plot colored by group
+pca_plot <- ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  theme_minimal()
 
-# Replace the above line with your code to plot PCA using group-specific genes
+# Display the PCA plot
+print(pca_plot)
 ```
 ```

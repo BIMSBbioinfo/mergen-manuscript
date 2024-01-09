@@ -10,31 +10,37 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from file
+# Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
+# Extract the gene names from the first column
+gene_names <- data[, 1]
+
+# Remove the first column
+expression_data <- data[, -1]
+
 # Calculate the variability of each gene
-variability <- apply(data[, -1], 2, var)
+variability <- apply(expression_data, 1, var)
 
-# Get the top 1000 most variable genes
-top_1000_genes <- names(variability)[order(variability, decreasing = TRUE)][1:1000]
+# Sort the genes based on their variability in descending order
+sorted_genes <- gene_names[order(variability, decreasing = TRUE)]
 
-# Filter the data to retain only the most variable genes
-filtered_data <- data[, c(1, top_1000_genes)]
+# Select the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000]
 
-# Remove rows with missing values
-filtered_data <- na.omit(filtered_data)
+# Filter the expression data to include only the top 1000 genes
+filtered_data <- data[data[, 1] %in% top_1000_genes, ]
 
-# Convert gene names to row names
-rownames(filtered_data) <- filtered_data[, 1]
-filtered_data <- filtered_data[, -1]
+# Calculate the z-scores for the filtered data
+z_scores <- scale(filtered_data[, -1])
 
-# Plot a heatmap with clustering
-heatmap(as.matrix(filtered_data), Rowv = TRUE, Colv = TRUE)
+# Plot the heatmap with clustering
+heatmap(z_scores, Colv = NA, scale = "column")
 
-# Perform PCA on the samples
-pca <- prcomp(t(filtered_data))
+# Calculate the principal components for the expression data
+pca <- prcomp(expression_data[, -1])
 
-# Plot a PCA plot
-plot(pca$x[,1], pca$x[,2], pch = 19, col = "blue", xlab = "PC1", ylab = "PC2")
+# Plot the PCA for the samples
+plot(pca$x[, 1], pca$x[, 2])
 ```
+

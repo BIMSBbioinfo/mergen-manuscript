@@ -10,18 +10,30 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data
+leukemiaExp <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Calculate the variability for each gene
-gene_variability <- apply(data[, -1], 1, var)
+# Extract the gene names and expression values from the data
+genes <- leukemiaExp$Gene
+expression <- leukemiaExp[, -1]
 
-# Sort the genes based on their variability
-sorted_genes <- data[order(gene_variability, decreasing = TRUE), ]
+# Calculate the variance for each gene
+variance <- apply(expression, 1, var)
 
-# Select the top 1000 genes with the highest variability
-top_1000_genes <- sorted_genes[1:1000, ]
+# Sort the variance in descending order and select the top 1000 genes
+topGenes <- genes[order(variance, decreasing=TRUE)][1:1000]
+
+# Extract the expression values for the top genes
+topExpression <- expression[topGenes, ]
+
+# Calculate the variance for the top genes
+topVariance <- apply(topExpression, 1, var)
+
+# Find the indices of the two most variable genes
+mostVariableGenes <- order(topVariance, decreasing=TRUE)[1:2]
 
 # Create a scatterplot of the two most variable genes
-plot(top_1000_genes[, 2], top_1000_genes[, 3])
+plot(topExpression[mostVariableGenes[1], ], topExpression[mostVariableGenes[2], ], 
+     xlab=paste0("Gene Expression (", topGenes[mostVariableGenes[1]], ")"), 
+     ylab=paste0("Gene Expression (", topGenes[mostVariableGenes[2]], ")"))
 ```

@@ -10,52 +10,42 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(openxlsx)
-library(DESeq2)
-library(ggplot2)
+# Load required packages
+library(tidyverse)
+library(readxl)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", colNames = TRUE, rowNames = TRUE)
-count_table <- count_table[, -1]
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = FALSE)
+# Transpose count table so that genes are in rows and samples are in columns
+count_table <- t(as.matrix(count_table))
+# Remove first row (gene names) and first column (sample names)
+count_table <- count_table[-1, -1]
 
 # Read annotation data
-annotation <- read.delim("SRP021193.colData.tsv", sep = "\t")
+annotation_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
 
-# Extract sample names from count table
-sample_names <- colnames(count_table)
+# Extract sample IDs from annotation data
+sample_ids <- annotation_data$sample
 
-# Create design matrix based on annotations
-design <- model.matrix(~0 + group + LibrarySelection, data = annotation)
+# Normalize counts
+normalized_counts <- log2(count_table + 1)
 
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation,
-                              design = design)
-dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Combine normalized counts with annotation data based on sample IDs
+combined_data <- data.frame(sample = sample_ids, normalized_counts)
+combined_data <- inner_join(combined_data, annotation_data, by = "sample")
 
-# Perform PCA based on normalized counts
-pca <- prcomp(t(normalized_counts))
+# Perform PCA with samples color coded by "group"
+pca_group <- prcomp(select(combined_data, -c(sample, LibrarySelection)), scale. = TRUE)
+plot(pca_group$x[,1:2], col = combined_data$group, main = "PCA Plot (samples color coded by group)")
 
-# Plot PCA with samples color coded by "group"
-ggplot(data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], group = annotation$group)) +
-  geom_point(aes(x = PC1, y = PC2, color = group)) +
-  xlab("PC1") +
-  ylab("PC2") +
-  ggtitle("PCA - Color coded by Group")
-
-# Plot PCA with samples color coded by "LibrarySelection"
-ggplot(data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], LibrarySelection = annotation$LibrarySelection)) +
-  geom_point(aes(x = PC1, y = PC2, color = LibrarySelection)) +
-  xlab("PC1") +
-  ylab("PC2") +
-  ggtitle("PCA - Color coded by LibrarySelection")
+# Perform PCA with samples color coded by "LibrarySelection"
+pca_library <- prcomp(select(combined_data, -c(sample, group)), scale. = TRUE)
+plot(pca_library$x[,1:2], col = combined_data$LibrarySelection, main = "PCA Plot (samples color coded by LibrarySelection)")
 ```
 ```

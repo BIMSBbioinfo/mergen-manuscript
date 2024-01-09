@@ -10,37 +10,29 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(readxl)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Extract sample names from annotation data
-sample_names <- annotation_data$diagnosis
+# Rename the first column of the annotation data to match the sample ids in the count table
+colnames(annotation_data)[1] <- "diagnosis"
 
-# Remove duplicates from row names in count table
-count_table <- count_table[!duplicated(count_table$Genes), ]
+# Merge annotation data and gene expression tables based on sample ids
+merged_data <- merge(annotation_data, count_table, by = "diagnosis")
 
-# Reset row names of count table as gene names
-rownames(count_table) <- count_table$Genes
-
-# Remove "Genes" column from count table
-count_table$Genes <- NULL
-
-# Merge count table with annotation data using row names
-merged_data <- merge(count_table, annotation_data, by = "row.names", all = FALSE)
-
-# Plot boxplots for gene expression values per sample and color code boxplots based on group variable
-boxplot(merged_data[, 2:ncol(merged_data)], col = merged_data$group)
+# Plot boxplots for gene expression values per sample and color code boxplots based on the "group" variable
+par(mar = c(10, 4, 4, 2)) # Adjust the margins for better visualization
+boxplot(as.matrix(merged_data[,3:ncol(merged_data)]), col = merged_data$group)
 ```
 ```

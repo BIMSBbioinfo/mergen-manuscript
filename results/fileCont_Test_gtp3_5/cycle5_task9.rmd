@@ -10,27 +10,31 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data file
+# Read the data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability of each gene
-variance <- apply(data[, -1], 1, var)
+# Remove the first column which contains gene names
+data <- data[, -1]
 
-# Sort the genes based on their variability
-sorted_genes <- data[order(variance, decreasing = TRUE), ]
+# Calculate the variability of each gene
+var <- apply(data, 1, var)
+
+# Sort the genes based on variability in descending order
+sorted_genes <- rownames(data)[order(var, decreasing = TRUE)]
 
 # Select the top 1000 most variable genes
-selected_genes <- sorted_genes[1:1000, ]
+selected_genes <- sorted_genes[1:1000]
 
-# Remove the first column (gene names) from the selected genes data
-selected_genes <- selected_genes[, -1]
+# Subset the data to include only the selected genes
+selected_data <- data[selected_genes, ]
 
-# Perform hierarchical clustering on the selected genes data
-heatmap(selected_genes, Colv = NA)
+# Plot a heatmap with clustering
+heatmap(selected_data)
 
-# Perform PCA on the samples
-pca <- prcomp(data[, -1], center = TRUE, scale = TRUE)
+# Perform Principal Component Analysis (PCA) on the data
+pca <- prcomp(selected_data)
 
-# Plot the PCA results
-plot(pca$x[, 1], pca$x[, 2])
+# Plot the PCA for samples
+plot(pca$x[,1], pca$x[,2])
+```
 ```

@@ -10,29 +10,35 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(readxl)
-library(tidyverse)
 
-# Read count table file
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data file
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
 
-# Rename the first column of the annotation data to match the column names in the count table
-colnames(annotation_data)[1] <- "Genes"
+# Rename the first column of count table as "Genes"
+colnames(count_table)[1] <- "Genes"
 
-# Merge the annotation data and count table based on the matching column names
-merged_data <- merge(count_table, annotation_data, by = "Genes")
+# Merge annotation data and count table based on sample ids
+merged_data <- merge(annotation_data, count_table, by.x = "row.names", by.y = "Genes")
 
-# Plot boxplots for gene expression values per sample and color code boxplots based on the "group" variable in the annotation data
-boxplot_data <- select(merged_data, -c(Genes, diagnosis, LibrarySelection))
-boxplot(boxplot_data, col = merged_data$group, main = "Gene Expression Boxplots", xlab = "Samples", ylab = "Gene Expression")
+# Plot boxplots for gene expression values per sample and color code boxplots based on group variable in annotation data
+boxplot(as.matrix(merged_data[,4:ncol(merged_data)]), 
+        col = ifelse(merged_data$group == "CASE", "blue", "red"),
+        main = "Gene Expression Boxplots",
+        xlab = "Samples",
+        ylab = "Gene Expression Value")
+
+# Note: You may need to install and load the "readxl" library before reading the excel file.
+# You can install it using 
+```
 ```

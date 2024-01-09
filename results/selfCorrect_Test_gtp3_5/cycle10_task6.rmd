@@ -10,23 +10,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the data from the file
+# Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check the number of samples
-num_samples <- length(data) - 1
+# Check the number of columns in the data
+num_samples <- ncol(data) - 1
 
-# If there are more than 500 samples
-if(num_samples > 500) {
-  # Randomly sample 500 samples
-  set.seed(123)  # Set seed for reproducibility
-  sample_indices <- sample(2:length(data), size = 500, replace = FALSE)
-  
-  # Create a subset of the data with the sampled samples
-  data_subset <- data[c(1, sample_indices)]
+# If there are more than 500 samples, randomly sample 500 of them
+if (num_samples > 500) {
+  set.seed(123)  # Set a seed for reproducibility
+  sampled_columns <- sample(colnames(data)[-1], 500)
+  subset_data <- data[, c(1, sampled_columns)]
 } else {
-  # If there are 500 or fewer samples, keep the data as is
-  data_subset <- data
+  subset_data <- data
 }
-print(data_subset)
+
+# Print the subset of the data
+subset_data
 ```
+Note: In the code above, the number of samples is determined by the number of columns in the data minus 1 (since the first column is gene names). The `set.seed` function is used to ensure reproducibility in the random sampling of columns.

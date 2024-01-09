@@ -10,37 +10,33 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data into a data frame, excluding the first column
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")[-1]
 
-# Remove the first column (gene names)
-expr <- data[, -1]
+# Convert the data to a numeric matrix
+data_matrix <- as.matrix(data)
 
-# Convert the expression data to numeric matrix
-expr <- as.matrix(expr)
+# Transpose the data matrix
+transposed_data <- t(data_matrix)
 
-# Calculate the variability for each gene
-variance <- apply(expr, 1, var)
+# Calculate the variance of each gene and sort them in decreasing order
+variances <- apply(transposed_data, 1, var)
+sorted_genes <- names(variances)[order(variances, decreasing = TRUE)]
 
-# Get the top 1000 most variable genes
-top_genes <- head(sort(variance, decreasing = TRUE), 1000)
+# Select the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000]
 
-# Filter the expression data to keep only the top variable genes
-filtered_expr <- expr[top_genes, ]
+# Filter the data to include only the top variable genes
+filtered_data <- transposed_data[top_genes, ]
 
-# Calculate the distance matrix for clustering
-dist_matrix <- dist(filtered_expr)
+# Plot a heatmap of the filtered data with clustering
+heatmap(filtered_data, Colv = NA)
 
-# Perform hierarchical clustering on the samples
-clustering <- hclust(dist_matrix)
+# Perform PCA on the transposed data
+pca <- prcomp(filtered_data)
 
-# Plot the heatmap with clustering
-heatmap(filtered_expr, Colv = NA, scale = "row", dendrogram = "row")
-
-# Perform PCA on the samples
-pca <- prcomp(t(filtered_expr))
-
-# Plot the PCA
-plot(pca$x[, 1], pca$x[, 2], xlab = "PC1", ylab = "PC2")
+# Plot a PCA biplot
+biplot(pca)
 ```
-Note: The revised code includes the conversion of the expression data to a numeric matrix before calculating variability and performing PCA.
+
+Note: The error occurred because the gene expression data had a different number of columns (samples) than rows (genes). Therefore, I transposed the data before calculating variances, filtering, and performing PCA to ensure the dimensions are appropriate for the analyses.

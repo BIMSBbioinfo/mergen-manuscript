@@ -10,37 +10,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data file
-data <- read.delim("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Convert the data to a numeric matrix
-data <- as.matrix(data)
+# Calculate the variability for each gene
+variability <- apply(data[, -1], 1, var)
 
-# Calculate the variance for each gene
-gene_variability <- apply(data, 1, var)
+# Get the top 1000 most variable genes
+top_var_genes <- names(variability)[order(variability, decreasing=TRUE)][1:1000]
 
-# Sort the genes based on their variability in descending order
-sorted_genes <- names(sort(gene_variability, decreasing=TRUE))
+# Subset the data to retain only the most variable genes
+filtered_data <- data[, c("V1", top_var_genes)]
 
-# Retain the top 1000 most variable genes
-top_1000_genes <- sorted_genes[1:1000]
+# Perform hierarchical clustering and plot the heatmap
+heatmap_data <- as.matrix(filtered_data[, -1])
+heatmap_scale <- scale(heatmap_data)
+heatmap(heatmap_scale, main="Gene Expression", col=heat.colors(256))
 
-# Subset the data to include only the top 1000 genes
-filtered_data <- data[top_1000_genes, ]
+# Perform PCA on the samples
+pca <- prcomp(filtered_data[, -1])
+summary(pca)
+biplot(pca)
 
-# Calculate the variance-covariance matrix for the filtered data
-covariance_matrix <- cov(filtered_data)
-
-# Perform hierarchical clustering on the filtered data
-clustering <- hclust(dist(filtered_data))
-
-# Plot the heatmap with clustering
-heatmap(filtered_data, col=heat.colors(256), main="Heatmap with Clustering")
-
-# Perform PCA on the filtered data
-pca <- prcomp(filtered_data)
-
-# Plot the PCA for samples
-plot(pca$x, type="n", xlab="PC1", ylab="PC2", main="PCA for Samples")
-points(pca$x[,1], pca$x[,2], col="red")
 ```
+Note: Make sure to replace "V1" with the actual column name in your dataset that contains the gene names.

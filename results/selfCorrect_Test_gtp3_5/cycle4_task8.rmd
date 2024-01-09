@@ -11,23 +11,21 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-data <- read.delim("leukemiaExp.txt", sep = "\t")
-
-# Remove the first column (gene names) from the data
-data <- data[, -1]
+data <- read.table("leukemiaExp.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
 # Calculate the variability of each gene
-variability <- apply(data, 1, var)
+variability <- apply(data[, -1], 1, var)
 
-# Find the indices of the top 1000 most variable genes
-top_genes <- order(variability, decreasing = TRUE)[1:1000]
+# Sort the genes based on their variability in descending order
+sorted_genes <- data[order(variability, decreasing = TRUE), ]
 
-# Subset the data to retain only the top 1000 most variable genes
-top_data <- data[top_genes, ]
+# Retain the top 1000 most variable genes
+top_genes <- sorted_genes[1:1000, ]
+
+# Select the first and second most variable genes
+gene1 <- top_genes[1, ]
+gene2 <- top_genes[2, ]
 
 # Create a scatterplot of the two most variable genes
-gene1 <- top_data[1, ]
-gene2 <- top_data[2, ]
-
-plot(gene1, gene2, xlab = "Gene 1", ylab = "Gene 2", main = "Scatterplot of the Two Most Variable Genes")
+plot(gene1[-1], gene2[-1], xlab = names(gene1)[1], ylab = names(gene2)[1], main = "Scatterplot of the Two Most Variable Genes")
 ```

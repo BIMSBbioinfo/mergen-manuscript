@@ -10,31 +10,53 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
+
+
+
 library(readxl)
-library(dplyr)
-library(ggplot2)
+library(tidyverse)
 
 # Read the count table
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Merge annotation data and gene expression tables
-merged_data <- count_data %>%
-  inner_join(annotation_data, by = c("Genes" = "diagnosis"))
+# Rename the first column of the count table as "Genes"
+names(count_table)[1] <- "Genes"
 
-# Plot boxplots for gene expression values per sample and color code boxplots based on "group" variable
-ggplot(merged_data, aes(x = group, y = CASE_1)) +
-  geom_boxplot(fill = "group") +
-  labs(x = "Group", y = "Gene Expression Value") +
-  theme_minimal()
+# Merge the annotation data and count table based on sample ids
+merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = 1)
+
+# Get the unique groups from the annotation data
+groups <- unique(merged_data$group)
+
+# Create a list to store the boxplot plots
+boxplot_plots <- list()
+
+# Plot boxplots for gene expression values per sample
+for (group in groups) {
+  # Subset the merged data for the current group
+  group_data <- merged_data[merged_data$group == group, ]
+  
+  # Remove the "Genes", "diagnosis", and "group" columns
+  group_data <- group_data[, -c(1,2,3)]
+  
+  # Create a boxplot for the current group
+  boxplot_plot <- boxplot(group_data, main = group, col = group_data$group)
+  
+  # Add the boxplot plot to the list
+  boxplot_plots[[group]] <- boxplot_plot
+}
+
+# Print the boxplot plots
+boxplot_plots
 ```
-Note: Make sure to replace the file paths "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual file paths in your system.
+```

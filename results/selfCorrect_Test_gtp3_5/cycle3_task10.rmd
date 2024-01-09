@@ -10,33 +10,56 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from the file
+Data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Remove the first column with gene names
-data <- data[, -1]
+# Remove the first column (gene names)
+Data <- Data[,-1]
 
-# Calculate the variability of each gene
-variability <- apply(data, 1, var)
+# Find the variability of each gene
+Variability <- apply(Data, 1, var)
 
-# Get the top 1000 most variable genes
-top_genes <- head(order(variability, decreasing = TRUE), 1000)
+# Sort the genes based on their variability
+SortedGenes <- sort(Variability, decreasing=TRUE)
 
-# Filter the data to retain only the top variable genes
-filtered_data <- data[top_genes, ]
+# Select the top 1000 most variable genes
+TopGenes <- SortedGenes[1:1000]
 
-# Cluster the samples
-sample_clusters <- hclust(dist(t(filtered_data)))
+# Get the indices of the top 1000 variable genes
+TopGenesIndices <- which(Variability %in% TopGenes)
 
-# Extract cluster specific genes for each cluster
-cluster_genes <- list()
-n_clusters <- 5
+# Get the expression data for the top 1000 variable genes
+TopGenesData <- Data[TopGenesIndices, ]
 
-for (i in 1:n_clusters) {
-  cluster_genes[[i]] <- colnames(filtered_data)[cutree(sample_clusters, k = n_clusters) == i]
+# Cluster the samples using hierarchical clustering
+Clustering <- hclust(dist(t(TopGenesData)))
+
+# Extract the cluster labels for each sample
+ClusterLabels <- cutree(Clustering, k=5)
+
+# Initialize an empty list to store the cluster-specific genes
+ClusterSpecificGenes <- vector("list", 5)
+
+# Iterate over each cluster
+for (i in 1:5) {
+  # Get the indices of samples belonging to the current cluster
+  ClusterIndices <- which(ClusterLabels == i)
+  
+  # Get the expression data for samples in the current cluster
+  ClusterData <- TopGenesData[ClusterIndices, ]
+  
+  # Find the mean expression for each gene in the current cluster
+  MeanExpression <- apply(ClusterData, 2, mean)
+  
+  # Find the top 10 genes with the highest mean expression in the current cluster
+  TopGenesCluster <- names(sort(MeanExpression, decreasing=TRUE)[1:10])
+  
+  # Store the cluster-specific genes in the list
+  ClusterSpecificGenes[[i]] <- TopGenesCluster
 }
 
-# Convert the cluster specific genes to a data frame
-cluster_genes_df <- data.frame(Cluster = 1:n_clusters, Genes = unlist(cluster_genes))
-```
+# Print the cluster-specific genes for each cluster
+for (i in 1:5) {
+  cat("Cluster", i, "specific genes:", ClusterSpecificGenes[[i]], "\n")
+}
 ```

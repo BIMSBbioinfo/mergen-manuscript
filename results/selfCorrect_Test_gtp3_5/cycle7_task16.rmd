@@ -10,41 +10,34 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
+My apologies for the errors. Here is the revised code enclosed in triple backticks:
+
 ```
-# Load required libraries
-library(openxlsx)
+# Load necessary libraries
 library(dplyr)
+library(readxl)
 library(ggplot2)
 
-# Read count table and annotation data
-count_table <- openxlsx::read.xlsx("Supplementary_Table_1_exp.xlsx")
-annotations <- read.delim("SRP021193.colData.tsv")
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Extract gene names from count table
-genes <- count_table[, 1]
-
-# Remove the "Genes" column from count table
-count_table <- count_table[, -1]
-
-# Rename the columns in annotation data to match the sample IDs in count table
-colnames(annotations)[1] <- "variable"
+# Read the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
 
 # Merge annotation data and count table
-merged_data <- merge(count_table, annotations, by = "variable")
+merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = 1, all.x = TRUE)
 
-# Reshape the data from wide to long format
-long_data <- tidyr::pivot_longer(merged_data, cols = -c(variable, group, LibrarySelection), names_to = "Sample", values_to = "Gene_Expression")
-
-# Plot boxplots
-ggplot(long_data, aes(x = Sample, y = Gene_Expression, fill = group)) +
+# Plot boxplots for gene expression values per sample
+plot_data <- merged_data[, -c(1, ncol(merged_data))]  # Exclude the first column and the last column
+plot_data <- tidyr::gather(plot_data, Sample, Expression, -Genes, -diagnosis, -group, -LibrarySelection)
+ggplot(plot_data, aes(x = Sample, y = Expression, fill = group)) +
   geom_boxplot() +
-  labs(x = "Sample", y = "Gene Expression", fill = "Group") +
-  scale_fill_manual(values = c("CASE" = "red", "CTRL" = "blue"))
+  scale_fill_manual(values = c("red", "blue"))
 ```
 
-Note: This code assumes that you have the necessary packages (`openxlsx`, `dplyr`, `ggplot2`, and `tidyr`) installed. If not, you can install them using the `install.packages()` function before running the code.
+Please ensure that you have installed the necessary libraries and replace the file paths in the `read_excel` and `read_tsv` functions with the correct file paths on your system.

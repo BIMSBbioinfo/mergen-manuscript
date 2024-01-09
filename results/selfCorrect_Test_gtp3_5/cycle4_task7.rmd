@@ -10,21 +10,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
+# Load data from file
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Check the number of samples in the dataset
-num_samples <- ncol(data) - 1
+# Check number of columns in the dataset
+num_columns <- ncol(data)
 
-# Check if there are more than 500 samples
-if (num_samples > 500) {
-  # Randomly sample 500 samples
-  sampled_data <- data[, sample(2:(num_samples + 1), 500)]
+# Check if there are more than 500 columns
+if (num_columns > 500) {
+   # Randomly sample 500 columns
+   sampled_data <- data[, sample(2:num_columns, 500)]
+   
+   # Create boxplot of the sampled columns
+   boxplot(sampled_data, main="Gene Expression Data", xlab="Sample", ylab="Expression Value")
 } else {
-  sampled_data <- data
+   # Create boxplot of all columns
+   boxplot(data[, 2:num_columns], main="Gene Expression Data", xlab="Sample", ylab="Expression Value")
 }
-
-# Create a boxplot of the columns
-boxplot(sampled_data[, -1], col = "lightblue", main = "Gene Expression Data", xlab = "Samples", ylab = "Expression Level")
 ```
-
+Note: The code assumes that the "leukemiaExp.txt" file is in the same directory as the R script. If the file is located in a different directory, you need to provide the full path to the file in the `read.table()` function.

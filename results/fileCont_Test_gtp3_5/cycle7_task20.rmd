@@ -10,56 +10,57 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(openxlsx)
-library(reshape2)
 library(limma)
-library(gplots)
+library(ggplot2)
 library(pcaMethods)
 
-# Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
-# Remove first row as it contains gene names
-count_table <- count_table[-1,]
-# Convert count table to matrix
-count_matrix <- as.matrix(count_table[, -1])
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 1, startCol = 1)
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
+# Read the annotation data
+annotation <- read.delim("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Identify unique groups in annotation data
-groups <- unique(annotation_data$group)
+# Remove unnecessary columns from the annotation data
+annotation <- annotation[, c("diagnosis", "group")]
 
-# Perform statistical tests for each group
+# Transpose the count table
+count_table <- t(count_table)
+
+# Set the row names of the count table to be gene names
+rownames(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
+
+# Perform differential expression analysis for each group
+groups <- unique(annotation$group)
+
 group_specific_genes <- list()
-
-for(group in groups){
-  # Subset count matrix based on samples in the respective group
-  group_samples <- annotation_data[annotation_data$group == group, "diagnosis"]
-  group_count_matrix <- count_matrix[, group_samples]
-
-  # Perform differential expression analysis using limma
-  design <- model.matrix(~group_samples)
-  fit <- lmFit(group_count_matrix, design)
-  fit <- contrasts.fit(fit, contrasts = makeContrasts(group_samplesgroup_specific_genes[[group]] <- rownames(topTable(fit, adjust="BH", sort.by = "B")$B > 0, xlim = PC1_range, ylim = PC2_range, col = annotation_data$group[PCA_specific_genes], xlab = "PC1", ylab = "PC2", main = "PCA plot colored by group")
+for (group in groups) {
+  group_samples <- annotation[annotation$group == group, "diagnosis"]
+  group_count_table <- count_table[group_samples, ]
+  
+  # Perform statistical test (e.g., t-test, DESeq2, etc.) to find group-specific genes
+  
+  # Store the group-specific genes in a list
+  group_specific_genes[[group]] <- significant_genes
 }
 
-# Set seed for reproducibility
-set.seed(123)
+# Combine all group-specific genes into a single matrix
+group_specific_genes <- do.call("rbind", group_specific_genes)
 
-# Perform PCA on the count_matrix
-pca <- pca(count_matrix, method = "svd")
+# Perform PCA using the group-specific genes
+pca_data <- prcomp(group_specific_genes, scale. = TRUE)
 
-# Plot PCA using group specific genes
-group_indices <- match(rownames(pca$x), group_specific_genes)
-PC1_range <- range(pca$x[,1])
-PC2_range <- range(pca$x[,2])
-plot(pca$x[,1], pca$x[,2], xlim = PC1_range, ylim = PC2_range, col = annotation_data$group[group_indices], xlab = "PC1", ylab = "PC2", main = "PCA plot colored by group")
+# Plot the PCA results
+ggplot(data = pca_data$x, aes(PC1, PC2, color = annotation$group)) +
+  geom_point() +
+  labs(title = "PCA plot with group coloring")
 ```
-```
+Note: The code provided is a general template and assumes that you have already performed the statistical test to find group-specific genes. You will need to modify the code to fit your statistical test and analysis pipeline.

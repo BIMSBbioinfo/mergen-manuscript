@@ -11,15 +11,15 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 response:
 ```
 # Read the count table file
-count_table <- read.table("SRP021193.raw_counts.tsv", sep = "\t", header = TRUE)
+count_table <- read.delim("SRP021193.raw_counts.tsv", sep = "\t")
 
-# Calculate the number of genes
+# Count the number of genes
 num_genes <- nrow(count_table)
 
-# Calculate the number of samples (excluding the first and last columns)
+# Count the number of samples
 num_samples <- ncol(count_table) - 2
 
-# Print the number of genes and samples
+# Print the results
 num_genes
 num_samples
 ```

@@ -11,23 +11,23 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-leuk_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_expression <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check the number of samples
-num_samples <- ncol(leuk_exp) - 1
+# Check the number of columns in the gene expression data
+num_columns <- ncol(gene_expression)
 
-# If there are more than 500 samples, randomly sample 500 samples
-if (num_samples > 500) {
-  # Set the seed for reproducibility
-  set.seed(123)
-  
-  # Randomly sample 500 sample columns
-  sample_cols <- sample(2:(num_samples + 1), 500)
+# Check if there are more than 500 samples
+if (num_columns > 500) {
+  # Randomly sample 500 columns
+  column_indices <- sample(2:num_columns, 500, replace = FALSE)
   
   # Create a subset of the data with the sampled columns
-  leuk_exp_subset <- leuk_exp[, c(1, sample_cols)]
+  subset_data <- gene_expression[, c(1, column_indices)]
 } else {
-  leuk_exp_subset <- leuk_exp
+  # No need to sample, keep the original data
+  subset_data <- gene_expression
 }
-```
+
+# Print the subsetted data
+subset_data
 ```

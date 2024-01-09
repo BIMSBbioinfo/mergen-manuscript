@@ -10,51 +10,83 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(readxl)
+# Load necessary libraries
+library(openxlsx)
 library(dplyr)
-library(pcaMethods)
+library(edgeR)
+library(ggplot2)
+library(gplots)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_data <- as.matrix(read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1))
 
-# Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Remove the first column (gene names) to separate it from the count table
+gene_names <- count_data[, 1]
+count_data <- count_data[, -1]
 
-# Transpose count table for easier manipulation
-count_table <- t(count_table)
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", row.names = 1)
 
-# Rename count table columns with gene names
-colnames(count_table) <- count_table[1,]
-count_table <- count_table[-1,]
+# Extract the sample IDs from the annotation data
+sample_ids <- rownames(annotation_data)
 
-# Remove rows with missing values
-count_table <- count_table[complete.cases(count_table),]
+# Match the column names of the count table with the sample IDs
+colnames(count_data) <- sample_ids
 
-# Rename annotation data columns
-colnames(annotation_data) <- c("Sample_ID", "Diagnosis", "Group", "Library_Selection")
+# Match the row names of the count table with the gene names
+rownames(count_data) <- gene_names
 
-# Perform statistical tests for group-specific genes
+# Extract the "group" variable from the annotation data
+group <- as.factor(annotation_data$group)
+
+# Perform statistical tests for each group using edgeR
 group_specific_genes <- list()
-for (group in unique(annotation_data$Group)) {
-  samples_in_group <- annotation_data$Sample_ID[annotation_data$Group == group]
-  group_counts <- count_table[, samples_in_group]
-  p_values <- apply(group_counts, 1, function(x) {
-    t.test(x ~ group)$p.value
-  })
-  group_specific_genes[[group]] <- rownames(count_table)[p.adjust(p_values, method = "fdr") < 0.05]
+for (i in levels(group)) {
+  group_counts <- count_data[, group == i]
+  other_counts <- count_data[, group != i]
+  if (min(group_counts) < 0 | min(other_counts) < 0) {
+    group_specific_genes[[i]] <- NULL
+  } else {
+    group_dge <- DGEList(counts = group_counts, group = group)
+    other_dge <- DGEList(counts = other_counts, group = group)
+    group_dge <- calcNormFactors(group_dge)
+    other_dge <- calcNormFactors(other_dge)
+    group_dge <- estimateGLMCommonDisp(group_dge)
+    other_dge <- estimateGLMCommonDisp(other_dge)
+    group_dge <- estimateGLMTrendedDisp(group_dge)
+    other_dge <- estimateGLMTrendedDisp(other_dge)
+    group_dge <- estimateGLMTagwiseDisp(group_dge)
+    other_dge <- estimateGLMTagwiseDisp(other_dge)
+    et <- exactTest(group_dge, other_dge)
+    group_specific_genes[[i]] <- rownames(et$table)[et$table$PValue < 0.05]
+  }
 }
 
-# Get PCA scores for group-specific genes
-group_specific_counts <- count_table[, unlist(group_specific_genes)]
-pca_result <- prcomp(group_specific_counts, scale = TRUE)
+# Combine the group-specific genes into a single vector
+all_group_specific_genes <- unique(unlist(group_specific_genes))
 
-# Plot PCA with color-coded groups
-plot(pca_result$x[, 1], pca_result$x[, 2], col = annotation_data$Group, pch = 16)
+# Subset the count data to include only the group-specific genes
+count_data_specific <- count_data[all_group_specific_genes, ]
+
+# Perform PCA on the group-specific genes
+pca_result <- prcomp(t(count_data_specific))
+
+# Extract the first two principal components
+pc1 <- pca_result$x[, 1]
+pc2 <- pca_result$x[, 2]
+
+# Create a data frame for the PCA plot
+pca_df <- data.frame(PC1 = pc1, PC2 = pc2, group = group)
+
+# Plot PCA using group-specific genes
+ggplot(data = pca_df, aes(x = PC1, y = PC2, color = group)) +
+  geom_point()
+
+# End of code
 ```

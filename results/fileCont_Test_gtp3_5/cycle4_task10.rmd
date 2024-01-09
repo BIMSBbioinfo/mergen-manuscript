@@ -13,31 +13,21 @@ response:
 # Read the gene expression data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column (gene names)
-data <- data[,-1]
+# Calculate the variability of each gene
+variances <- apply(data[, -1], 1, var)
 
-# Calculate the variance for each gene
-variance <- apply(data, 1, var)
+# Sort the genes based on their variability
+sorted_genes <- data[order(variances, decreasing = TRUE), ]
 
-# Sort the genes based on variance in descending order
-sorted_genes <- names(variance)[order(-variance)]
+# Select the top 1000 most variable genes
+variable_genes <- sorted_genes[1:1000, ]
 
-# Retain the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000]
+# Cluster the samples using the variable genes
+sample_clusters <- kmeans(variable_genes[, -1], centers = 3)
 
-# Subset the data to include only the top variable genes
-data_filtered <- data[top_genes,]
-
-# Cluster the samples
-clusters <- kmeans(data_filtered, centers = 3)
-
-# Get the cluster assignments
-cluster_assignments <- clusters$cluster
-
-# Extract cluster-specific genes for each cluster
-cluster_genes <- list()
-for (i in 1:max(cluster_assignments)) {
-  cluster_genes[[i]] <- top_genes[cluster_assignments == i]
-}
+# Extract the cluster specific genes for each cluster
+cluster1_genes <- variable_genes[sample_clusters$cluster == 1, ]
+cluster2_genes <- variable_genes[sample_clusters$cluster == 2, ]
+cluster3_genes <- variable_genes[sample_clusters$cluster == 3, ]
 ```
-```
+Note: This code assumes that you have the `kmeans` function available in your R environment. If not, you may need to load the necessary package or use a different clustering algorithm.

@@ -10,32 +10,27 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
+Here is the R code to merge the annotation data and gene expression tables and calculate the number of columns:
+
 ```
-# Load necessary libraries
-library(readxl)
-library(dplyr)
+# Read the count table and annotation data
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheetName = 1, header = TRUE)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", row.names = 1)
 
-# Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Merge the count table and annotation data
+merged_data <- merge(count_table, annotation_data, by.x = 0, by.y = 0, all = TRUE)
+merged_data <- merged_data[, -1]
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
-
-# Rename the first column of the annotation data to match the sample column in count table
-colnames(annotation_data)[1] <- "sample_ids"
-
-# Merge the count table and annotation data based on the sample_ids column
-merged_data <- merge(count_table, annotation_data, by = "sample_ids")
-
-# Calculate the number of columns in the merged data
+# Calculate the number of columns
 num_columns <- ncol(merged_data)
 
 # Print the number of columns
 num_columns
 ```
-```
+
+Note: This code assumes that you have the `openxlsx` package installed and loaded in your R environment. If not, you can install it using ``.

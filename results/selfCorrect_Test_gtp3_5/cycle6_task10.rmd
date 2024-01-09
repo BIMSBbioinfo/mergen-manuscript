@@ -10,31 +10,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read data from file
-gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
-
-# Remove the first column (gene names)
-gene_exp <- gene_exp[, -1]
+# Read the gene expression data file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Calculate the variance for each gene
-gene_var <- apply(gene_exp, 1, var)
+variance <- apply(data[, -1], 1, var)
 
-# Select the top 1000 genes with highest variance
-top_var_genes <- gene_exp[order(gene_var, decreasing = TRUE), ][1:1000, ]
+# Sort the genes based on variance in descending order
+sorted_genes <- data[order(variance, decreasing = TRUE), ]
 
-# Perform clustering on the samples
-sample_clusters <- hclust(dist(t(top_var_genes)))
+# Keep only the top 1000 most variable genes
+top_1000_genes <- sorted_genes[1:1000, ]
 
-# Set the desired number of clusters
-k <- 5
+# Cluster the samples based on the variable genes
+sample_clusters <- kmeans(top_1000_genes[, -1], centers = 3)
 
-# Cut the dendrogram into k clusters
-sample_clusters_cut <- cutree(sample_clusters, k = k)
-
-# Extract cluster-specific genes
-cluster_genes <- list()
-for (i in 1:k) {
-  cluster_genes[[i]] <- rownames(top_var_genes[sample_clusters_cut == i, ])
-}
+# Extract cluster specific genes for each cluster
+cluster1_genes <- top_1000_genes[sample_clusters$cluster == 1, ]
+cluster2_genes <- top_1000_genes[sample_clusters$cluster == 2, ]
+cluster3_genes <- top_1000_genes[sample_clusters$cluster == 3, ]
 ```
-Note: In the code above, I have used `cutree` function to cut the dendrogram into `k` clusters. I have set the desired number of clusters (`k`) to be 5, but you can change this value according to your needs.
+

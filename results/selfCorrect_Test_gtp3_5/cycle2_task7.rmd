@@ -11,20 +11,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data
-data <- read.delim("leukemiaExp.txt", header = TRUE, sep = "\t")
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
-# Count the number of columns (samples)
-num_samples <- ncol(data)
+# Check the number of samples
+num_samples <- ncol(data) - 1
 
-# Check if there are more than 500 samples
+# If there are more than 500 samples, randomly sample 500 samples
 if(num_samples > 500) {
-  # Randomly sample 500 columns (samples)
-  sampled_data <- data[, sample(2:num_samples, 500)]
-  
-  # Create a boxplot of the columns
-  boxplot(sampled_data, main = "Gene Expression Data")
+  set.seed(123)  # Set a seed for reproducibility
+  sample_cols <- sample(2:ncol(data), 500)  # Randomly select 500 sample columns
+  subset_data <- data[, c(1, sample_cols)]  # Create a subset of the data
 } else {
-  boxplot(data[, 2:num_samples], main = "Gene Expression Data")
+  subset_data <- data  # Use the original data
 }
-```
 
+# Create a boxplot of the columns
+boxplot(subset_data[, -1], col = "skyblue", xlab = "Sample", ylab = "Gene Expression")
+```

@@ -10,31 +10,34 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
+# Load necessary packages
 library(readxl)
 
-# Read count table
+# Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+# Read the annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
 
-# Rename the first column of annotation data to match the sample ids in count table
-colnames(annotation_data)[1] <- "SampleID"
+# Set the row names of the count table to be the gene names
+row.names(count_table) <- count_table$Genes
 
-# Ensure that the SampleID column is a character type in both data frames
-count_table$SampleID <- as.character(count_table$Genes)
-annotation_data$SampleID <- as.character(annotation_data$SampleID)
+# Remove the gene names column from the count table
+count_table <- count_table[,-1]
 
-# Merge annotation data and count table based on sample ids
-merged_data <- merge(annotation_data, count_table, by = "SampleID")
+# Merge the annotation data with the count table based on the sample ids
+merged_data <- merge(annotation_data, count_table, by.x="diagnosis", by.y="row.names")
 
-# Calculate the number of columns
+# Calculate the number of columns in the merged data
 num_columns <- ncol(merged_data)
+
+# Print the number of columns
+num_columns
+```
 ```

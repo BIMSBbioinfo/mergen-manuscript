@@ -10,30 +10,29 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
+# Load necessary packages
+library(openxlsx)
+
 # Read count table
-count_table <- read.table("Supplementary_Table_1_exp.xlsx", header = TRUE, sep = "\t")
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, startRow = 2, colNames = FALSE)
+num_rows_count_table <- nrow(count_table)
+num_cols_count_table <- ncol(count_table)
 
 # Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
-
-# Get the number of rows and columns for the count table
-count_rows <- nrow(count_table)
-count_cols <- ncol(count_table)
-
-# Get the number of rows and columns for the annotation data
-annotation_rows <- nrow(annotation_data)
-annotation_cols <- ncol(annotation_data)
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE)
+num_rows_annotation_data <- nrow(annotation_data)
+num_cols_annotation_data <- ncol(annotation_data)
 
 # Print the number of rows and columns for each table
-print(paste("Count Table Rows:", count_rows))
-print(paste("Count Table Columns:", count_cols))
-print(paste("Annotation Data Rows:", annotation_rows))
-print(paste("Annotation Data Columns:", annotation_cols))
+print(paste("Number of rows in count table:", num_rows_count_table))
+print(paste("Number of columns in count table:", num_cols_count_table))
+print(paste("Number of rows in annotation data:", num_rows_annotation_data))
+print(paste("Number of columns in annotation data:", num_cols_annotation_data))
 ```
-```
+Note: This code assumes that the count table starts on the second row of the first sheet of the Excel file and that the annotation data is in a tab-separated text file. Adjust the file paths and sheet numbers if necessary.

@@ -10,54 +10,51 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary packages
-library(openxlsx)
-library(DESeq2)
-library(ggplot2)
+# Load required libraries
+library(readxl)
+library(Seurat)
 
-# Read count table
-counts <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2, colNames = TRUE)
-rownames(counts) <- counts[, 1]
-counts <- counts[, -1]
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", 1)
 
-# Read annotation data
-annotation <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE, row.names = 1)
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Remove duplicate row names
-counts <- counts[!duplicated(rownames(counts)), ]
+# Rename the first column in the annotation data to match with the column names in count table
+colnames(annotation_data)[1] <- colnames(count_table)[1]
 
-# Create DESeq2 object
-dds <- DESeqDataSetFromMatrix(countData = counts, colData = annotation, design = ~1)
+# Remove the first column from the count table (gene names)
+count_table <- count_table[, -1]
 
 # Normalize counts
-dds <- DESeq(dds)
+normalized_counts <- log2(count_table + 1)
 
-# Perform PCA analysis
-pca <- prcomp(t(assay(dds)))
+# Create a Seurat object
+seurat_object <- CreateSeuratObject(counts = normalized_counts)
 
-# Plot PCA with samples color coded by "group"
-group_colors <- levels(annotation$group)
-pca_plot_group <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2, color = annotation$group)) +
-  geom_point() +
-  scale_color_manual(values = group_colors) +
-  labs(title = "PCA Plot - Samples Color Coded by Group")
+# Add metadata from the annotation data to the seurat object
+seurat_object$sample_ids <- rownames(annotation_data)
+seurat_object$diagnosis <- annotation_data$diagnosis
+seurat_object$group <- annotation_data$group
+seurat_object$LibrarySelection <- annotation_data$LibrarySelection
 
-# Plot PCA with samples color coded by "LibrarySelection"
-libsel_colors <- levels(annotation$LibrarySelection)
-pca_plot_libsel <- ggplot(data = as.data.frame(pca$x), aes(x = PC1, y = PC2, color = annotation$LibrarySelection)) +
-  geom_point() +
-  scale_color_manual(values = libsel_colors) +
-  labs(title = "PCA Plot - Samples Color Coded by LibrarySelection")
+# Scale data
+seurat_object <- ScaleData(seurat_object)
 
-# Print the PCA plots
-pca_plot_group
-pca_plot_libsel
+# Run PCA
+seurat_object <- RunPCA(seurat_object)
+
+# Plot PCA color coded by "group"
+PCAPlot(seurat_object, group.by = "group")
+
+# Plot PCA color coded by "LibrarySelection"
+PCAPlot(seurat_object, group.by = "LibrarySelection")
 ```
 
-Please note that the error `'duplicate 'row.names' are not allowed'` occurred because the row names of the count table were duplicated. I fixed it by removing the duplicates using the `duplicated()` function before creating the DESeq2 object.
+Note: The error you mentioned occurs because the data has not been normalized before running PCA. I have used the `log2(count_table + 1)` function to log-transform and normalize the counts. This should fix the issue.

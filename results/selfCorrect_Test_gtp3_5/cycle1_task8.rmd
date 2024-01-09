@@ -11,16 +11,29 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+exp_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
 
-# Calculate the variance for each gene
-gene_var <- apply(leukemiaExp[, -1], 1, var)
+# Remove the first column (gene names)
+exp_data <- exp_data[, -1]
 
-# Get the top 1000 most variable genes
-top_1000_genes <- head(order(gene_var, decreasing = TRUE), 1000)
+# Calculate the variability of each gene
+gene_variability <- apply(exp_data, 1, var)
+
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(gene_variability)[order(gene_variability, decreasing = TRUE)]
+
+# Select the top 1000 genes with the highest variability
+top_1000_genes <- sorted_genes[1:1000]
 
 # Create a scatterplot of the two most variable genes
-plot(leukemiaExp[top_1000_genes[1], -1], leukemiaExp[top_1000_genes[2], -1], 
-     main = "Scatterplot of the Two Most Variable Genes",
-     xlab = "Sample 1", ylab = "Sample 2")
+gene1 <- top_1000_genes[1]
+gene2 <- top_1000_genes[2]
+
+gene1_exp <- exp_data[gene1, ]
+gene2_exp <- exp_data[gene2, ]
+
+plot(gene1_exp, gene2_exp, main = "Scatterplot of the Two Most Variable Genes", xlab = paste("Expression of", gene1), ylab = paste("Expression of", gene2))
 ```
+
+Note: Replace "leukemiaExp.txt" with the actual file path if it is in a different directory.
+Also, make sure that the number of genes in the dataset is greater than or equal to 2. If not, you may need to adjust the code accordingly.

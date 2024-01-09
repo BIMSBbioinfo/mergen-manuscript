@@ -11,17 +11,20 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 response:
 ```
-# Load required libraries
+# Load the necessary libraries
 library(readxl)
 
-# Read the excel file
-gene_expression <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the gene expression data from the Excel file
+gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Get the number of genes and samples in the dataset
-num_genes <- nrow(gene_expression)
-num_samples <- ncol(gene_expression) - 1
+# Get the number of genes
+num_genes <- nrow(gene_data)
 
+# Get the number of samples
+num_samples <- ncol(gene_data) - 1 # subtract 1 to exclude the gene name column
+
+# Print the number of genes and samples
 num_genes
 num_samples
 ```
-Note: In the code above, we assume that the first row contains the column names and the first column contains the gene names. If this is not the case, you may need to modify the code accordingly.
+```

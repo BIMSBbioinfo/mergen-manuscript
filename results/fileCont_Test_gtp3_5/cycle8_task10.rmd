@@ -10,19 +10,39 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from file
+leukemiaExp <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
 
-# Calculate the variability of each gene
-variance <- apply(data[,-1], 1, var)
+# Compute the variance of each gene
+gene_var <- apply(leukemiaExp[, -1], 1, var)
 
-# Select the top 1000 genes with the highest variability
-top_genes <- data[order(variance, decreasing = TRUE), ][1:1000, ]
+# Sort the genes based on variance in descending order
+sorted_genes <- names(gene_var)[order(gene_var, decreasing=TRUE)]
 
-# Cluster the samples
-# (Clarification needed: Please specify the method and parameters to use for clustering)
+# Select the top 1000 most variable genes
+top1000_genes <- sorted_genes[1:1000]
 
-# Extract cluster-specific genes for each cluster
-# (Clarification needed: Please specify how to determine cluster-specific genes)
-```
+# Create a subset of the gene expression data with only the top 1000 genes
+leukemiaExp_top1000 <- leukemiaExp[c("GeneName", top1000_genes)]
+
+# Perform hierarchical clustering on the samples based on the gene expression data
+sample_clusters <- hclust(dist(t(leukemiaExp_top1000[, -1])))
+
+# Cut the hierarchical clustering dendrogram into clusters
+cluster_membership <- cutree(sample_clusters, k=5)
+
+# Create a list to store the cluster-specific genes
+cluster_specific_genes <- list()
+
+# Iterate over each cluster and extract the genes specific to that cluster
+for (cluster in unique(cluster_membership)) {
+  cluster_samples <- which(cluster_membership == cluster)
+  cluster_specific_genes[[paste("Cluster", cluster, sep="")]] <- colnames(leukemiaExp_top1000)[cluster_samples]
+}
+
+# Print the cluster-specific genes for each cluster
+for (cluster in unique(cluster_membership)) {
+  cluster_genes <- cluster_specific_genes[[paste("Cluster", cluster, sep="")]]
+  print(paste("Cluster", cluster, "genes:", paste(cluster_genes, collapse=",")))
+}
 ```

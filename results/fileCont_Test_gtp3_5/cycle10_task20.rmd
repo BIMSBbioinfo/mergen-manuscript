@@ -10,63 +10,62 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load necessary libraries
-library(openxlsx)
-library(limma)
+library(readxl)
+library(dplyr)
+library(edgeR)
 library(ggplot2)
-library(PCAtools)
+library(RColorBrewer)
 
-# Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1, colNames = TRUE)
+# Read count table and annotation data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
 
-# Read the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Rename columns in count table
+colnames(count_table) <- count_table[1, ]
+count_table <- count_table[-1, ]
 
-# Transpose the count table
-count_table <- t(count_table)
+# Remove unnecessary columns in annotation data
+annotation_data <- annotation_data[, c("diagnosis", "group")]
 
-# Match the sample ids between count table and annotation data
-count_table_samples <- colnames(count_table)[-1]
-annotation_samples <- annotation_data$X
+# Perform statistical tests to find group-specific genes using edgeR
+rownames(count_table) <- count_table[, 1]
+count_table <- count_table[, -1]
+y <- DGEList(counts = count_table, group = annotation_data$group)
+y <- calcNormFactors(y)
+design <- model.matrix(~ group, data = annotation_data)
+y <- estimateDisp(y, design)
+fit <- glmFit(y, design)
+lrt <- glmLRT(fit)
+topTags(lrt)
 
-# Find the genes specific to each group
-group_specific_genes <- list()
+# Select top differentially expressed genes for each group
+top_genes <- c()
 for (group in unique(annotation_data$group)) {
-  group_samples <- annotation_samples[annotation_data$group == group]
-  group_count_table <- count_table[, c("Genes", group_samples)]
-  
-  # Run a statistical test (e.g., linear model) to identify differentially expressed genes
-  design <- model.matrix(~0 + group_samples)
-  colnames(design) <- unique(annotation_data$group)
-  fit <- lmFit(group_count_table[, -1], design)
-  contrast_matrix <- makeContrasts(CASE = CASE - CTRL, levels = design)
-  fit_contrast <- contrasts.fit(fit, contrast_matrix)
-  fit_eBayes <- eBayes(fit_contrast)
-  group_de_genes <- topTable(fit_eBayes, coef = 1, adjust.method = "BH", n = Inf)$Genes
-  
-  # Store the group-specific genes
-  group_specific_genes[[group]] <- group_de_genes
+  top_genes_group <- rownames(lrt)[lrt$table$PValue[lrt$table$group == group] < 0.05]
+  top_genes <- c(top_genes, top_genes_group)
 }
+top_genes <- unique(top_genes)
 
-# Subset count table to include only group-specific genes
-group_specific_count_table <- count_table[, c("Genes", unlist(group_specific_genes))]
+# Subset count table and annotation data with top genes
+count_table_subset <- count_table[top_genes, ]
+annotation_data_subset <- annotation_data[rownames(count_table_subset), ]
 
-# Perform PCA using group-specific genes
-pca_res <- prcomp(group_specific_count_table[, -1], scale = TRUE)
+# Perform PCA using top genes
+pca_data <- prcomp(count_table_subset)
 
-# Create a data frame for coloring PCA by group variable
-pca_data <- data.frame(PC1 = pca_res$x[,1], PC2 = pca_res$x[,2], Group = annotation_data$group)
+# Create a data frame for PCA results
+pca_df <- data.frame(PC1 = pca_data$x[, 1], PC2 = pca_data$x[, 2], Group = annotation_data_subset$group)
 
 # Plot PCA with color-coded groups
-ggplot(pca_data, aes(x = PC1, y = PC2, color = Group)) +
+ggplot(pca_df, aes(x = PC1, y = PC2, color = Group)) +
   geom_point() +
-  scale_color_manual(values = c("non-ischemic cardiomyopathy" = "blue", "CASE" = "red")) +
-  labs(x = "PC1", y = "PC2", color = "Group")
+  scale_color_manual(values = brewer.pal(n = length(unique(annotation_data_subset$group)), name = "Set1"))
 ```
 ```

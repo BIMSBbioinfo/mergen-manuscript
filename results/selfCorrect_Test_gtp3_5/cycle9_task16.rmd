@@ -10,39 +10,37 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(openxlsx)
+# Load necessary packages
+library(readxl)
 library(tidyverse)
 
 # Read the count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
 # Rename the first column of the count table to "Genes"
 colnames(count_table)[1] <- "Genes"
 
-# Add a column "sample" to the count table with matching sample IDs from the annotation data
-count_table$sample <- colnames(count_table)[-1]
+# Merge the annotation data and count table
+merged_data <- merge(count_table, annotation_data, by.x = "Genes", by.y = "row.names")
 
-# Reshape the count table from wide to long format
-count_table_long <- count_table %>% 
-  pivot_longer(-c(Genes, sample), names_to = "group", values_to = "count")
+# Convert the merged_data dataframe into a tidy format
+tidy_data <- merged_data %>% 
+  pivot_longer(cols = -Genes, names_to = "Sample", values_to = "Expression")
 
-# Merge the count table and annotation data based on sample IDs
-merged_data <- merge(count_table_long, annotation_data, by.x = "sample", by.y = "diagnosis")
-
-# Plot boxplots for gene expression values per sample and color code boxplots based on group variable in annotation data
-ggplot(data = merged_data, aes(x = sample, y = count, fill = group)) + 
+# Plot boxplots for gene expression values per sample, color-coded based on group variable
+ggplot(data = tidy_data, aes(x = Sample, y = Expression, fill = group)) +
   geom_boxplot() +
-  labs(x = "Sample", y = "Gene Expression", fill = "Group")
+  xlab("Sample") +
+  ylab("Gene Expression")
 ```
 
-This code reshapes the count table from wide to long format using `pivot_longer()`, and then merges it with the annotation data based on sample IDs. The error related to replacement and data dimensions should be resolved with these modifications.
+Note: The code assumes that the count table and annotation data file are in the same directory as the R script, or you have provided the full path to the files. Adjust the file paths accordingly if they are located in a different directory. Make sure to replace the sample names (CASE_1, CASE_2, etc.) with the actual sample names present in your count_table dataframe.

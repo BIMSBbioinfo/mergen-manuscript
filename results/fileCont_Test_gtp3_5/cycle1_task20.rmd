@@ -10,51 +10,58 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1, header = TRUE)
 
-# Load necessary libraries
-library(readxl)
-library(dplyr)
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Identify the groups in the annotation data
+groups <- unique(annotation_data$group)
+
+# Create an empty list to store the group-specific genes
+group_specific_genes <- list()
+
+# Perform statistical tests for each group
+for (group in groups) {
+  # Subset the count table and annotation data for the current group
+  count_subset <- count_table[, c(1, which(annotation_data$group == group) + 1)]
+  annotation_subset <- annotation_data[which(annotation_data$group == group), ]
+  
+  # Perform statistical test (e.g., t-test) to identify group-specific genes
+  pvalues <- apply(count_subset[, -1], 1, function(x) t.test(x ~ count_subset[, 1])$p.value)
+  
+  # Select genes with p-values below a certain threshold (e.g., 0.05)
+  group_specific_genes[[group]] <- names(count_subset$Genes)[which(pvalues < 0.05)]
+}
+
+# Plot PCA using group-specific genes
 library(ggplot2)
-library(PCAtools)
+library(ggrepel)
+library(ggrepel)
+library(ggfortify)
+library(dplyr)
 
-# Read count table from Excel file
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Filter count table for group-specific genes
+group_specific_count_table <- count_table[, c(1, unlist(group_specific_genes))]
 
-# Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Perform PCA
+pca <- prcomp(t(group_specific_count_table[, -1]))
 
-# Extract gene names from count table
-genes <- count_table$Genes
+# Extract PC scores and group information
+pc_scores <- data.frame(pca$x)
+pc_scores$group <- annotation_data$group
 
-# Remove the first column (gene names) from count table
-count_table <- count_table[, -1]
-
-# Transpose the count table for easier analysis
-count_table <- t(count_table)
-
-# Merge count table with annotation data based on sample ids
-merged_data <- merge(count_table, annotation_data, by.x = "row.names", by.y = "diagnosis")
-
-# Group specific genes using statistical tests
-group_specific_genes <- apply(merged_data[, -c(1:3)], 2, function(x) {
-  t.test(x[merged_data$group == "non-ischemic cardiomyopathy"], 
-         x[merged_data$group == "CONTROL"])$p.value < 0.05
-})
-
-# Filter count table with group specific genes
-group_specific_count_table <- count_table[, group_specific_genes]
-
-# Perform PCA on group specific count table
-pca_data <- prcomp(group_specific_count_table, scale = TRUE)
-
-# Plot PCA colored by group variable
-PCAtools::plot_PCA(pca_data, colby = merged_data$group)
+# Plot PCA with color-coded groups
+ggplot(pc_scores, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  scale_color_discrete(name = "Group") 
 
 ```
-Note: The package "PCAtools" is used for visualizing PCA plots.
+Note: This code assumes that the necessary packages (e.g., 'readxl', 'ggplot2', 'ggrepel', 'ggfortify', 'dplyr') have been installed and loaded.

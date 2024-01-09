@@ -13,18 +13,15 @@ response:
 # Read the gene expression data
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variance for each gene
-variance <- apply(data[, -1], 1, var)
+# Calculate the variance of each gene
+variances <- apply(data[, -1], 1, var)
 
-# Get the top 1000 most variable genes
-top_genes <- head(sort(variance, decreasing = TRUE), 1000)
+# Sort the variances in descending order and get the indices of the top 1000 genes
+top_genes <- order(variances, decreasing = TRUE)[1:1000]
 
 # Filter the data to retain only the top 1000 genes
-filtered_data <- data[data$gene %in% names(top_genes), ]
+filtered_data <- data[c(1, top_genes + 1)]
 
-# Select the first two most variable genes
-selected_genes <- filtered_data[1:2]
-
-# Create a scatterplot of the two genes
-plot(selected_genes$gene1, selected_genes$gene2, xlab = "Gene 1", ylab = "Gene 2")
+# Create a scatterplot of the two most variable genes
+plot(filtered_data[, 2], filtered_data[, 3], xlab = colnames(filtered_data)[2], ylab = colnames(filtered_data)[3])
 ```

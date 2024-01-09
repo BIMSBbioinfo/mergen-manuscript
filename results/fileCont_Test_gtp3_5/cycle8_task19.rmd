@@ -10,46 +10,33 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-library(readxl)
+# Load necessary libraries
+library(openxlsx)
 library(DESeq2)
-library(ggplot2)
-library(dplyr)
+library(pcaExplorer)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 2, colNames = TRUE)
+colnames(count_table) <- gsub("[.].*", "", colnames(count_table)) # Remove anything after the dot in column names
 
-# Read annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t", row.names = 1)
 
-# Convert annotation data to data frame
-annotation_data <- as.data.frame(annotation_data)
+# Normalize counts
+dds <- DESeqDataSetFromMatrix(countData = count_table[,2:ncol(count_table)],
+                              colData = annotation_data,
+                              design = ~ group)
 
-# Set the row names of count table as gene names
-rownames(count_table) <- count_table$Genes
-count_table <- count_table[, -1] # Remove the first column
-
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~1)
 dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
 
-# Perform PCA
-pca_data <- prcomp(t(normalized_counts))
-
-# Plot PCA color coded by "group" in annotation data
-ggplot(data = as.data.frame(pca_data$x), aes(x = PC1, y = PC2, color = annotation_data$group)) +
-  geom_point() +
-  labs(title = "PCA plot: Color coded by group")
-
-# Plot PCA color coded by "LibrarySelection" in annotation data
-ggplot(data = as.data.frame(pca_data$x), aes(x = PC1, y = PC2, color = annotation_data$LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA plot: Color coded by LibrarySelection")
-}
+# Create PCA plots
+pca_plot_group <- plotPCA(dds, intgroup = "group", ntop = 500, return_Score = TRUE)
+pca_plot_LibrarySelection <- plotPCA(dds, intgroup = "LibrarySelection", ntop = 500, return_Score = TRUE)
+```
 ```

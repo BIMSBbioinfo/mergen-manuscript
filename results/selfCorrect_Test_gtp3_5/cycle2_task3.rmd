@@ -11,18 +11,20 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 response:
 ```
-# Load the required library
-library(openxlsx)
+# Install and load the required packages
+  # for reading excel files
+library(readxl)
 
 # Read the excel file
-data <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Get the number of genes (rows) and samples (columns) in the dataset
-num_genes <- nrow(data) - 1  # Subtract 1 for the header row
-num_samples <- ncol(data) - 1  # Subtract 1 for the gene names column
+# Get the number of genes by counting the rows
+num_genes <- nrow(data)
 
-# Print the results
+# Get the number of samples by counting the columns (excluding the first column with gene names)
+num_samples <- ncol(data) - 1
+
+#Print the number of genes and samples
 num_genes
 num_samples
 ```
-Note: The -1 is subtracted from the number of rows and columns to exclude the header row and the gene names column.

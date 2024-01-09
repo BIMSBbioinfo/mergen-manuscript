@@ -10,56 +10,60 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Import required libraries
+# Load necessary packages
 library(readxl)
-library(DESeq2)
+library(tidyverse)
+library(edgeR)
+library(pcaMethods)
 library(ggplot2)
-library(dplyr)
 
-# Read the count table
-count_table <- read_xls("Supplementary_Table_1_exp.xlsx")
+# Read in count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Remove unnecessary columns (gene names)
+count_table <- count_table[, -1]
 
-# Read the annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Read in annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
 
-# Set row names as gene names
-rownames(count_table) <- count_table$Genes
-count_table <- count_table[, -1] # Remove gene names column
+# Match rows of annotation data to columns of count table
+annotation_data <- annotation_data[match(colnames(count_table), annotation_data$sample_id),]
 
-# Filter genes specific to each group using statistical tests
+# Perform statistical tests to identify group-specific genes
+group_specific_genes <- list()
 groups <- unique(annotation_data$group)
-specific_genes <- list()
-
 for (group in groups) {
-  samples <- annotation_data$diagnosis[annotation_data$group == group]
-  design <- model.matrix(~0 + samples)
-  colnames(design) <- levels(annotation_data$diagnosis)
+  group_samples <- annotation_data$sample_id[annotation_data$group == group]
+  group_counts <- count_table[, group_samples]
+  group_design <- model.matrix(~0 + group_samples)
   
-  dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = design)
-  dds <- DESeq(dds)
-
-  results <- results(dds, contrast = c(group, "CTRL_1", group))
-  specific_genes[[group]] <- rownames(results)[results$padj < 0.05 & results$log2FoldChange > 1]
+  edge_object <- DGEList(counts = group_counts)
+  edge_object <- calcNormFactors(edge_object)
+  edge_object <- estimateDisp(edge_object, design = group_design)
+  edge_fit <- glmQLFit(edge_object, design = group_design)
+  edge_table <- edgeR::topTags(edge_fit, n = Inf)
+  
+  group_specific_genes[[group]] <- edge_table$table$gene_name[edge_table$table$padj < 0.05]
 }
 
-# Extract PCA specific genes and create a new count table
-pca_genes <- Reduce(union, specific_genes)
-pca_count_table <- count_table[pca_genes, ]
+# Subset count table using group-specific genes
+group_specific_count_table <- count_table[group_specific_genes[[1]], ]
 
-# Perform PCA
-pca <- prcomp(t(pca_count_table), scale. = TRUE)
-
-# Plot PCA with color-coded groups
-plot_data <- annotation_data[annotation_data$diagnosis %in% colnames(pca_count_table), ]
-plot_data$pca1 <- pca$x[, 1]
-plot_data$pca2 <- pca$x[, 2]
-
-ggplot(plot_data, aes(x = pca1, y = pca2, color = group)) +
+# Perform PCA using group-specific genes
+pca_result <- pca(group_specific_count_table, method = "svd")
+  
+# Create plot of PCA with color-coded groups
+pca_plot <- ggplot(pca_result$res, aes(x = PC1, y = PC2, color = annotation_data$group)) +
   geom_point() +
-  labs(x = "PC1", y = "PC2", color = "Group")
+  labs(title = "PCA Plot", x = "PC1", y = "PC2")
+
+# Show the PCA plot
+print(pca_plot)
+```
+
+Note: Make sure to replace the file paths ("Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv") with the actual paths to the files on your local machine.

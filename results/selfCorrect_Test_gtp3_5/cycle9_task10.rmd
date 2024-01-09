@@ -10,55 +10,36 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
 
-# Remove the first column (gene names) from the data
+# Extract gene names
+gene_names <- data[, 1]
+
+# Remove the first column (gene names)
 data <- data[, -1]
 
 # Calculate the variability of each gene
-variances <- apply(data, 1, var)
+variability <- apply(data, 1, var)
 
-# Sort the genes based on their variability
-sorted_genes <- order(variances, decreasing = TRUE)
+# Sort genes based on variability in decreasing order
+sorted_genes <- gene_names[order(variability, decreasing=TRUE)]
 
 # Select the top 1000 most variable genes
-top_genes <- sorted_genes[1:1000]
+top_var_genes <- sorted_genes[1:1000]
 
-# Filter the data to only include the top genes
-filtered_data <- data[top_genes, ]
+# Filter the data to include only the top variable genes
+filtered_data <- data[which(gene_names %in% top_var_genes), ]
 
-# Cluster the samples using k-means clustering
-clusters <- kmeans(t(filtered_data), centers = 5)
+# Cluster the samples
+sample_clusters <- kmeans(t(filtered_data), centers=5)
 
-# Extract the cluster labels for each sample
-sample_clusters <- clusters$cluster
-
-# Create a list to store the cluster-specific genes
-cluster_genes <- list()
-
-# Loop through each cluster
-for (i in 1:max(sample_clusters)) {
-  # Find the indexes of samples in the current cluster
-  cluster_samples <- which(sample_clusters == i)
-  
-  # Calculate the mean expression for each gene in the cluster
-  cluster_means <- apply(filtered_data[, cluster_samples], 1, mean)
-  
-  # Sort the genes based on their mean expression in the cluster
-  sorted_cluster_genes <- order(cluster_means, decreasing = TRUE)
-  
-  # Select the top 100 genes for the cluster
-  top_cluster_genes <- top_genes[sorted_cluster_genes[1:100]]
-  
-  # Store the top cluster-specific genes in the list
-  cluster_genes[[i]] <- top_cluster_genes
-}
-
-# Print the cluster-specific genes for each cluster
-for (i in 1:max(sample_clusters)) {
-  cat("Cluster", i, ":")
-  cat(cluster_genes[[i]], "\n")
+# Extract cluster specific genes for each cluster
+cluster_specific_genes <- list()
+for (i in 1:max(sample_clusters$cluster)) {
+  cluster_genes <- top_var_genes[sample_clusters$cluster == i]
+  cluster_specific_genes[[i]] <- cluster_genes
 }
 ```
-Note: The updated code contains changes in the clustering section, where the data is transposed using `t()` function before clustering to ensure that the clustering is performed on samples rather than genes. The top cluster-specific genes are also selected using `top_genes` variable, which contains the indexes of the top 1000 genes with high variability.
+
+Note: The error was occurring because the gene names were not correctly extracted from the data. The correct approach is to use `gene_names <- data[, 1]` to extract the gene names from the first column of the data. Also, when filtering the data to include only the top variable genes, the code needs to use `which(gene_names %in% top_var_genes)` to select the rows corresponding to the desired genes. Finally, when clustering the samples, we need to transpose the data using `t(filtered_data)` since the kmeans function expects each column to represent a sample.

@@ -10,20 +10,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from file
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data file
+gene_data <- read.delim("leukemiaExp.txt", sep = "\t")
 
-# Calculate the variability of each gene
-gene_variability <- apply(gene_data[, -1], 1, var)
+# Remove the first column which contains gene names
+gene_data <- gene_data[, -1]
 
-# Get the indices of the top 1000 genes with the highest variability
-top_1000_genes <- order(gene_variability, decreasing = TRUE)[1:1000]
+# Calculate the variability for each gene
+gene_variability <- apply(gene_data, 1, var)
 
-# Filter the gene data to retain only the top 1000 genes
-filtered_gene_data <- gene_data[top_1000_genes, ]
+# Sort the genes based on their variability in descending order
+sorted_genes <- sort(gene_variability, decreasing = TRUE)
+
+# Select the top 1000 genes with highest variability
+top_genes <- names(head(sorted_genes, 1000))
+
+# Create a subset of the gene expression data with the top genes
+gene_data_top <- gene_data[top_genes, ]
+
+# Identify the two most variable genes
+most_variable_genes <- names(head(sorted_genes, 2))
 
 # Create a scatterplot of the two most variable genes
-plot(filtered_gene_data[, 2], filtered_gene_data[, 3], main = "Scatterplot of Two Most Variable Genes", 
-     xlab = "Gene 2 Expression", ylab = "Gene 3 Expression")
+plot(gene_data_top[, most_variable_genes[1]], gene_data_top[, most_variable_genes[2]], main = "Scatterplot of Two Most Variable Genes", xlab = most_variable_genes[1], ylab = most_variable_genes[2])
 ```
-Note: The code assumes that the gene expression data file "leukemiaExp.txt" is in the same directory as the R script.

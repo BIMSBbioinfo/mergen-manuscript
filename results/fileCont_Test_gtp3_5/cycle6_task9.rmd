@@ -10,28 +10,38 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load the gene expression data
-leukemia_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column with gene names
-gene_exp <- leukemia_exp[, -1]
+# Remove the first column (gene names)
+gene_data <- data[, -1]
 
 # Calculate the variability of each gene
-gene_variability <- apply(gene_exp, 1, var)
+gene_variability <- apply(gene_data, 1, var)
 
-# Sort the genes based on variability in descending order
-sorted_genes <- gene_exp[order(gene_variability, decreasing = TRUE), ]
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(gene_variability)[order(gene_variability, decreasing = TRUE)]
 
-# Retain the top 1000 most variable genes
-top_variable_genes <- sorted_genes[1:1000, ]
+# Select the top 1000 most variable genes
+top_variable_genes <- sorted_genes[1:1000]
 
-# Plot a heatmap with clustering using the top variable genes
-heatmap(top_variable_genes)
+# Filter the data for the selected genes
+filtered_data <- data[top_variable_genes]
 
-# Perform PCA on the sample data
-pca <- prcomp(t(gene_exp))
+# Calculate the z-scores of the filtered data
+filtered_zscores <- scale(filtered_data)
 
-# Plot the PCA
-plot(pca)
+# Perform hierarchical clustering on the filtered data
+heatmap_data <- as.matrix(filtered_zscores)
+heatmap_clusters <- hclust(dist(heatmap_data))
+
+# Plot the heatmap with clustering
+heatmap(heatmap_data, Colv = as.dendrogram(heatmap_clusters))
+
+# Perform PCA on the original data
+pca_data <- prcomp(gene_data, scale. = TRUE)
+
+# Plot the PCA for samples
+plot(pca_data$x[,1], pca_data$x[,2])
 ```
-
+```

@@ -5,21 +5,22 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
 ```
-# Read the tab separated file
-data <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Read the subjects.txt file
+subjects <- read.table("subjects.txt", sep = "\t", header = TRUE)
 
-# Count the number of rows and columns
-num_rows <- nrow(data)
-num_columns <- ncol(data)
+# Count the number of rows
+num_rows <- nrow(subjects)
+
+# Count the number of columns
+num_columns <- ncol(subjects)
 
 # Print the number of rows and columns
 num_rows
 num_columns
 ```
-
-Note: This code assumes that the file "subjects.txt" is in the current working directory. If the file is in a different directory, you may need to provide the full file path.
+Note: In the code, make sure to replace `"subjects.txt"` with the actual file path or use `setwd()` to set the working directory to the folder containing the file.

@@ -10,41 +10,42 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(openxlsx)
-library(limma)
-library(PCAtools)
+# Install required packages
 
-# Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1, colNames = TRUE)
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
 
-# Extract gene names and counts from count table
-genes <- count_table[, 1]
-counts <- count_table[, -1]  # Exclude the first column (gene names)
+
+# Load required libraries
+library(tidyverse)
+library(readxl)
+library(pcaMethods)
+
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- count_table[-1, ]  # Remove the header row
+
+# Read the annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
 # Normalize counts
-normalized_counts <- voom(counts)
+normalized_counts <- normalize(count_table, method = "TMM")
+normalized_counts <- as.data.frame(normalized_counts)
 
-# Add sample annotations to the normalized counts
-colnames(normalized_counts) <- annotation_data$Sample_ID
+# Merge annotation data with normalized counts
+merged_data <- merge(annotation_data, normalized_counts, by.x = "row.names", by.y = "Genes")
 
-# Perform PCA with color coding by "group"
-pca_group <- PCA(normalized_counts, groupCol = annotation_data$group)
+# Create PCA plot color coded by "group"
+pca_plot_group <- PCA(merged_data[, -c(1, 3, 4)], scale.unit = FALSE, scell = TRUE, nPcs = 2)
+autoplot(pca_plot_group, data = merged_data, colour = "group")
 
-# Perform PCA with color coding by "LibrarySelection"
-pca_library <- PCA(normalized_counts, groupCol = annotation_data$LibrarySelection)
-
-# Plot PCA results
-plotPCA(pca_group, title = "PCA plot with color coding by group")
-plotPCA(pca_library, title = "PCA plot with color coding by LibrarySelection")
+# Create PCA plot color coded by "LibrarySelection"
+pca_plot_library <- PCA(merged_data[, -c(1, 2, 3)], scale.unit = FALSE, scell = TRUE, nPcs = 2)
+autoplot(pca_plot_library, data = merged_data, colour = "LibrarySelection")
 ```
 ```

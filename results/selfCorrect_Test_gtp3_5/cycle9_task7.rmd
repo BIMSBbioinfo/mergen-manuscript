@@ -10,32 +10,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load the necessary libraries
-library(data.table)
-library(ggplot2)
-
 # Read the gene expression data from the file
-gene_exp <- fread("leukemiaExp.txt", sep = "\t")
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Check the number of samples
-num_samples <- ncol(gene_exp) - 1
+num_samples <- ncol(data) - 1
 
-# If there are more than 500 samples, randomly sample 500 columns
+# If there are more than 500 samples, randomly sample 500 samples
 if (num_samples > 500) {
-  sample_cols <- sample(2:(num_samples + 1), size = 500)
-  gene_exp_subset <- gene_exp[, c(1, sample_cols), with = FALSE]
-} else {
-  gene_exp_subset <- gene_exp
+  set.seed(1)  # Set a seed for reproducibility
+  samples <- sample(2:(num_samples + 1), 500, replace = FALSE)
+  data <- data[, c(1, samples)]
 }
 
-# Reshape the data for plotting
-gene_exp_melt <- melt(gene_exp_subset, id.vars = "V1")
-
 # Create a boxplot of the columns
-ggplot(gene_exp_melt, aes(x = V1, y = value)) +
-  geom_boxplot() +
-  xlab("") +
-  ylab("Gene Expression") +
-  ggtitle("Boxplot of Gene Expression")
+boxplot(data[, -1], main = "Gene Expression Data", xlab = "Samples", ylab = "Expression")
 ```
-```
+

@@ -10,20 +10,17 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
-data <- read.table("leukemiaExp.txt", header=TRUE, stringsAsFactors=FALSE, sep="\t")
+# Read the gene expression data from file
+gene_data <- read.delim("leukemiaExp.txt", sep = "\t")
 
-# Extract the gene names from the first column
-gene_names <- data[, 1]
+# Count the number of genes
+num_genes <- nrow(gene_data)
 
-# Calculate the number of genes
-num_genes <- length(gene_names)
-
-# Calculate the number of samples
-num_samples <- ncol(data) - 1  # subtract 1 for the first column (gene names)
+# Count the number of samples
+num_samples <- ncol(gene_data) - 1
 
 # Print the results
-num_genes
-num_samples
+cat("Number of genes:", num_genes, "\n")
+cat("Number of samples:", num_samples, "\n")
 ```
-```
+Note: The code assumes that the first row contains the column names for the samples, and that the gene names are in the first column. The number of samples is calculated by subtracting 1 from the total number of columns, as the first column is the gene names.

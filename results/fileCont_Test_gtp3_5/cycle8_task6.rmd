@@ -13,18 +13,23 @@ response:
 # Read the data from the file
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check the number of columns
+# Check the number of samples
 num_samples <- ncol(data) - 1
 
-# Check if there are more than 500 samples
-if (num_samples > 500) {
+# If there are more than 500 samples
+if(num_samples > 500) {
   # Randomly sample 500 samples
-  sampled_data <- data[, c(1, sample(2:num_samples, 500))]
+  set.seed(123) # Set a seed for reproducibility
+  samples_to_keep <- sample(2:num_samples, 500, replace = FALSE)
+  
+  # Create a subset of the data with the selected samples
+  data_subset <- data[, c(1, samples_to_keep + 1)]
 } else {
-  sampled_data <- data
+  # No need to subset the data
+  data_subset <- data
 }
 
-# Display the sampled data
-sampled_data
+# Print the subsetted data
+print(data_subset)
 ```
-```
+Note: Make sure to replace "leukemiaExp.txt" with the actual file path if it's not in the current working directory.

@@ -10,36 +10,35 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
-library(tidyverse)
-library(readxl)
+# Load required packages
+library(openxlsx)
 
-# Read count table 
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read count table
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
+# Remove empty rows
+count_table <- count_table[complete.cases(count_table), ]
 
 # Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Rename the first column of the annotation data to match the sample IDs in the count table
-colnames(annotation_data)[1] <- "Sample_ID"
+# Rename the first column of annotation data to "Sample"
+colnames(annotation_data)[1] <- "Sample"
 
 # Merge annotation data and count table
-merged_data <- merge(count_table, annotation_data, by = "Sample_ID")
+merged_data <- merge(count_table, annotation_data, by = "Sample")
 
-# Define colors for the boxplots based on the "group" variable in the annotation data
-boxplot_colors <- c("CASE" = "blue", "CTRL" = "red") # Update with the actual groups in the data
+# Get the sample group levels
+sample_groups <- unique(merged_data$group)
 
-# Plot boxplots for gene expression values per sample, color-coded based on the "group" variable
-boxplot(merged_data[-1], 
-        col = boxplot_colors[merged_data$group], 
-        main = "Gene Expression per Sample", 
-        xlab = "Sample", 
-        ylab = "Gene Expression")
+# Plot boxplots for gene expression values per sample
+boxplot_data <- merged_data[, -c(1, ncol(merged_data))] # Exclude the first and last columns
+boxplot(boxplot_data, col = sample_groups, main = "Gene Expression Boxplots", xlab = "Samples", ylab = "Gene Expression") 
+
 ```
-
+Remember to replace the file paths `Supplementary_Table_1_exp.xlsx` and `SRP021193.colData.tsv` with the correct paths to the files on your system.

@@ -10,34 +10,32 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
+library(tidyverse)
 library(readxl)
 
-# Read count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the count table
+count_table <- read_xlsx("Supplementary_Table_1_exp.xlsx")
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read the annotation data
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t", col_names = c("sample_id", "diagnosis", "group", "LibrarySelection"))
 
-# Remove unnecessary columns from annotation data
-annotation_data <- annotation_data[, c("diagnosis", "group", "LibrarySelection")]
+# Rename the first column of the count table as "Genes"
+names(count_table)[1] <- "Genes"
 
-# Rename the first column in count table as "Genes"
-colnames(count_table)[1] <- "Genes"
+# Merge the count table and annotation data based on sample_id
+merged_data <- inner_join(count_table, annotation_data, by = "Genes")
 
-# Merge count table and annotation data by matching sample IDs
-merged_data <- merge(annotation_data, count_table, by.x = "diagnosis", by.y = "Genes", all = TRUE)
+# Calculate the number of columns
+num_columns <- ncol(merged_data)
 
-# Calculate the number of columns (samples)
-num_columns <- ncol(merged_data) - 3
-
-# Print the number of columns
-print(num_columns)
+# Print the final result
+num_columns
 ```
-Make sure to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the correct file paths or file names of your data.
+Note: I have fixed the error by directly renaming the first column of the count table using `names(count_table)[1] <- "Genes"`.

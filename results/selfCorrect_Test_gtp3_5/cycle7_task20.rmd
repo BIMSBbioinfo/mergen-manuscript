@@ -10,61 +10,64 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
 library(readxl)
-library(DESeq2)
+library(dplyr)
+library(edgeR)
 library(ggplot2)
-library(pcaExplorer)
 
-# Read count table and remove duplicate row names
-count_table <- readxl::read_excel("Supplementary_Table_1_exp.xlsx")
-count_table <- count_table[!duplicated(count_table$Genes), ]
-
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
 
-# Set row names of count table as gene names
-rownames(count_table) <- count_table$Genes
+# Get group specific genes using statistical tests
+group_specific_genes <- lapply(unique(annotation_data$group), function(group) {
+  group_samples <- annotation_data$Sample[annotation_data$group == group]
+  group_counts <- count_table[, group_samples]
+  
+  # Check if count table is not empty
+  if (any(rowSums(group_counts) > 0)) {
+    DGE <- DGEList(counts = group_counts)
+    DGE <- calcNormFactors(DGE)
+    design <- model.matrix(~group)
+    fit <- glmFit(DGE, design)
+    group_specific <- decideTests(fit)
+    if (any(group_specific[group, ] == 1)){
+      group_genes <- rownames(group_counts)[group_specific[group, ] == 1]
+      return(group_genes)
+    } else {
+      return(NULL)
+    }
+  } else {
+    return(NULL)
+  }
+})
 
-# Remove the first column from count table as it is now the row names
-count_table <- count_table[, -1]
+# Remove NULL values if any
+group_specific_genes <- Filter(Negate(is.null), group_specific_genes)
 
-# Match the column names of count table with row names of annotation data
-annotation_data <- annotation_data[match(colnames(count_table), annotation_data$diagnosis), ]
+# Get the intersection of group specific genes
+intersection_genes <- Reduce(intersect, group_specific_genes)
 
-# Create a DESeq2 object for differential expression analysis
-dds <- DESeq2::DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~ group)
-
-# Perform differential expression analysis
-dds <- DESeq2::DESeq(dds)
-
-# Get differential expression results
-results <- DESeq2::results(dds)
-
-# Perform statistical tests for each group and get significant genes
-specific_genes <- NULL
-for (group in unique(annotation_data$group)) {
-  group_data <- annotation_data[annotation_data$group == group, ]
-  group_results <- results[rownames(results) %in% rownames(group_data), ]
-  specific_genes <- rbind(specific_genes, group_results[which(group_results$padj < 0.05), ])
+# Plot PCA using group specific genes
+if (length(intersection_genes) > 0) {
+  pca_data <- count_table[intersection_genes, ]
+  pca_data <- t(pca_data[-1, ])
+  pca <- prcomp(pca_data, scale. = TRUE)
+  pca_df <- as.data.frame(pca$x)
+  pca_df$group <- annotation_data$group
+  ggplot(pca_df, aes(PC1, PC2, color = group)) +
+    geom_point() +
+    labs(title = "PCA Plot", x = "PC1", y = "PC2")
+} else {
+  print("No group-specific genes found.")
 }
-
-# Get the specific gene names
-specific_gene_names <- rownames(specific_genes)
-
-# Filter count table to include only specific genes
-specific_count_table <- count_table[specific_gene_names, ]
-
-# Plot PCA using specific genes for each group
-pca_data <- t(scale(t(specific_count_table)))
-metadata <- data.frame(Group = annotation_data$group)
-pcaExplorer::plotPCA(pca_data, metadata = metadata)
 ```
-
-I've added a step to remove duplicate row names in the count table before setting them as gene names. This should resolve the `duplicate 'row.names' are not allowed` error.
+```

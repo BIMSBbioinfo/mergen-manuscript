@@ -11,40 +11,29 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-gene_expression <- read.delim("leukemiaExp.txt", sep="\t", header=TRUE, stringsAsFactors=FALSE)
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column (gene names)
-gene_data <- gene_expression[, -1]
+# Calculate the variability of each gene
+gene_variability <- apply(gene_data[, -1], 1, var)
 
-# Calculate the variance for each gene
-gene_variability <- apply(gene_data, 1, var)
+# Sort the genes based on their variability in descending order
+sorted_genes <- gene_data[order(gene_variability, decreasing = TRUE), ]
 
-# Get the top 1000 most variable genes
-top_1000_genes <- head(sort(gene_variability, decreasing=TRUE), 1000)
+# Select the top 1000 most variable genes
+top_variable_genes <- sorted_genes[1:1000, ]
 
-# Subset the gene expression data to include only the top 1000 genes
-filtered_data <- gene_expression[gene_variability %in% top_1000_genes, ]
+# Cluster the samples based on the variable genes
+sample_clusters <- kmeans(top_variable_genes[, -1], centers = 5)
 
-# Transpose the filtered data to have samples as rows and genes as columns
-transpose_data <- t(filtered_data[, -1])
-
-# Perform hierarchical clustering on the filtered data
-clustering <- hclust(dist(transpose_data))
-
-# Cut the dendrogram into clusters
-clusters <- cutree(clustering, k=3)
-
-# Create a data frame to store the cluster-specific genes
-cluster_specific_genes <- data.frame(Cluster = clusters)
-
-# Loop over each cluster and identify the cluster-specific genes
-for (i in unique(clusters)) {
-  cluster_samples <- which(clusters == i)
-  cluster_mean_expression <- rowMeans(transpose_data[cluster_samples, ])
-  cluster_specific_genes$Genes[cluster_specific_genes$Cluster == i] <- names(cluster_mean_expression)[cluster_mean_expression == max(cluster_mean_expression)]
+# Extract cluster specific genes for each cluster
+cluster_genes <- list()
+for (i in 1:max(sample_clusters$cluster)) {
+  cluster_genes[[i]] <- top_variable_genes[(sample_clusters$cluster == i), ]
 }
 
-# Print the cluster-specific genes for each cluster
-cluster_specific_genes
+# Print the cluster specific genes for each cluster
+for (i in 1:max(sample_clusters$cluster)) {
+  print(paste("Cluster", i))
+  print(cluster_genes[[i]])
 }
 ```

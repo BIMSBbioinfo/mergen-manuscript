@@ -10,36 +10,43 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
 # Load necessary libraries
-library(readxl)
-library(tidyverse)
+library(openxlsx)
+library(dplyr)
+library(ggplot2)
 
 # Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
 
-# Rename the first column of annotation data to match sample ids
-colnames(annotation_data)[1] <- "Samples"
+# Remove unnecessary columns from the annotation data
+annotation_data <- annotation_data[, c("diagnosis", "group")]
 
-# Merge annotation data and count table
-merged_data <- merge(count_table, annotation_data, by = "Samples")
+# Rename the first column of the annotation data
+colnames(annotation_data)[1] <- "Sample_ID"
 
-# Plot boxplots for gene expression values per sample and color code based on group variable
-merged_data %>%
-  gather(key = "Sample", value = "Expression", -Samples, -Genes, -group) %>%
-  ggplot(aes(x = Sample, y = Expression, fill = group)) +
-  geom_boxplot() +
-  labs(title = "Gene Expression Boxplots",
-       x = "Sample",
-       y = "Expression") +
-  theme_bw()
+# Merge the count table and annotation data based on sample ID
+merged_data <- merge(count_table, annotation_data, by = "Sample_ID")
+
+# Define the colors for boxplots based on the group variable
+colors <- c("CASE" = "red", "CTRL" = "blue")
+
+# Create boxplots for gene expression values per sample
+plot <- ggplot(merged_data, aes(x = group, y = CASE_1)) +
+  geom_boxplot(fill = colors) +
+  xlab("Group") +
+  ylab("Gene Expression Values")
+
+# Print the plot
+print(plot)
 ```
-```
+
+Note: Make sure to adjust the file paths in the code to match the actual locations of the files on your system.

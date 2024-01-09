@@ -5,16 +5,20 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
 ```
-data <- read.table("subjects.txt", sep="\t", header=TRUE)
-num_rows <- nrow(data)
-num_columns <- ncol(data)
+# Read the tab-separated file "subjects.txt"
+data <- read.delim("subjects.txt", sep="\t")
 
+# Get the number of rows and columns in the dataset
+num_rows <- nrow(data)
+num_cols <- ncol(data)
+
+# Print the number of rows and columns
 num_rows
-num_columns
+num_cols
 ```
-Note: The code assumes that the file "subjects.txt" is in the current working directory.
+Note: Replace "subjects.txt" with the actual file path and name if it is located in a different directory.

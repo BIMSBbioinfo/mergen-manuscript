@@ -10,33 +10,30 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(data.table)
+# Load required libraries
 library(readxl)
-library(ggplot2)
 
 # Read the count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation_data <- fread("SRP021193.colData.tsv")
+annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
 
-# Rename the first column of annotation data to match the sample ids in count table
-colnames(annotation_data)[1] <- "Samples"
+# Rename the first column in the annotation data to match the sample ids
+colnames(annotation_data)[1] <- "Genes"
 
-# Merge the count table and annotation data based on sample ids
-merged_data <- merge(count_table, annotation_data, by = "Samples")
+# Merge the annotation data and count table based on sample ids
+merged_data <- merge(annotation_data, count_table, by = "Genes")
 
-# Plot boxplots for gene expression values per sample and color code boxplots based on "group" variable
-ggplot(merged_data, aes(x = group, y = CASE_1)) +
-  geom_boxplot(fill = "group") +
-  labs(x = "Group", y = "Gene Expression") +
-  ggtitle("Boxplots of Gene Expression by Group")
+# Plot boxplots for gene expression values per sample and color code based on "group" variable
+boxplot(merged_data[, 5:ncol(merged_data)], col = merged_data$group)
 ```
-```
+Note: 
+- Make sure to install the necessary libraries (`readxl`) before running the code.
+- Replace the file paths with the actual paths to your files.

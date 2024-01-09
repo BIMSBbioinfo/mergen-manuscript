@@ -10,24 +10,18 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-gene_exp <- read.table("leukemiaExp.txt", sep="\t", header=TRUE)
+# Read gene expression data from file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Calculate the variability for each gene
-gene_variability <- apply(gene_exp[, -1], 1, var)
+# Calculate the variance of each gene
+gene_var <- apply(data[, -1], 2, var)
 
-# Get the top 1000 most variable genes
-top_genes <- names(sort(gene_variability, decreasing=TRUE)[1:1000])
+# Get the indices of the top 1000 most variable genes
+top_var_genes <- order(gene_var, decreasing = TRUE)[1:1000]
 
-# Subset the gene expression data to include only the top genes
-filtered_exp <- gene_exp[gene_exp$Gene %in% top_genes, ]
+# Filter the data to retain only the top 1000 most variable genes
+filtered_data <- data[top_var_genes, ]
 
-# Check if there are finite values for xlim
-if(all(is.finite(filtered_exp[, 2])) && all(is.finite(filtered_exp[, 3]))) {
-  # Create a scatterplot of the two most variable genes
-  plot(filtered_exp[, 2], filtered_exp[, 3], xlab="Gene 1", ylab="Gene 2", main="Scatterplot of Two Most Variable Genes")
-} else {
-  print("Error: The x-axis or y-axis values contain non-finite values. Please check the data.")
-}
+# Create a scatterplot of the two most variable genes
+plot(filtered_data[, 2], filtered_data[, 3], main = "Scatterplot of the Two Most Variable Genes", xlab = "Gene 1", ylab = "Gene 2")
 ```
-Note: The updated code checks if there are finite values for the x-axis (`filtered_exp[, 2]`) and the y-axis (`filtered_exp[, 3]`) before creating the scatterplot. If there are any non-finite values, an error message will be printed indicating that the data should be checked. This helps avoid the error "need finite 'xlim' values".

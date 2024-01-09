@@ -9,21 +9,29 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-```
-# Read the gene expression data file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+'''R
+# Read the gene expression data from the file
+data <- read.delim("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Calculate the variability of each gene
-variability <- apply(data[, -1], 2, var)
+# Remove the first column which contains gene names
+data <- data[, -1]
+
+# Calculate the variability for each gene
+variability <- apply(data, 1, var)
+
+# Sort the genes based on their variability in descending order
+sorted_genes <- names(variability)[order(variability, decreasing = TRUE)]
 
 # Select the top 1000 most variable genes
-top_genes <- names(sort(variability, decreasing = TRUE))[1:1000]
+top_genes <- sorted_genes[1:1000]
 
-# Filter the data to retain only the most variable genes
-filtered_data <- data[, c(1, top_genes)]
+# Subset the data to retain only the top genes
+filtered_data <- data[top_genes, ]
+
+# Extract the expression values of the two most variable genes
+gene1 <- filtered_data[1, ]
+gene2 <- filtered_data[2, ]
 
 # Create a scatterplot of the two most variable genes
-plot(filtered_data[, 2], filtered_data[, 3], xlab = names(filtered_data)[2], ylab = names(filtered_data)[3], main = "Scatterplot of the Two Most Variable Genes")
-```
-
-Note: The code assumes that the columns of the gene expression data are numeric values representing gene expression levels and the first column contains the gene names. Adjust the column indices (`[, 2]` and `[, 3]`) in the `plot()` function based on the actual indices of the desired genes in the filtered data.
+plot(gene1, gene2, xlab = "Gene 1", ylab = "Gene 2", main = "Scatterplot of Two Most Variable Genes")
+'''

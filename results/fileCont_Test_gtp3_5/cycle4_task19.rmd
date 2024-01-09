@@ -10,64 +10,35 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required libraries
+# Load necessary libraries
 library(readxl)
-library(data.table)
-library(DESeq2)
-library(ggplot2)
+library(PCAtools)
 
-# Read count table
+# Read count table and annotation data
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Read annotation data
-annotation_data <- fread("SRP021193.colData.tsv")
+# Remove first column from count table (gene names)
+count_table <- count_table[, -1]
 
-# Extract sample IDs from annotation data
-sample_ids <- annotation_data$diagnosis
+# Normalize counts (e.g., using DESeq2)
+normalized_counts <- DESeq2::rlog(count_table)
 
-# Set row names of count table to gene names
-rownames(count_table) <- count_table$Genes
-count_table <- count_table[, -1] # Remove first column
+# Merge count table and annotation data based on sample ids
+merged_data <- merge(normalized_counts, annotation_data, by.x = 0, by.y = 1)
 
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ 1)
-dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Create PCA plots
+pca_plot1 <- PCAtools::plotPCA(merged_data, colorBy = "group")
+pca_plot2 <- PCAtools::plotPCA(merged_data, colorBy = "LibrarySelection")
 
-# Perform PCA analysis using normalized counts
-pca <- prcomp(t(normalized_counts))
-
-# Create a data frame with sample IDs and PC scores
-pca_data <- data.frame(Sample = sample_ids,
-                       PC1 = pca$x[,1],
-                       PC2 = pca$x[,2],
-                       Group = annotation_data$group,
-                       LibrarySelection = annotation_data$LibrarySelection)
-
-# Create PCA plot color coded by "group"
-pca_plot_group <- ggplot(data = pca_data, aes(x = PC1, y = PC2, color = Group)) +
-  geom_point() +
-  labs(title = "PCA Plot (Group)",
-       x = "PC1",
-       y = "PC2")
-
-# Create PCA plot color coded by "LibrarySelection"
-pca_plot_selection <- ggplot(data = pca_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA Plot (Library Selection)",
-       x = "PC1",
-       y = "PC2")
-
-# Print the two PCA plots
-print(pca_plot_group)
-print(pca_plot_selection)
+# Print plots
+print(pca_plot1)
+print(pca_plot2)
 ```
-```
+Note: This code assumes that you have already installed the required packages (`readxl` and `PCAtools`) and loaded them in your R environment.

@@ -10,47 +10,37 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from "leukemiaExp.txt"
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the first column (gene names)
-leukemiaExp <- leukemiaExp[, -1]
+# Calculate the variability of each gene
+variability <- apply(data[, -1], 1, var)
 
-# Calculate the variance of each gene
-geneVar <- apply(leukemiaExp, 1, var)
-
-# Sort the genes based on their variance
-sortedGenes <- sort(geneVar, decreasing = TRUE)
+# Sort the genes based on their variability
+sorted_genes <- names(variability)[order(variability, decreasing = TRUE)]
 
 # Select the top 1000 most variable genes
-top1000Genes <- head(sortedGenes, 1000)
+top_genes <- sorted_genes[1:1000]
 
-# Filter the gene expression data based on the top 1000 genes
-filteredData <- leukemiaExp[rownames(leukemiaExp) %in% names(top1000Genes), ]
+# Extract the expression data for the top 1000 genes
+filtered_data <- data[c(1, which(names(data) %in% top_genes) + 1)]
 
-# Perform clustering on the filtered data
-clustering <- hclust(dist(filteredData))
+# Cluster the samples
+sample_clusters <- hclust(dist(t(filtered_data[, -1])))
+sample_labels <- cutree(sample_clusters, k = 5)
 
-# Cut the dendrogram into clusters
-clusters <- cutree(clustering, k = 5)
+# Create a list to store the cluster specific genes
+cluster_specific_genes <- vector("list", 5)
 
-# Create a list to store the cluster-specific genes
-clusterGenes <- list()
-
-# Extract the cluster-specific genes for each cluster
-for (i in 1:max(clusters)) {
-  clusterData <- filteredData[clusters == i, ]
-  clusterVar <- apply(clusterData, 1, var)
-  sortedClusterGenes <- sort(clusterVar, decreasing = TRUE)
-  topClusterGenes <- head(sortedClusterGenes, 50)
-  clusterGenes[[i]] <- rownames(clusterData) %in% names(topClusterGenes)
+# Loop through each cluster and extract the cluster specific genes
+for (i in 1:5) {
+  cluster_samples <- which(sample_labels == i)
+  cluster_data <- filtered_data[, cluster_samples + 1]
+  cluster_specific_genes[[i]] <- colnames(cluster_data)[-1]
 }
 
-# Print the cluster-specific genes for each cluster
-for (i in 1:length(clusterGenes)) {
-  cat("Cluster", i, "specific genes:\n")
-  print(rownames(filteredData)[clusterGenes[[i]]])
+# Print the cluster specific genes
+for (i in 1:5) {
+  cat("Cluster", i, "specific genes:", cluster_specific_genes[[i]], "\n")
 }
 ```
-
-Note: This code assumes that the file "leukemiaExp.txt" is in the working directory.

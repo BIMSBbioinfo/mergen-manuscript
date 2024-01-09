@@ -9,30 +9,32 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+Apologies for the confusion. Here's the fixed code:
+
 ```
 # Read the gene expression data from the file
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+gene_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
 
-# Remove the first column with gene names
-geneExp <- leukemiaExp[, -1]
+# Calculate the variability of each gene
+gene_variability <- apply(gene_data[, -1], 1, var)
 
-# Compute the variance of each gene
-geneVariance <- apply(geneExp, 1, var)
+# Sort the genes based on their variability
+sorted_genes <- sort(gene_variability, decreasing = TRUE)
 
-# Sort the genes based on their variance in descending order
-sortedGenes <- sort(geneVariance, decreasing = TRUE)
+# Select the top 1000 most variable genes
+top_1000_genes <- names(sorted_genes)[1:1000]
 
-# Get the indices of the top 1000 most variable genes
-topGenesIndices <- head(sortedGenes, 1000)
+# Subset the gene data to include only the top 1000 genes
+top_1000_gene_data <- gene_data[top_1000_genes, ]
 
-# Subset the gene expression data to retain only the top 1000 genes
-topGenesExp <- geneExp[topGenesIndices, ]
+# Select the two most variable genes
+most_variable_genes <- top_1000_gene_data[1:2, ]
 
-# Take the first two genes from the filtered dataset
-gene1 <- topGenesExp[1, ]
-gene2 <- topGenesExp[2, ]
+# Create a scatterplot of the two most variable genes
+plot(most_variable_genes[1, -1], most_variable_genes[2, -1], pch=16, col="blue", xlab="Gene 1", ylab="Gene 2")
 
-# Create a scatterplot of the two most variable genes with adjusted margins
-par(mar = c(4, 4, 2, 1))  
-plot(gene1, gene2)
+# Add a title to the scatterplot
+title(main = "Scatterplot of the Two Most Variable Genes")
 ```
+
+Please make sure that the "leukemiaExp.txt" file is in your working directory before running this code to read the data successfully.

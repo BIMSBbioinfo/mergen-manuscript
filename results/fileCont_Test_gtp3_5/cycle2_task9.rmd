@@ -10,29 +10,31 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", stringsAsFactors = FALSE)
+# Read the data file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Remove the gene names from the data
-gene_names <- data[, 1]
-expression_data <- data[, -1]
+# Select the gene expression columns
+expression <- data[, -1]
 
-# Calculate the variability of each gene
-variability <- apply(expression_data, 1, var)
+# Compute the variance for each gene
+variance <- apply(expression, 1, var)
 
-# Get the top 1000 most variable genes
-top_genes <- gene_names[order(variability, decreasing = TRUE)][1:1000]
+# Sort the genes by variance in descending order
+sorted_genes <- names(variance)[order(variance, decreasing = TRUE)]
 
-# Filter the expression data to keep only the most variable genes
-filtered_data <- expression_data[gene_names %in% top_genes, ]
+# Select the top 1000 genes with the highest variance
+top_genes <- sorted_genes[1:1000]
 
-# Plot a heatmap with clustering
-heatmap(filtered_data, Rowv = NA, Colv = NA)
+# Subset the expression data for the top variable genes
+filtered_expression <- data[, c("gene", top_genes)]
 
-# Perform PCA on the filtered data
-pca <- prcomp(filtered_data)
+# Create the heatmap
+heatmap(filtered_expression[, -1], Colv = NA)
 
-# Plot the PCA for samples
-plot(pca$x[,1], pca$x[,2])
+# Perform PCA on the expression data
+pca <- prcomp(filtered_expression[, -1])
+
+# Plot the PCA results
+plot(pca$x[, 1], pca$x[, 2])
 ```
-
+Note: Please make sure to replace "leukemiaExp.txt" with the correct file path to the data file. Also, make sure that the first column in the file is named "gene".

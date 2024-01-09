@@ -10,57 +10,51 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
-library(data.table)
+# Load necessary packages
 library(readxl)
-library(ggplot2)
-library(ggrepel)
-library(ggfortify)
+library(dplyr)
+library(Seurat)
 
-# Read in count table and annotation data
-count_table <- as.data.frame(read_excel("Supplementary_Table_1_exp.xlsx"))
-annotation_data <- fread("SRP021193.colData.tsv")
+# Read the count table and annotation data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation_data <- read.delim("SRP021193.colData.tsv", sep="\t")
 
-# Remove any missing values in count table
-count_table <- count_table[complete.cases(count_table), ]
+# Extract the gene names and sample ids
+gene_names <- count_table[, 1]
+sample_ids <- colnames(count_table)[-1]
 
-# Set row names as gene names
-rownames(count_table) <- count_table$Genes
+# Remove the first column (gene names) from the count table
+count_table <- count_table[, -1]
 
-# Remove gene names as a separate column
-count_table <- count_table[,-1]
+# Rename the column names of the count table to match the sample ids in the annotation data
+colnames(count_table) <- sample_ids
 
-# Normalize counts using DESeq2 method
-normalized_counts <- count_table / colSums(count_table) * 1e6
+# Normalize the count table
+normalized_counts <- log1p(count_table)
 
-# Create a data frame with sample IDs, group, and LibrarySelection
-sample_data <- annotation_data[, .(sample_id = V1, group = V2, LibrarySelection = V4)]
+# Create a Seurat object with the normalized counts
+seurat_obj <- CreateSeuratObject(counts = normalized_counts)
 
-# Join the count table and sample data based on sample IDs
-normalized_counts <- cbind.data.frame(sample_id = rownames(normalized_counts), normalized_counts)
-normalized_counts <- merge(normalized_counts, sample_data, by = "sample_id")
+# Add the annotation data to the Seurat object
+seurat_obj$sample_metadata <- annotation_data[match(colnames(seurat_obj), annotation_data$X1), ] 
 
-# Perform PCA using normalized counts
-pca <- prcomp(normalized_counts[, -1], scale. = TRUE)
+# Perform PCA
+seurat_obj <- RunPCA(seurat_obj)
 
-# Plot PCA with samples color-coded by "group"
-ggplot(data = normalized_counts, aes(x = pca$x[,1], y = pca$x[,2], color = group)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2") +
-  ggtitle("PCA Plot: Samples Colored by Group") +
-  theme_minimal()
+# Plot the PCA with samples color coded by the "group" column
+pca_plot_group <- DimPlot(seurat_obj, group.by = "group")
 
-# Plot PCA with samples color-coded by "LibrarySelection"
-ggplot(data = normalized_counts, aes(x = pca$x[,1], y = pca$x[,2], color = LibrarySelection)) +
-  geom_point() +
-  labs(x = "PC1", y = "PC2") +
-  ggtitle("PCA Plot: Samples Colored by LibrarySelection") +
-  theme_minimal()
-}
+# Plot the PCA with samples color coded by the "LibrarySelection" column
+pca_plot_library <- DimPlot(seurat_obj, group.by = "LibrarySelection")
+
+# Plot the PCA plots
+pca_plot_group
+pca_plot_library
+```
 ```

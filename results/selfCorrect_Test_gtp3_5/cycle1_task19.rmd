@@ -10,58 +10,46 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
+# Load required libraries
 library(readxl)
-library(dplyr)
+library(RColorBrewer)
 library(ggplot2)
-library(DESeq2)
-library(apeglm)
+library(pcaMethods)
 
-# Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
 
-# Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Remove "Genes" column
+count_table <- count_table[, -1]
 
-# Remove the gene names column from the count table
-count_table <- count_table %>% select(-Genes)
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t", header = TRUE)
 
-# Set the rownames of the count table as the gene names
-rownames(count_table) <- count_table$Genes
+# Normalize counts
+normalized_counts <- t(log2(as.matrix(count_table[, -1]) + 1))
 
-# Remove the gene names column from the annotation data
-annotation_data <- annotation_data %>% select(-1)
+# Prepare sample IDs for PCA plots
+sample_ids <- colnames(normalized_counts)
+sample_ids <- gsub("\\..*", "", sample_ids)
 
-# Normalize counts using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~1)
-dds <- DESeq(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+# Add sample IDs as row names to normalized counts
+rownames(normalized_counts) <- sample_ids
 
-# Perform PCA on samples
-pca_samples <- prcomp(t(normalized_counts))
+# Merge annotation data with normalized counts
+normalized_with_annotation <- merge(annotation_data, normalized_counts, by = "row.names")
 
-# Create data frame for plotting
-sample_info <- as.data.frame(colData(dds))
-sample_info$PC1 <- pca_samples$x[,1]
-sample_info$PC2 <- pca_samples$x[,2]
+# Perform PCA on samples color coded by "group" variable
+pca_group <- pca(normalized_with_annotation[, -match(c("group", "LibrarySelection"), colnames(normalized_with_annotation))], scale = "none")
+plot(pca_group, col = brewer.pal(8, "Set1")[as.factor(normalized_with_annotation$group)])
 
-# Plot PCA color coded by "group"
-pca_plot_group <- ggplot(sample_info, aes(x = PC1, y = PC2, color = group)) +
-  geom_point() +
-  labs(title = "PCA Plot of Samples - Color coded by group")
-
-# Plot PCA color coded by "LibrarySelection"
-pca_plot_libsel <- ggplot(sample_info, aes(x = PC1, y = PC2, color = LibrarySelection)) +
-  geom_point() +
-  labs(title = "PCA Plot of Samples - Color coded by LibrarySelection")
-
-# Print the plots
-print(pca_plot_group)
-print(pca_plot_libsel)
+# Perform PCA on samples color coded by "LibrarySelection" variable
+pca_library <- pca(normalized_with_annotation[, -match(c("group", "LibrarySelection"), colnames(normalized_with_annotation))], scale = "none")
+plot(pca_library, col = brewer.pal(8, "Set1")[as.factor(normalized_with_annotation$LibrarySelection)])
 ```
 ```

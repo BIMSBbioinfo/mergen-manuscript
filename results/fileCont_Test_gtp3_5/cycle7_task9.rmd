@@ -11,27 +11,23 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-data <- read.delim("leukemiaExp.txt", sep="\t", header=TRUE)
+gene_exp <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE)
 
-# Remove the first column (gene names) from the data
-data <- data[, -1]
+# Filter genes based on their variability
+var_genes <- gene_exp[row.vars(gene_exp) >= quantile(row.vars(gene_exp), 0.75), ]
 
-# Calculate the variance for each gene
-variances <- apply(data, 1, var)
+# Select the top 1000 most variable genes
+top_var_genes <- var_genes[1:1000, ]
 
-# Sort the variances in descending order and keep the top 1000 genes
-top_genes <- names(sort(variances, decreasing=TRUE))[1:1000]
+# Calculate the z-scores for the selected genes
+z_scores <- scale(top_var_genes[, -1])
 
-# Extract the top 1000 genes from the data
-filtered_data <- data[top_genes, ]
+# Plot heatmap with clustering
+heatmap(z_scores, Rowv = TRUE, Colv = TRUE)
 
-# Plot a heatmap with clustering for the variable genes
-heatmap(filtered_data, Colv=NA, Rowv=TRUE)
+# Perform PCA for samples
+pca <- prcomp(t(top_var_genes[, -1]))
 
-# Perform PCA for the samples
-pca <- prcomp(t(data))
-
-# Plot the PCA results
-plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", main="PCA")
+# Plot PCA
+plot(pca$x[, 1], pca$x[, 2])
 ```
-Note: This code assumes that the gene names are in the first column of the "leukemiaExp.txt" file. If the gene names are not in the first column, please adjust the column index in the code accordingly.

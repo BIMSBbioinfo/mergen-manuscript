@@ -11,34 +11,50 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from the file
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Calculate the variability of each gene
-gene_variability <- apply(gene_data[, -1], 1, var)
+gene_variability <- apply(expression_data[, -1], 1, var)
 
-# Sort the genes based on their variability
-sorted_genes <- gene_data[order(gene_variability, decreasing = TRUE), ]
+# Sort the genes based on variability
+sorted_genes <- expression_data[order(gene_variability, decreasing = TRUE), ]
 
-# Select the top 1000 genes with highest variability
+# Select the top 1000 most variable genes
 top_1000_genes <- sorted_genes[1:1000, ]
 
-# Perform clustering on the samples using the variable genes
-sample_clusters <- kmeans(top_1000_genes[, -1], centers = 5)
+# Remove the first column (gene names) from the top 1000 genes dataset
+top_1000_genes <- top_1000_genes[, -1]
 
-# Extract the cluster assignments for each sample
-sample_cluster_assignments <- sample_clusters$cluster
+# Transpose the dataset to have samples as rows and genes as columns
+transposed_data <- t(top_1000_genes)
 
-# Initialize a list to store cluster specific genes
-cluster_specific_genes <- vector("list", 5)
+# Cluster the samples using hierarchical clustering
+clustering <- hclust(dist(transposed_data))
 
-# Loop through each cluster and extract the genes specific to that cluster
-for (i in 1:5) {
-  cluster_specific_genes[[i]] <- top_1000_genes[sample_cluster_assignments == i, ]
+# Determine the number of clusters based on the dendrogram
+num_clusters <- 3  # Assume there are 3 clusters
+
+# Assign each sample to a cluster
+sample_clusters <- cutree(clustering, k = num_clusters)
+
+# Create empty lists to store the cluster-specific genes
+cluster_genes <- vector("list", num_clusters)
+
+# Iterate over each cluster
+for (i in 1:num_clusters) {
+  # Select the samples belonging to the current cluster
+  samples_in_cluster <- which(sample_clusters == i)
+  
+  # Extract the gene expression data for the current cluster
+  cluster_data <- top_1000_genes[samples_in_cluster, ]
+  
+  # Store the gene expression data for the current cluster
+  cluster_genes[[i]] <- cluster_data
 }
 
-# Print the cluster specific genes for each cluster
-for (i in 1:5) {
-  cat("Cluster", i, "specific genes:\n")
-  print(cluster_specific_genes[[i]])
-}
+# Print the code output
+top_1000_genes
+sample_clusters
+cluster_genes
 ```
+Note: The code assumes that the number of clusters is known and fixed at 3. You may need to adjust the "num_clusters" variable depending on your specific dataset.

@@ -11,18 +11,18 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 response:
 ```
-# Load necessary libraries
-library(openxlsx)
+# Install and load the necessary packages
+
+library(readxl)
 
 # Read the excel file
-data <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1)
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Count the number of genes and samples
-num_genes <- nrow(data)
+# Number of genes and samples
+num_genes <- nrow(data) - 1
 num_samples <- ncol(data) - 1
 
-# Print the results
 num_genes
 num_samples
 ```
-```
+

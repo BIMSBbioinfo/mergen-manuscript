@@ -10,25 +10,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the data from the file
+# Read the gene expression data
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Subset the data to exclude the first column (gene names)
-subset_data <- data[, -1]
+# Remove the first column with gene names
+data <- data[, -1]
 
-# Calculate the variability of each gene
-variance <- apply(subset_data, 1, var)
+# Calculate the variance for each gene
+variance <- apply(data, 1, var)
 
-# Order the genes based on their variability and select the top 1000 genes
-top_genes <- subset_data[order(variance, decreasing = TRUE), ][1:1000, ]
+# Get the top 1000 genes with the highest variance
+top_genes <- names(sort(variance, decreasing = TRUE))[1:1000]
 
-# Create a heatmap with clustering
-heatmap(top_genes, col = cm.colors(256))
+# Filter the data to include only the top variable genes
+filtered_data <- data[top_genes]
+
+# Plot a heatmap with clustering
+heatmap(filtered_data, Colv = NA, scale = "row")
 
 # Perform PCA on the samples
-pca <- prcomp(subset_data)
+pca <- prcomp(t(filtered_data), scale = TRUE)
 
 # Plot the PCA
-plot(pca$x[, 1], pca$x[, 2])
+plot(pca$x[, 1], pca$x[, 2], xlab = "PC1", ylab = "PC2")
 ```
-

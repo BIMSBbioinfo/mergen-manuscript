@@ -10,31 +10,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read gene expression data from file
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from the file
+gene_data <- read.delim("leukemiaExp.txt", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
-# Convert gene expression data to numeric matrix
-gene_data_mat <- as.matrix(gene_data[, -1])
+# Remove the first column (gene names)
+gene_data <- gene_data[, -1]
 
-# Calculate the variance for each gene
-gene_var <- apply(gene_data_mat, 1, var)
+# Calculate the variance of each gene
+gene_var <- apply(gene_data, 1, var)
 
-# Get the top 1000 genes with the highest variance
-top_genes <- head(order(gene_var, decreasing = TRUE), 1000)
+# Select the top 1000 most variable genes
+top_genes <- order(gene_var, decreasing = TRUE)[1:1000]
 
-# Subset the gene expression data with the top variable genes
-filtered_gene_data <- gene_data[top_genes, ]
+# Subset the gene data to include only the top 1000 genes
+top_gene_data <- gene_data[top_genes, ]
 
-# Convert filtered gene expression data to numeric matrix
-filtered_gene_data_mat <- as.matrix(filtered_gene_data[, -1])
+# Plot a heatmap of the top variable genes with clustering
+heatmap(as.matrix(top_gene_data), Rowv = TRUE, Colv = TRUE)
 
-# Plot a heatmap with clustering for the variable genes
-heatmap(filtered_gene_data_mat, Colv = NA, main = "Gene Expression Heatmap")
+# Perform PCA on the gene data
+gene_pca <- prcomp(gene_data, scale. = TRUE)
 
-# Perform PCA on the samples
-pca <- prcomp(filtered_gene_data_mat)
-
-# Plot a PCA for the samples
-plot(pca$x[, 1], pca$x[, 2], main = "PCA", xlab = "PC1", ylab = "PC2")
+# Plot the PCA for samples
+plot(gene_pca$x[,1], gene_pca$x[,2], xlab = "PC1", ylab = "PC2")
 ```
-

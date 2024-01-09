@@ -11,51 +11,29 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 response:
 ```
 # Read the gene expression data from file
-exp_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Remove the first column (gene names)
-exp_data <- exp_data[, -1]
+# Calculate the variance of each gene
+variance <- apply(data, 1, var)
 
-# Calculate the variability for each gene
-variability <- apply(exp_data, 1, var)
+# Get the top 1000 genes with highest variance
+top_genes <- names(variance)[order(variance, decreasing = TRUE)][1:1000]
 
-# Sort the genes based on variability in descending order
-sorted_genes <- names(variability)[order(variability, decreasing = TRUE)]
+# Subset the data to retain only the top variable genes
+filtered_data <- data[top_genes, ]
 
-# Select the top 1000 genes with highest variability
-top_1000_genes <- sorted_genes[1:1000]
+# Perform clustering on the samples
+clusters <- kmeans(t(filtered_data), centers = 5)
 
-# Filter the gene expression data to keep only the top 1000 genes
-filtered_data <- exp_data[top_1000_genes, ]
+# Get cluster membership of each sample
+sample_clusters <- clusters$cluster
 
-# Cluster the samples based on the filtered gene expression data
-cluster_results <- kmeans(filtered_data, centers = 5)
+# Create a list to store cluster-specific genes
+cluster_genes <- vector("list", n = max(sample_clusters))
 
-# Get the cluster assignments for each sample
-cluster_assignments <- cluster_results$cluster
-
-# Initialize a list to store cluster specific genes
-cluster_specific_genes <- vector("list", nlevels(cluster_assignments))
-
-# Iterate over each cluster
-for (i in 1:nlevels(cluster_assignments)) {
-  # Get the samples belonging to the current cluster
-  cluster_samples <- names(cluster_assignments)[cluster_assignments == i]
-  
-  # Get the gene expression data for the samples in the current cluster
-  cluster_data <- filtered_data[, cluster_samples]
-  
-  # Calculate the average expression for each gene in the current cluster
-  average_expression <- apply(cluster_data, 1, mean)
-  
-  # Select the genes with the highest average expression in the current cluster
-  cluster_specific_genes[[i]] <- names(average_expression)[order(average_expression, decreasing = TRUE)][1:10]
-}
-
-# Print the cluster specific genes for each cluster
-for (i in 1:nlevels(cluster_assignments)) {
-  cat("Cluster", i, "\n")
-  cat(cluster_specific_genes[[i]], "\n\n")
+# Loop over clusters to extract cluster-specific genes
+for (i in 1:max(sample_clusters)) {
+  cluster_genes[[i]] <- rownames(filtered_data)[sample_clusters == i]
 }
 ```
-Note: Replace "leukemiaExp.txt" with the actual file path if the file is not located in the current working directory.
+Note: This code assumes that the gene expression data file "leukemiaExp.txt" is in the current working directory. If the file is located in a different directory, modify the file path accordingly in the `read.table()` function.

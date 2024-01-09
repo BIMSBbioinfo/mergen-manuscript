@@ -10,7 +10,7 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
@@ -18,51 +18,59 @@ response:
 ```
 # Load necessary libraries
 library(readxl)
-library(dplyr)
-library(pcaMethods)
+library(DESeq2)
 library(ggplot2)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
+# Remove rows with all zeros
+count_table <- count_table[rowSums(count_table[, -1]) > 0, ]
+
 # Read annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Extract gene names from count table
-gene_names <- count_table$Genes
+# Match columns of count table with rows of annotation data
+matched_data <- count_table[, names(count_table) %in% annotation_data$diagnosis]
 
-# Remove first column and convert count table to matrix
-count_matrix <- as.matrix(count_table[,-1])
+# Store group information
+group_info <- unique(annotation_data$group)
 
-# Extract group column from annotation data
-groups <- annotation_data$group
+# Create a list to store genes specific for each group
+specific_genes <- list()
 
-# Perform statistical tests to find group-specific genes
-group_specific_genes <- apply(count_matrix, 1, function(row) {
-  group_stats <- t.test(row ~ groups)
-  if (group_stats$p.value < 0.05) {
-    return(gene_names[which.max(abs(group_stats$estimate))])
-  } else {
-    return(NA)
-  }
-})
+# Perform statistical test for each group
+for (group in group_info) {
+  # Extract samples for the group
+  group_samples <- annotation_data$diagnosis[annotation_data$group == group]
+  
+  # Subset count table with group samples
+  group_data <- matched_data[, group_samples]
+  
+  # Perform differential expression analysis using DESeq2
+  dds <- DESeqDataSetFromMatrix(countData = group_data,
+                                colData = data.frame(condition = rep(group, length(group_samples))),
+                                design = ~condition)
+  dds <- DESeq(dds)
+  
+  # Find differentially expressed genes
+  res <- results(dds)
+  specific_genes[[group]] <- row.names(res[significantly DE,])
+}
 
-# Remove NA values from group-specific genes
-group_specific_genes <- group_specific_genes[!is.na(group_specific_genes)]
+# Merge specific genes for all groups
+all_specific_genes <- do.call(c, specific_genes)
 
-# Subset count matrix to include only group-specific genes
-count_matrix_specific <- count_matrix[grep(paste(group_specific_genes, collapse = "|"), gene_names),]
+# Subset count table with specific genes
+specific_data <- matched_data[all_specific_genes, ]
 
-# Perform PCA using group-specific genes
-pca_result <- pca(count_matrix_specific)
+# Perform PCA
+pca <- prcomp(t(specific_data))
 
-# Create data frame for plotting PCA results
-pca_data <- data.frame(pca_result$X, group = groups)
-
-# Plot PCA with color-coded groups
-ggplot(pca_data, aes(PC1, PC2, color = group)) +
+# Plot PCA colored by group
+ggplot(data = data.frame(PC1 = pca$x[, 1], PC2 = pca$x[, 2], group = annotation_data$group),
+       aes(x = PC1, y = PC2, color = group)) +
   geom_point() +
-  labs(title = "PCA Plot", x = "PC1", y = "PC2") +
-  theme_minimal()
-```
+  labs(title = "PCA of Group-Specific Genes", x = "PC1", y = "PC2")
+}
 ```

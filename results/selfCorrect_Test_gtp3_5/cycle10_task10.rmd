@@ -10,28 +10,25 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data file
-data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
+# Read the gene expression data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Get the gene names
-gene_names <- data[, 1]
-
-# Remove the gene names column from the data
+# Remove the first column (gene names)
 data <- data[, -1]
 
-# Calculate the variance of each gene
-variance <- apply(data, 1, var)
+# Calculate the variability of each gene
+variability <- apply(data, 1, var)
 
-# Sort the variance vector in descending order
-sorted_variance <- sort(variance, decreasing=TRUE)
+# Get the indices of the top 1000 most variable genes
+top_var_genes <- order(variability, decreasing = TRUE)[1:1000]
 
-# Get the top 1000 variable genes
-top_1000_genes <- gene_names[rank(variance, ties.method="random") <= 1000]
+# Filter the data based on the top variable genes
+filtered_data <- data[top_var_genes, ]
 
-# Cluster the samples based on the variable genes
-# ... code for clustering ...
+# Perform clustering on the filtered data
+clusters <- kmeans(filtered_data, centers = 5)
 
-# Extract cluster-specific genes for each cluster
-# ... code for extracting cluster-specific genes ...
+# Extract cluster specific genes for each cluster
+cluster_genes <- split(filtered_data, clusters$cluster)
 ```
-Note: The code provided above only covers the first part of the task, filtering genes based on their variability and retaining the top 1000 genes. The remaining parts of the task, clustering the samples and extracting cluster-specific genes, are not implemented in the provided code.
+```

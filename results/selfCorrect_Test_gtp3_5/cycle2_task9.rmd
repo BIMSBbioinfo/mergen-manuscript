@@ -10,37 +10,30 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read in the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read gene expression data from file
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Remove the first column (gene names)
-data <- data[, -1]
+# Convert gene expression data to numeric matrix
+gene_exp_numeric <- as.matrix(gene_exp[, -1])
 
-# Convert the data to a numeric matrix
-data <- as.matrix(data)
+# Calculate variability for each gene
+gene_variability <- apply(gene_exp_numeric, 1, var)
 
-# Calculate the variance for each gene and sort in descending order
-variances <- apply(data, 1, var)
-sorted_variances <- sort(variances, decreasing = TRUE)
+# Get top 1000 most variable genes
+top_1000_genes <- names(sort(gene_variability, decreasing = TRUE)[1:1000])
 
-# Retain the top 1000 most variable genes
-top_genes <- sorted_variances[1:1000]
+# Filter gene expression data to retain only top 1000 genes
+filtered_gene_exp <- gene_exp_numeric[top_1000_genes, ]
 
-# Filter the gene expression data to include only the top variable genes
-filtered_data <- data[rownames(data) %in% names(top_genes), ]
+# Generate heatmap with clustering for the filtered gene expression data
+heatmap(filtered_gene_exp, col = colorRampPalette(c("blue", "white", "red"))(100), 
+        main = "Gene Expression Heatmap")
 
-# Check if filtered data has at least 2 rows and 2 columns
-if (ncol(filtered_data) >= 2 && nrow(filtered_data) >= 2) {
-  # Plot a heatmap with clustering
-  heatmap(filtered_data, scale = "row")
-  
-  # Perform PCA on the gene expression data
-  pca <- prcomp(filtered_data)
-  
-  # Plot the PCA
-  plot(pca$x[, 1], pca$x[, 2])
-} else {
-  stop("Filtered data does not have enough rows or columns for PCA")
-}
+# Perform PCA on the original gene expression data
+pca_result <- prcomp(gene_exp_numeric)
+
+# Plot PCA for samples
+plot(pca_result$x[, 1], pca_result$x[, 2], 
+     xlab = "PC1", ylab = "PC2",
+     main = "PCA Plot for Samples")
 ```
-Note: Make sure to replace "leukemiaExp.txt" with the appropriate path to the file if it is not in the current working directory.

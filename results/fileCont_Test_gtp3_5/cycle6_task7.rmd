@@ -10,24 +10,21 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data from the file
+# Read the gene expression data from leukemiaExp.txt
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
 # Check the number of samples
-num_samples <- ncol(data) - 1
+num_samples <- ncol(data)
 
-# If there are more than 500 samples
+# Check if there are more than 500 samples
 if (num_samples > 500) {
   # Randomly sample 500 samples
-  sample_indices <- sample(2:ncol(data), 500)
-  
-  # Create the subset of the data with the sampled columns
-  subset_data <- data[, c(1, sample_indices)]
+  sampled_data <- data[, sample(num_samples, 500)]
 } else {
-  subset_data <- data
+  sampled_data <- data
 }
 
-# Create a boxplot of the columns in the subset_data
-boxplot(subset_data[, -1])
+# Create a boxplot of the columns
+boxplot(sampled_data, xlab = "Samples", ylab = "Gene Expression")
 ```
-Note: In the code, it is assumed that the gene names are present in the first column of the data file, and the gene expression values start from the second column. The code reads the data from the file, checks the number of samples, and if it exceeds 500, randomly samples 500 samples. Finally, it creates a boxplot of the columns in the subset of the data.
+Note: This code assumes that the "leukemiaExp.txt" file is in the working directory. If it's in a different directory, you will need to provide the full file path in the `read.table()` function.

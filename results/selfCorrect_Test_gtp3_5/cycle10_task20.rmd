@@ -10,65 +10,78 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load the necessary libraries
+# Load necessary packages
 library(readxl)
-library(DESeq2)
-library(dplyr)
+library(tidyverse)
+library(glmnet)
+library(RColorBrewer)
 library(ggplot2)
-library(ggrepel)
+library(gplots)
+library(pheatmap)
+library(vegan)
 
 # Read the count table
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", sheet = 1)
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Set the row names of the count table as the gene names
-rownames(count_table) <- count_table$Genes
-count_table <- count_table[, -1] # Remove the first column
+# Remove the header row from the annotation data
+colnames(annotation_data) <- NULL
 
-# Set row names in annotation data to match column names in count table
-rownames(annotation_data) <- annotation_data$diagnosis
+# Transpose the count table for further analysis
+count_table <- t(count_table)
+colnames(count_table) <- count_table[1, ]
+count_table <- count_table[-1, ]
 
-# Select relevant columns from the annotation data
-annotation_data <- annotation_data$group
+# Remove empty columns from the count table
+count_table <- count_table[, colSums(count_table != 0) > 0]
 
-# Perform differential expression analysis using DESeq2
-dds <- DESeqDataSetFromMatrix(countData = count_table, colData = annotation_data, design = ~1)
-dds <- DESeq(dds)
-res <- results(dds)
+# Match the sample ids from the annotation data with the columns of count table
+matching_samples <- intersect(colnames(count_table), annotation_data$V1)
 
-# Get the genes specific to each group
-group_specific_genes <- list()
-groups <- unique(annotation_data)
-for (group in groups) {
-  group_specific_genes[[group]] <- rownames(res)[which(res$padj < 0.05 & res$log2FoldChange > 1 & annotation_data == group)]
-}
+# Create a subset of count table with matching samples
+count_table_subset <- count_table[, matching_samples]
+
+# Create a subset of annotation data with matching samples
+annotation_data_subset <- annotation_data[match(matching_samples, annotation_data$V1), ]
+
+# Perform statistical tests using glmnet package
+group_specific_genes <- lapply(unique(annotation_data_subset$group), function(group) {
+  group_counts <- count_table_subset[, annotation_data_subset$group == group]
+  p_values <- apply(group_counts, 1, function(gene_counts) {
+    model <- cv.glmnet(as.matrix(data.frame(group_counts)), as.factor(annotation_data_subset$group))
+    coef <- coef(model, s = "lambda.min")
+    
+    # Check if the gene is specific for the current group
+    sum(coef[-1] != 0) == 1
+  })
+  gene_names <- rownames(count_table_subset)
+  gene_names[p_values]
+})
+
+# Combine the group-specific genes into a single vector
+group_specific_genes <- unlist(group_specific_genes)
 
 # Plot PCA using group-specific genes
-pca_data <- assay(dds)[group_specific_genes[[groups[1]]], ]
-for (i in 2:length(groups)) {
-  next_data <- assay(dds)[group_specific_genes[[groups[i]]], ]
-  pca_data <- rbind(pca_data, next_data)
-}
-pca <- prcomp(t(pca_data))
+pca_data <- prcomp(count_table_subset[group_specific_genes, ])
+pca_plot <- plot(pca_data$x[, 1:2], col = annotation_data_subset$group, pch = 16,
+                 xlab = "PC1", ylab = "PC2")
 
-# Create color palette for PCA plot
-colors <- c("red", "blue", "green", "purple", "orange", "yellow")
-group_colors <- colors[match(annotation_data, levels(annotation_data))]
+# Add a legend to the PCA plot
+legend("bottomright", legend = levels(annotation_data_subset$group),
+       col = unique(annotation_data_subset$group), pch = 16, cex = 1.2)
 
-# Generate PCA plot
-ggplot(data = data.frame(pca$x), aes(x = PC1, y = PC2, color = group_colors)) + 
-  geom_point() + 
-  labs(title = "PCA plot") + 
-  scale_color_manual(values = colors) + 
-  geom_label_repel(data = data.frame(pca$x), aes(label = rownames(pca_data)), box.padding = 0.5, point.padding = 0.5)
+# Save the PCA plot as a PDF file
+pdf("PCA_plot.pdf")
+print(pca_plot)
+dev.off()
 ```
 
-Note: The errors were fixed by removing the duplicate row names in the count table and using the correct syntax to access the variables and elements.
+Note: You may need to install the required packages before running the code (`install.packages()`).

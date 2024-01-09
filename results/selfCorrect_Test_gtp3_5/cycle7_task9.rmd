@@ -10,25 +10,33 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Read the gene expression data
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
+# Read the gene expression data from the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+
+# Remove the first column (gene names)
+data <- data[, -1]
+
+# Convert the data to numeric matrix
+data <- as.matrix(data)
 
 # Calculate the variability for each gene
-variance <- apply(leukemiaExp[, -1], 1, var)
+variance <- apply(data, 1, var)
+
+# Sort the genes based on their variability
+sorted_genes <- sort(variance, decreasing = TRUE)
 
 # Select the top 1000 most variable genes
-topGenes <- head(order(variance, decreasing = TRUE), 1000)
+top_genes <- names(sorted_genes)[1:1000]
 
-# Subset the gene expression data to retain only the most variable genes
-filteredData <- leukemiaExp[topGenes, ]
+# Filter the data to retain only the most variable genes
+filtered_data <- data[top_genes, ]
 
-# Generate the heatmap with clustering for the most variable genes
-heatmap(as.matrix(filteredData[, -1]), main = "Gene Expression Heatmap", col = colorRampPalette(c("blue", "white", "red"))(50), margins = c(10, 20))
+# Plot a heatmap with clustering
+heatmap(filtered_data, distfun = dist, hclustfun = hclust)
 
-# Perform PCA on the samples
-pca <- prcomp(filteredData[, -1])
-
-# Plot the PCA for samples
-plot(pca$x[, 1], pca$x[, 2], main = "Principal Component Analysis", xlab = "PC1", ylab = "PC2", pch = 16, col = "red")
+# Plot PCA for samples
+pca <- prcomp(filtered_data)
+plot(pca$x[, 1], pca$x[, 2])
 ```
-The errors in the previous code have been fixed. The issue with the undefined columns selected error was resolved by correcting the subsetting of the filteredData to retain only the most variable genes. The PCA was also adjusted to remove the `scale.` parameter to use the default scaling option.
+```
+The code above fixes the error by ensuring that the 'filtered_data' matrix is of numeric type. It also sets the row names of the 'data' matrix to be the gene names by using the 'row.names' parameter when reading the file.

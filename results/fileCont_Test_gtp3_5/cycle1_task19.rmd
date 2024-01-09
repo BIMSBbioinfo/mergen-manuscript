@@ -10,7 +10,7 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
@@ -18,45 +18,41 @@ response:
 ```
 # Load necessary libraries
 library(readxl)
-library(EDASeq)
-library(dplyr)
+library(DESeq2)
 library(ggplot2)
 
 # Read count table
 count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", sep = "\t")
+annotation_data <- read.table("SRP021193.colData.tsv", sep = "\t", header = TRUE)
 
-# Set row names to gene names in count table
-rownames(count_table) <- count_table$Gene
+# Set row names of count_table as gene names
+rownames(count_table) <- count_table$Genes
+count_table <- count_table[, -1]
 
-# Remove first column from count table
-count_table <- count_table[,-1]
+# Normalize counts using DESeq2
+dds <- DESeqDataSetFromMatrix(countData = count_table,
+                              colData = annotation_data,
+                              design = ~ 1)
+dds <- estimateSizeFactors(dds)
+normalized_counts <- counts(dds, normalized = TRUE)
 
-# Normalize counts
-norm_counts <- calcNormFactors(count_table)
+# Perform PCA
+pca_data <- prcomp(t(normalized_counts))
 
-# Perform PCA on samples
-pca <- prcomp(t(norm_counts), scale = TRUE)
-
-# Add sample annotations to PCA results
-pca_results <- cbind(pca$x, annotation_data)
-
-# Create PCA plot color coded by "group"
-pca_plot_group <- ggplot(pca_results, aes(x = PC1, y = PC2, color = group)) +
+# Plot PCA color coded by "group"
+ggplot(data = annotation_data, aes(x = pca_data$x[,1], y = pca_data$x[,2], color = group)) + 
   geom_point() +
-  labs(title = "PCA plot - group") +
-  theme_minimal()
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot color coded by 'group'")
 
-# Create PCA plot color coded by "LibrarySelection"
-pca_plot_library <- ggplot(pca_results, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+# Plot PCA color coded by "LibrarySelection"
+ggplot(data = annotation_data, aes(x = pca_data$x[,1], y = pca_data$x[,2], color = LibrarySelection)) + 
   geom_point() +
-  labs(title = "PCA plot - LibrarySelection") +
-  theme_minimal()
-
-# Display PCA plots
-pca_plot_group
-pca_plot_library
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot color coded by 'LibrarySelection'")
+}
 ```
-Please note that you will need to install and load the necessary libraries "readxl", "EDASeq", "dplyr", and "ggplot2" before running this code.

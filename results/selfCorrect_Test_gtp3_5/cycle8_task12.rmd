@@ -10,35 +10,26 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
 library(readxl)
 
 # Read the count table
-count_table <- read_xlsx("Supplementary_Table_1_exp.xlsx")
-
-# Get the number of rows and columns in the count table
-num_rows_count_table <- nrow(count_table)
-num_cols_count_table <- ncol(count_table)
-
-# Print the number of rows and columns in the count table
-cat("Number of rows in the count table:", num_rows_count_table, "\n")
-cat("Number of columns in the count table:", num_cols_count_table, "\n")
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Read the annotation data
-annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+annotation_data <- read.delim("SRP021193.colData.tsv")
 
-# Get the number of rows and columns in the annotation data
-num_rows_annotation_data <- nrow(annotation_data)
-num_cols_annotation_data <- ncol(annotation_data)
+# Check the number of rows and columns in count table
+count_rows <- nrow(count_table)
+count_cols <- ncol(count_table)
 
-# Print the number of rows and columns in the annotation data
-cat("Number of rows in the annotation data:", num_rows_annotation_data, "\n")
-cat("Number of columns in the annotation data:", num_cols_annotation_data, "\n")
-```
+# Check the number of rows and columns in annotation data
+annotation_rows <- nrow(annotation_data)
+annotation_cols <- ncol(annotation_data)
 ```

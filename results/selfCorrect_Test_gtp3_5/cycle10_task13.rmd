@@ -10,29 +10,26 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load required packages
+# Load necessary packages
 library(readxl)
-library(data.table)
 
-# Read count table with row names as NULL
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE, rowNames = NULL)
+# Read the count table
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+count_table <- count_table[, -1] # Remove the first column (Gene names)
 
-# Read annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+# Read the annotation data
+annotation_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Merge annotation data and count table using the diagnosis column as the key
-merged_data <- merge(annotation_data, count_table, by.x = "diagnosis", by.y = "Genes", sort = FALSE)
+# Merge annotation data and count table
+merged_data <- merge(annotation_data, count_table, by.x = "diagnosis", by.y = colnames(count_table)[1])
 
-# Calculate number of columns in the merged data
+# Calculate number of columns
 num_columns <- ncol(merged_data)
-
-# Print the number of columns
-num_columns
 ```
-Note: This code assumes that you have already installed the `readxl` and `data.table` packages. Additionally, please check that there are no duplicate values in the "Genes" column of the count table.
+Note: Make sure to replace the file paths ("Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv") with the actual paths to your files.

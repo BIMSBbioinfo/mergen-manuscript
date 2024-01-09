@@ -11,19 +11,17 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 response:
 ```
-# Step 1: Install and load the 'readxl' package
+# Load required library
+library(openxlsx)
 
-library(readxl)
+# Read the gene expression data from the excel file
+data <- read.xlsx("Supplementary_Table_1_exp.xlsx")
 
-# Step 2: Read the excel file
-data <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Step 3: Get the number of genes and samples
+# Get the number of genes and samples
 num_genes <- nrow(data)
-num_samples <- ncol(data) - 1
+num_samples <- ncol(data) - 1  # Exclude the first column which contains gene names
 
-# Step 4: Print the results
+# Print the results
 cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples)
+cat("Number of samples:", num_samples, "\n")
 ```
-Note: You need to have the 'readxl' package installed before running this code.

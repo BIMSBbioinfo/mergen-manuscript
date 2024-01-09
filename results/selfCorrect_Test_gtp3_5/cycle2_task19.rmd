@@ -10,50 +10,48 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
 ```
-# Load necessary libraries
+# Load required libraries
 library(openxlsx)
-library(dplyr)
-library(edgeR)
-library(ggplot2)
+library(tidyverse)
+library(pcaExplorer)
 
 # Read count table
-count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", sheet = 1)
-# Read annotation data
-annotations <- read.delim("SRP021193.colData.tsv", header = TRUE)
+count_table <- read.xlsx("Supplementary_Table_1_exp.xlsx", startRow = 1)
 
-# Remove first column (gene names) from count table
+# Read annotation data
+annotation_data <- read.delim("SRP021193.colData.tsv")
+
+# Set row names as gene names
+rownames(count_table) <- count_table[, 1]
+
+# Remove gene names column
 count_table <- count_table[, -1]
 
-# Normalize counts using TMM method
-norm_factors <- calcNormFactors(count_table)
-normalized_counts <- cpm(count_table, normalized.lib.sizes = norm_factors)
+# Normalize counts
+norm_counts <- count_table %>% 
+  mutate(across(everything(), function(x) x / sum(x) * 1000000))
 
-# Perform PCA on normalized counts
-pca <- prcomp(t(normalized_counts))
+# Convert annotation data into tibble
+annotation_data <- as_tibble(annotation_data)
 
-# Merge annotations and normalized counts
-merged_data <- cbind(annotations[, 1], normalized_counts)
-colnames(merged_data)[1] <- "Sample_ID"
-merged_data <- as.data.frame(merged_data)
+# Merge annotation data with normalized counts
+merged_data <- merge(norm_counts, annotation_data, by.x = 0, by.y = 1)
 
-# Convert factor columns to character for plotting
-merged_data$group <- as.character(merged_data$group)
-merged_data$LibrarySelection <- as.character(merged_data$LibrarySelection)
+# Perform PCA with color coded samples by "group"
+pca_plot_group <- plotPCA(merged_data, groupColumn = "group")
 
-# Plot PCA with color coding by "group"
-ggplot(merged_data, aes(PC1, PC2, color = group)) +
-  geom_point() +
-  ggtitle("PCA plot with color coded by 'group'")
+# Perform PCA with color coded samples by "LibrarySelection"
+pca_plot_library <- plotPCA(merged_data, groupColumn = "LibrarySelection")
 
-# Plot PCA with color coding by "LibrarySelection"
-ggplot(merged_data, aes(PC1, PC2, color = LibrarySelection)) +
-  geom_point() +
-  ggtitle("PCA plot with color coded by 'LibrarySelection'")
+# Print both PCA plots
+pca_plot_group
+pca_plot_library
 ```
 
+Note: Make sure to replace the file paths in the code with the actual paths where the files are located on your system.
