@@ -101,7 +101,7 @@ if (!file.exists(output_folder)) {
 results <- matrix(nrow=cycles,ncol=length(pcpairs))
 
 # how many repetions per task defined by j
-for(j in 9:cycles){
+for(j in 1:cycles){
 
   # create agent
   require(mergen)
@@ -111,9 +111,6 @@ for(j in 9:cycles){
 
   # for each prompt
   for( i in 1:length(pcpairs)){
-    if (j==8 & i<16){
-      next
-    }
 
     message("responding to prompt ",i, "\n")
 
