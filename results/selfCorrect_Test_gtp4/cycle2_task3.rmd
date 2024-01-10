@@ -10,27 +10,26 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-To count the number of genes and samples in the dataset, you can use the readxl package in R which allows to read Excel files and here is the code for that.
+You can use the `readxl` package to read excel files. After loading the data, you can use functions like `nrow` and `ncol` to get the number of genes (which are number of rows) and the number of samples (which are number of columns minus 1, because the first column contains gene names, not sample data).
 
 ```
-# Load required package
+# Install and load readxl package
+if(!require(readxl)) {
+   
+  library(readxl)
+}
 
-library(readxl)
+# Load data
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-library(dplyr)
+# Count number of genes and samples
+num_genes <- nrow(data)
+# Subtracting 1 because first column contains gene names
+num_samples <- ncol(data) - 1
 
-# Import data from excel file
-gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Count the number of genes (rows) and samples (columns)
-num_genes <- nrow(gene_data) - 1  # subtracting 1 to exclude the header
-num_samples <- ncol(gene_data) - 1  # subtracting 1 to exclude the "Genes" column
-
-# Print the results
-print(paste("Number of genes: ", num_genes))
-print(paste("Number of samples: ", num_samples))
+# print the number of genes and samples
+print(paste("Number of Genes:", num_genes))
+print(paste("Number of Samples:", num_samples))
 ```
 
-This piece of code first loads the needed package, then imports the data from the excel file. After this, the number of genes and samples are calculated by counting the number of rows and columns in the data respectively. 
-
-Please note that you need to install and load the readxl and dplyr packages in R for this code to work. Also, the working directory of R should be set to the directory where the Excel file is located.
+Please replace `"Supplementary_Table_1_exp.xlsx"` with your local file path to the file. Also, please ensure that the file is in the working directory of your R session for the code to work properly.

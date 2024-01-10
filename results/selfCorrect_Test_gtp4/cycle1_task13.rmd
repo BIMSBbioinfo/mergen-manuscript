@@ -10,35 +10,33 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Apologies for the confusion. It seems that the issue is with the `rownames()` function used with `t()`. By removing the row names in the expression data before the transpose, the duplicate row names problem will be fixed.
-
-Use a strategy to create an additional column in the expression data to hold the gene names instead of storing them in the row names. Here is the revised code:
+You can use the following R code to accomplish this:
 
 ```
-# load required libraries
+# load necessary packages
+
+
 library(readxl)
-library(dplyr)
+library(readr)
 
 # load the gene expression data
-exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+gene_counts <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
 
-# transpose the data and convert to data frame
-exp_data_transpose <- as.data.frame(t(exp_data[-1]), row.names = NULL)
-names(exp_data_transpose) <- c("diagnosis", as.character(exp_data$Genes))
+# load the annotation data 
+annotation <- read_delim("SRP021193.colData.tsv", "\t", col_names = TRUE)
 
-# load the annotation data
-ann_data <- read.delim("SRP021193.colData.tsv")
+# merging the two data frames 
+gene_counts <- merge(gene_counts, annotation, by.x="Genes", by.y="diagnosis", all.x=TRUE)
 
-# merge datasets based on sample names
-merged_data <- merge(ann_data, exp_data_transpose, by = "diagnosis")
+# calculate the number of columns
+num_cols <- ncol(gene_counts)
 
-# print the number of columns in the merged data frame
-cat("The number of columns is: ", ncol(merged_data))
+num_cols
 ```
 
-This modified code should avoid errors related to duplicate row names. The transpose operation (`t`) does not preserve the row names, therefore an additional diagnosis column is created to hold this data.
+Please note that this code assumes that the first column of your `gene_counts` data frame is named "Genes" and the first column of your `annotation` data frame is named "diagnosis". If the column names are different, you'll need to modify the `by.x` and `by.y` arguments in the `merge()` function. This code also assumes that the files "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" are located in your current working directory. If they are located elsewhere, you'll need to specify the absolute path to the files.

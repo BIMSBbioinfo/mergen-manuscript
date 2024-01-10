@@ -9,40 +9,42 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code that will perform the task:
+I apologize for the error. It appears that there was a typo in the provided code. The install.packages function requires a character vector of package names to install.
+
+Here is the corrected R code:
 
 ```
-library(edgeR)
+# Load needed libraries
+
 library(ggplot2)
-library(gplots)
+library(pheatmap)
 
-# read the data
-df <- read.table("leukemiaExp.txt", sep = "\t", header = T, row.names = 1)
+# Read the data
+leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# calculate gene-specific variability (variance)
-variance <- apply(df, 1, var)
+# Transpose the data for convenience, so rows are samples and columns are genes
+leukemiaExp <- t(leukemiaExp)
 
-# get the top 1000 most variable genes
-top_genes <- head(sort(variance, decreasing = TRUE), 1000)
+# Calculate the variance for each gene and take the top 1000
+top_genes <- names(sort(apply(leukemiaExp, 2, var), decreasing = TRUE))[1:1000]
 
-# filter the df to only include the most variable genes
-df <- df[rownames(df) %in% names(top_genes), ]
+# Filter the data for top_genes
+leukemiaExp_filtered <- leukemiaExp[, top_genes]
 
-# plot a heatmap with clustering
-heatmap.2(as.matrix(df), scale = "row", trace = "none")
+# Plot heatmap
+pheatmap(leukemiaExp_filtered, scale = "row")
 
-# principal component analysis
-pca <- prcomp(t(df))
+# Perform PCA
+pca_res <- prcomp(leukemiaExp_filtered, scale = TRUE)
 
-# extract the scores for the first two principal components
-scores <- as.data.frame(pca$x)[, 1:2]
+# Create DataFrame for PCA plot
+df <- data.frame(Sample=rownames(pca_res$x),X=pca_res$x[,1],Y=pca_res$x[,2])
 
-# plot PCA
-ggplot(scores, aes(x = PC1, y = PC2)) +
-  geom_point() +
-  xlab("PC1") +
-  ylab("PC2") +
-  ggtitle("PCA plot of top 1000 most variable genes")
+# Plot PCA
+ggplot(data = df, aes(x = X, y = Y, label = Sample)) + 
+  geom_text() + 
+  xlab("PC1") + ylab("PC2") + 
+  ggtitle("PCA")
 ```
 
-This code first calculates the variance for each gene across all samples. The most variable 1000 genes are selected, and the dataframe is updated to only contain these genes. Then a heatmap is plotted with hierarchical clustering based on this subsetted dataframe. Finally, we perform Principal Component Analysis (PCA) on the same subsetted data, and plot the samples in the space of the first two principal components.
+After running this script, you should first see a heatmap of gene expressions. The variation in colors from blue to yellow indicates low to high expression respectively. The PCA plot shows the sample points placed according to their Principal Component values. You should be able to see how closely related the samples are to each other based on these principal components. If there are any distinct clusters, they will be visible on this plot.

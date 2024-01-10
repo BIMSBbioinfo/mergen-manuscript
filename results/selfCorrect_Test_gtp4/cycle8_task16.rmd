@@ -10,44 +10,47 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I'm sorry for the confusion. It seems that we may be missing values from the 'group' variable. If the 'group' variable doesn't exist or is empty, the fill aesthetic will cause this error. Please check your annotation file for missing values. I will modify the code to proceed if the 'group' column is missing or empty by color-coding with the 'diagnosis'.
+My apologies for the confusion. The error you're facing might be due to missing or NA values in the 'group' variable. For ggplot to fill the boxplots with different colors based on 'group', it needs at least one non-NA value in 'group.' Alternatively, it might be a mismatch in your join operation which results in no valid 'group' in df_merged dataframe. So ensure the group variable exists, is named correctly and doesn't only contain NA values. 
+
+Here is the correct R code:
 
 ```
-# install necessary packages
+# Load necessary packages
 library(readxl)
+library(readr)
 library(tidyverse)
 
-# read RNA-seq count data from Excel file
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read excel file
+df_gene_exp <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# read sample annotation data
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Read tsv file
+df_annotation <- read_tsv("SRP021193.colData.tsv")
 
-# reshape data
-count_data_long <- count_data %>%
-  pivot_longer(
-    cols = -Genes,
-    names_to = "diagnosis",
-    values_to = "Expression"
-  )
+# Transpose gene expression data
+df_gene_exp <- df_gene_exp %>% gather(Sample, Value, -Genes)
 
-# merge datasets
-merged_data <- left_join(count_data_long, annotation_data, by = "diagnosis")
+# Set the diagnoses as the rownames before the merge
+rownames(df_annotation) <- df_annotation$diagnosis
 
-if('group' %in% names(merged_data)){
-  fill_aes <- "group"
-} else {
-  fill_aes <- "diagnosis"
-}
+# Merge data set by diagnosis as sample ID
+df_merged <- merge(df_gene_exp, df_annotation, by = "row.names", all.x = TRUE)
+rownames(df_merged) <- NULL
 
-# plot boxplots of gene expression colored by group
-ggplot(merged_data, aes(x = diagnosis, y = Expression, fill = !! fill_aes)) + 
+# Renaming merged column
+names(df_merged)[1] <- "Sample"
+
+# Plot boxplots of gene expression by Sample, colored by group
+df_merged <- df_merged %>% drop_na(group)
+
+ggplot(df_merged, aes(x=Sample, y=Value, fill=group)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  labs(y = "Expression level", x = "Samples", fill = fill_aes)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title="Gene Expression per Sample", y="Expression", x="Sample", fill="Group")
 ```
+
+Please replace 'group' and 'diagnosis' with the respective column names in your data frame if they are different. If the problem continues, it may result from issues with the color or group column in your specific dataset so it would be helpful to get the exact structure and content of your data.

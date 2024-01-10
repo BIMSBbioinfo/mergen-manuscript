@@ -9,54 +9,39 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the confusion. A common cause of that error is when there are duplicate row names or NAs in the row names. Here I've added a check to ensure all gene names are unique. If not, a suffix will be added to make them unique. Here's the adjusted code:
+I apologize for the error. The function `brewer.pal` is part of the package `RColorBrewer` which I forgot to include in the previous code. Let's correct this:
 
 ```
 # Load necessary libraries
-library(readr)
-library(dendextend)
 library(ggplot2)
-library(factoextra)
+library(pheatmap)
+library(RColorBrewer)
 
-# Load the data
-data <- read_tsv("leukemiaExp.txt", col_names = TRUE)
-data <- as.data.frame(data)
+# Read the data
+leukemia <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t", check.names = FALSE)
 
-# The rownames should be the gene names, so save them and remove the column
-gene_names <- data[,1]
-data <- data[,-1]
+# Filter the top 1000 genes with the highest variance
+top1000_var <- leukemia[order(-apply(leukemia, 1, var), decreasing=TRUE)[1:1000], ]
 
-# Remove duplicates from rownames
-count <- table(gene_names)
-duplicated_genes <- names(count)[count > 1]
-for(gene in duplicated_genes){
-  indexes <- which(gene_names == gene)
-  gene_names[indexes] <- paste0(gene, "_", seq_along(indexes))
-}
-# Assign new rownames
-rownames(data) <- gene_names
+# Build the heatmap with clustering
+pheatmap(top1000_var, 
+         main = "Top 1000 variable genes", 
+         color = colorRampPalette(rev(brewer.pal(n = 7, name = "RdYlBu")))(255), 
+         cluster_rows = TRUE, 
+         cluster_cols = TRUE,
+         scale = "row")
 
-# Calculate standard deviation for each gene
-gene_variability <- apply(data, 1, sd)
+# Perform PCA on the filtered data
+pca_results <- prcomp(t(top1000_var), center = TRUE, scale. = TRUE)
 
-# Filter out the most variable 1000 genes
-most_variable_genes <- names(sort(gene_variability, decreasing = TRUE)[1:1000])
-filtered_data <- data[most_variable_genes,]
+# Create dataframe with PCA results for plotting
+df_pca <- data.frame(Sample=rownames(pca_results$x), 
+                    PC1=pca_results$x[,1], 
+                    PC2=pca_results$x[,2])
 
-# Plot a heatmap with hierarchical clustering
-dend <- as.dendrogram(hclust(dist(filtered_data)))
-dend_colored <- color_branches(dend)
-heatmap(as.matrix(filtered_data), Rowv = dend_colored, col = colorRampPalette(c("blue", "white", "red"))(100))
-
-# Conduct a PCA
-pca_result <- prcomp(t(filtered_data), scale = TRUE)
-
-# Plot the PCA
-fviz_pca_ind(pca_result, geom = "point", pointshape = 21, pointsize = 2, fill.ind = "cos2",
-             col.ind = "contrib", gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             legend.title = list(color = "Contrib\n100*", cos2 = "cos2\n100*"))
+# Plot PCA results
+ggplot(data = df_pca, aes(x = PC1, y = PC2, label = Sample)) +
+  geom_point(size = 3) +
+  ggtitle("PCA plot of Top 1000 variable genes")
 ```
-
-Please make sure to adjust the filepath if needed. Also, please ensure your R environment has the necessary packages installed (`readr`, `dendextend`, `ggplot2`, `factoextra`). If some packages are missing, you can install them via ``. 
-
-Additionally, please ensure that the dataset is clean and formatted correctly. The first column should contain unique gene names and the other columns should contain the gene expression data for different samples.
+Make sure to install these packages with ``, `` and `` if not installed already.

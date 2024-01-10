@@ -4,55 +4,70 @@ We have the following datasets. One of the dataset contains CpG methylation valu
 here are first few lines of the file(s).
 
 metRmOlWithDbgapIdHeader.txt:
-	34	35	37	39	40	41	44	46	52	53	56	58	64	66	69	71	72	75	79	83	84	85	89	90	92	93	94	95	98	101	107	116	120	121	122	123	127	128	129	131	133	134	135	137	138	139	140	144	147	155	157	158	160	270	169	175	176	179	180	182	183	185	186	187	188	189	190	191	193	194	195	196	197	198	199	200	204	205	206	207	208	209	210	211	213	214	217	220	221	222	232	234	236	238	247	248	257	4	14	18	19	269	24	25	26	27	28	31
+cpg_ID	patient34	patient35	patient37	patient39	patient40	patient41	patient44	patient46	patient52	patient53	patient56	patient58	patient64	patient66	patient69	patient71	patient72	patient75	patient79	patient83	patient84	patient85	patient89	patient90	patient92	patient93	patient94	patient95	patient98	patient101	patient107	patient116	patient120	patient121	patient122	patient123	patient127	patient128	patient129	patient131	patient133	patient134	patient135	patient137	patient138	patient139	patient140	patient144	patient147	patient155	patient157	patient158	patient160	patient270	patient169	patient175	patient176	patient179	patient180	patient182	patient183	patient185	patient186	patient187	patient188	patient189	patient190	patient191	patient193	patient194	patient195	patient196	patient197	patient198	patient199	patient200	patient204	patient205	patient206	patient207	patient208	patient209	patient210	patient211	patient213	patient214	patient217	patient220	patient221	patient222	patient232	patient234	patient236	patient238	patient247	patient248	patient257	patient4	patient14	patient18	patient19	patient269	patient24	patient25	patient26	patient27	patient28	patient31
 cg26211698	0.018851902	0.023740776	0.023376387	0.037223975	0.018711838	0.02511006	0.015483673	0.02116208	0.0204752	0.026372315	0.025520833	0.019869858	0.022689769	0.022518862	0.018260292	0.01655481	0.01963973	0.022636485	0.02426135	0.014073864	0.031146584	0.022918707	0.018778788	0.022326064	0.013303579	0.021790541	0.036815462	0.027048423	0.02975166	0.030042918	0.018511753	0.031294165	0.022286422	0.019583428	0.022447812	0.031205674	0.018864747	0.016775501	0.048829355	0.023525514	0.019138756	0.017736583	0.016541742	0.018830676	0.013454351	0.034517093	0.032782318	0.03522939	0.034972882	0.048829355	0.040903541	0.038999264	0.020579981	0.04238959	0.036589698	0.045238095	0.027435388	0.021438451	0.028442268	0.027726433	0.025240189	0.020265549	0.0227639	0.018604651	0.016886478	0.019147449	0.012935186	0.025085208	0.013835014	0.01432248	0.012229634	0.015779531	0.012431339	0.02269673	0.016514927	0.016608278	0.015731515	0.019877977	0.028083819	0.031071292	0.022972741	0.034223573	0.030179445	0.0372502	0.025641026	0.028595041	0.048829355	0.027445461	0.037728139	0.025675676	0.028318277	0.017244082	0.024789594	0.034662265	0.036334552	0.021427726	0.038185205	0.020558003	0.02268431	0.021979522	0.022295907	0.025085725	0.018492041	0.019186569	0.025315068	0.02331483	0.019223225	0.018229932
 
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
-Apologies for the confusion, the error occurred because when performing the transpose, the data dimensions don't match. I'll correct this by using different logic for loading, matching, and organizing the data.
+The error `protect(): protection stack overflow` usually happens when there are too many variables or computational processes for R to handle. This is common when running complex models on large datasets. Moreover, using a method like random forest (in caret's `train` function) can be computationally expensive and often results in high memory demand.
 
-Here, I'll load the subjects file as it is, but for the CpG methylation file, I'll transpose it after loading so that individuals are the rows and CpG sites are the columns. Then, DBGap IDs from the first column of the CpG methylation file are matched with the DBGap IDs in the subjects file.
+A simple solution could be increasing the stack limit by running `ulimit -s unlimited` in the terminal before starting R. However, keep in mind that this will only work in Unix-based systems and could lead to your R session consuming a lot of memory.
+
+Alternatively, you can reduce the dimension of your data prior to modelling. You can use a dimension reduction technique. Below is a sample code snippet with the `PCA` method using `prcomp`.
 
 ```
-# Load necessary libraries
-library(tidyverse)
-library(caret)
+# Load necessary packages
+if (!require("tidyverse")) 
+if (!require("caret")) 
 
-# Load the datasets
-subjects <- read_delim("subjects.txt", delim = "\t")
-# Assuming that the CpGs data is in csv format.
-# CpGs file is transposed so that individuals are rows and CpGs are columns
-cpgs <- read_csv("metRmOlWithDbgapIdHeader.csv") %>% 
-        t() %>% 
-        as.data.frame() 
-colnames(cpgs) <- cpgs[1, ]  # set the column names
-cpgs <- cpgs[-1, ]  # remove the first row, which is now the column names
+# Load data
+methylation <- read.delim("metRmOlWithDbgapIdHeader.txt", header = T, row.names = 1)
+subjects <- read.delim("subjects.txt", header = T)
 
-# Ensure that the 'dbGaP ID' column in the two data frames are of the same type (numeric)
-subjects$dbGaP.ID <- as.numeric(subjects$dbGaP.ID)
-cpgs$dbGaP.ID <- as.numeric(as.character(cpgs$dbGaP.ID))
+# Transpose methylation dataset
+methylation <- t(methylation)
+methylation <- as.data.frame(methylation)
 
-# Merge the datasets by 'dbGaP ID'
-merged_data <- merge(subjects, cpgs, by = "dbGaP.ID")
+# Merge the datasets
+data <- merge(subjects, methylation, by.x = "dbGaP ID", by.y = "row.names")
 
-# Split data into training and testing sets
-in_train <- createDataPartition(y = merged_data$Age, p = 0.7, list = F)
-training <- merged_data[in_train, ]
-testing <- merged_data[-in_train, ]
+# Reduce dimension of the merged dataset using PCA
+data.pca <- prcomp(data[,-(1:4)], center = TRUE, scale. = TRUE)
 
-# Train a linear regression model
-model <- train(Age ~ ., data = training, method = "lm")
+# select the number of principal components that explain at least 95% of the variance
+explained_variance_ratio <- cumsum(data.pca$sdev^2 / sum(data.pca$sdev^2))
+num_pc <- min(which(explained_variance_ratio >= 0.95))
 
-# Display the most important variables for the predictive model
-importance <- varImp(model, scale = FALSE)
-print(importance)
+# add the selected principal components to the dataframe
+data$PC <- data.pca$x[,1:num_pc]
+
+# Create a train/test split
+set.seed(123)
+inTrain <- createDataPartition(y = data$Age, p = 0.8, list = F)
+trainData <- data[inTrain, ]
+testData <- data[-inTrain, ]
+
+# Fit a regression model
+ctrl <- trainControl(method = "cv", number = 10)
+model <- train(Age ~ PC1 + PC2 ... + PCn, data = trainData, method = "rf", trControl = ctrl)
+
+# Print the model
+print(model)
+
+# Display variable importance
+print(varImp(model))
+
+# Predict on test data
+predictions <- predict(model, newdata = testData)
+
+# Assess model performance
+postResample(pred = predictions, obs = testData$Age)
 ```
+Remember to replace "PC1 + PC2 ... + PCn" with the actual principal components columns you generated.
 
-Please replace file paths as per your local files. Also, this script assumes that CpG methylation values are available in a CSV file. If it is a different type of file, please replace `read_csv` with an appropriate function.
- 
-The model used in this code is linear regression and the method to get variable importance will depend on the model used; some models may necessitate a different method for obtaining variable importance. It is worth mentioning that this code might necessitate modifications as per the specific nature of the problem and data.
+Also please note that the outputs may not be identical each time due to the randomized nature of train/test splitting and the random forest algorithm.

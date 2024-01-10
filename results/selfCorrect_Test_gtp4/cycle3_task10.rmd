@@ -9,36 +9,40 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Apologies for the confusion, the `$` operator is used incorrectly in the KMeans clustering line. Please use the corrected code below:
+Apologies for the confusion earlier. You were seeing that error because of a missing comma in the indexing line for `cluster2_genes`. 
+
+Please see the revised complete R code block below:
 
 ```
-# load necessary libraries
-library(dplyr)
+# Load necessary packages
+library(stats)
 library(cluster)
-library(factoextra)
 
-# load the data
-exp_data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+# Read the file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# compute variability (standard deviation in this case)
-variable_genes <- apply(exp_data, 1, sd)
+# Compute standard deviation for each gene
+gene_sd <- apply(data, 1, sd)
 
-# retain the most variable top 1000 genes
-top_genes <- names(sort(variable_genes, decreasing = TRUE)[1:1000])
-filtered_data <- exp_data[top_genes,]
+# Get the top 1000 genes based on variability
+top_genes <- names(sort(gene_sd, decreasing = TRUE)[1:1000])
 
-# scaling the data
-scaled_data <- scale(t(filtered_data))
+# Subset the data
+data_sub <- data[top_genes, ]
 
-# Kmeans cluster analysis
-k2 <- kmeans(scaled_data, centers = 2, nstart = 25)
+# Compute the distance matrix
+dist_mat <- dist(data_sub)
 
-# assign clusters to data
-cluster_assignments <- k2$cluster
+# Apply hierarchical clustering
+clusters <- hclust(dist_mat)
 
-# Extract cluster-specific genes
-genes_cluster_1 <- rownames(scaled_data)[cluster_assignments == 1]
-genes_cluster_2 <- rownames(scaled_data)[cluster_assignments == 2]
+# cut tree into clusters, replace with desired cluster number
+grp <- cutree(clusters, k = 3) #Replace 3 with your desired number of clusters
+
+# Obtain cluster specific genes
+cluster1_genes <- data_sub[grp == 1, ]
+cluster2_genes <- data_sub[grp == 2, ]
+cluster3_genes <- data_sub[grp == 3, ]  #Add more lines like this if you have more clusters
 ```
 
-This updated script corrects the error related to inappropriate use of the `$` operator. The `cluster` assignments are now correctly extracted from the KMeans clustering result (`k2$cluster`), and then used to extract the genes specific to each cluster from the scaled data.
+Remember to replace `k = 3` with the desired number of clusters. If you have more clusters, add additional lines to obtain the genes for those clusters following the pattern shown in the code.

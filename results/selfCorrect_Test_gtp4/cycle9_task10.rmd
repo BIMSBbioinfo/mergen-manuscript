@@ -9,44 +9,45 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is some R code that performs the desired operations. This code begins by assuming that you've installed the necessary packages (`tidyverse` and `pheatmap`). If you have not installed these packages, you can do so by uncommenting the first few lines of code.
+Apologies for the inconvenience. The error can occur when the number of clusters or genes specified does not match the actual data's cluster number or genes number. Please ensure that the number of clusters (k) and top variable genes (1000) in the previous code matches your actual data. 
+
+Here's the fixed code block:
 
 ```
-# 
-# 
-
-# Load libraries
 library(tidyverse)
-library(pheatmap)
 
-# Load data
-data <- read.delim("leukemiaExp.txt", row.names = 1, header = TRUE)
+# Read in data file and transpose
+data <- read.delim("leukemiaExp.txt", row.names = 1, check.names = FALSE)
+data <- data.frame(t(data))
 
-# Compute variance for each gene, sort, and keep only top 1000
-top_genes <- data %>% 
-  apply(1, var) %>%
-  sort(decreasing = TRUE) %>%
-  .[1:1000]
+# Calculate standard deviation for each gene, retain top 1000 variable genes
+gene_sd <- apply(data, 2, sd)
+top_genes <- names(sort(gene_sd, decreasing = TRUE)[1:1000])
+data_filtered <- data[, top_genes]
 
-# Subset original data to keep only top genes
-filtered_data <- data[rownames(data) %in% names(top_genes), ]
+# Perform clustering
+dist <- dist(data_filtered)
+hclust <- hclust(dist)
 
-# Compute distances and cluster data
-distances <- dist(t(filtered_data))
-clustering <- hclust(distances)
+# Cut tree to get x clusters
+clusters <- cutree(hclust, k=3)
 
-# Cluster assignments
-clusters <- cutree(clustering, 2)
-
-# Split data by cluster and extract cluster-specific genes
-split_data <- split(filtered_data, clusters)
-cluster_specific_genes <- lapply(split_data, function(cluster_data) {
-  variances <- apply(cluster_data, 1, var)
-  names(variances)[variances == max(variances)]
+# Get cluster specific genes for each cluster
+cluster_specific_genes <- lapply(unique(clusters), function(cluster) {
+  cluster_indices <- which(clusters == cluster)
+  other_indices <- which(clusters != cluster)
+  
+  t_values <- sapply(top_genes, function(gene) {
+    t.test(data_filtered[cluster_indices, gene], data_filtered[other_indices, gene])$p.value
+  })
+  
+  specific_genes <- names(t_values)[p.adjust(t_values, method = "fdr") < 0.05]
+  specific_genes
 })
 
-# Print cluster-specific genes
-print(cluster_specific_genes)
+names(cluster_specific_genes) <- paste0("Cluster", 1:length(cluster_specific_genes))
+
+cluster_specific_genes
 ```
 
-This code first computes variance for each gene across all samples, sorts genes by variance in decreasing order, and then keeps the top 1000 genes according to this sorting. We then subset the original data to only keep these genes. We compute distances between each pair of samples based on these genes and perform hierarchical clustering. Once we have the clustering, we assign each sample to a cluster. We split the filtered data by cluster assignments, and for each cluster we compute variances for all genes within the cluster and pick the one with the highest variance as being cluster-specific.
+In this code, the error may occur while transcripting data when there are pre-existing row names. To overcome it, we first change the data into a data frame before transposing. Then, while calculating the t-test statistic, we explicitly specify the a and b vectors by indexing into the data frame.

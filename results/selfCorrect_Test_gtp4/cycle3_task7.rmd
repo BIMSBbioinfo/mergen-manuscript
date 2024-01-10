@@ -9,27 +9,23 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+Here is your R code. It first reads the data, checks if the number of samples is more than 500 and, if so, randomly selects 500 of them. A boxplot is then created using the subset of the data.
+
 ```
-# Load necessary packages
-library(dplyr)
-library(ggplot2)
+# read gene expression data
+gene_exp <- read.delim("leukemiaExp.txt", row.names = 1)
 
-# Load the data
-leukemia_exp <- read.delim("leukemiaExp.txt", header = TRUE, stringsAsFactors = FALSE, row.names = 1, sep = "\t")
-
-# Check if there are more than 500 samples
-if (ncol(leukemia_exp) > 500) {
-  # Randomly sample 500 samples
-  set.seed(123) # set seed for reproducibility
-  leukemia_exp <- leukemia_exp %>% select(sample(colnames(leukemia_exp), 500))
+# if the number of columns is more than 500
+if (ncol(gene_exp) > 500) {
+  # select a random subset of 500 columns
+  set.seed(123) # for reproducibility
+  subset <- gene_exp[,sample(ncol(gene_exp), 500)]
+} else {
+  subset <- gene_exp
 }
 
-# Melt the data in order to create the boxplot
-leukemia_exp_long <- leukemia_exp %>% tidyr::pivot_longer(cols = everything(), names_to = "Sample", values_to = "Expression")
-
-# Create a boxplot
-ggplot(leukemia_exp_long, aes(x = Sample, y = Expression)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+# create a boxplot
+boxplot(subset, las = 2, outline = FALSE)
 ```
-The above code first reads the file, then it checks if there are more columns than 500. If so, it selects a random 500 columns from the data. The data is then reshaped (melted) into a long format suitable for ggplot boxplot. The ggplot function at the end creates a boxplot for each column (i.e., sample).
+
+The `las = 2` argument to the `boxplot` function ensures that the x-axis labels (i.e., sample names) are displayed vertically to prevent overlap. The `outline = FALSE` argument avoids plotting outliers, which can make the boxplots easier to compare.

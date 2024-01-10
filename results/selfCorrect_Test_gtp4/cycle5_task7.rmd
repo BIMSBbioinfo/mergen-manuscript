@@ -9,40 +9,23 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the confusion earlier. The error occurs because R isn't recognizing 'X1' as the name of the first column. Let's change the column names for clarity first, then use the updated column name ('gene_name') in the reshape and ggplot steps. 
-
-Here's your corrected code:
+Here is the R code to perform the mentioned task:
 
 ```
-# Load the necessary libraries
-library(readr)
+# Load required libraries
 library(dplyr)
-library(ggplot2)
-library(reshape2)
 
-# Read the data file
-leukemiaExp <- read_delim("leukemiaExp.txt", delim = "\t")
+# Load data
+data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep="\t", check.names = FALSE)
 
-# Rename the first column
-colnames(leukemiaExp)[1] <- "gene_name"
-
-# Check if the number of columns is more than 500
-if(ncol(leukemiaExp) > 500) {
-  
-  # Randomly sample 500 columns and create a new subset. 
-  # Include the gene name column. 
-  set.seed(123) # For reproducibility
-  cols <- sample(2:ncol(leukemiaExp), 500)
-  cols <- sort(c(1, cols)) 
-  leukemiaExp <- leukemiaExp[, cols]
+# Randomly sample 500 columns if there are more than 500 
+if(ncol(data) > 500) {
+  data <- data %>%
+    dplyr::sample_n(, size = 500)
 }
 
-# Melt the data to bring it in a format suitable for ggplot
-leukemiaExp_melt <- reshape2::melt(leukemiaExp, id.vars = "gene_name")
-
-# Create a boxplot of the columns
-ggplot(leukemiaExp_melt, aes(x = variable, y = value)) + 
-  geom_boxplot() + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) 
+# Boxplot of the columns
+boxplot(data, las=2)
 ```
-Please make sure you have the required libraries installed in your R environment. If not, you can install them using the `install.packages` function.
+
+Please note the file path to `"leukemiaExp.txt"` file and update it as required. The `boxplot` function will create a boxplot of each sample (column) in the dataset and `las=2` will make the labels on x-axis to be written in perpendicular to the axis for easier readability when you have hundreds of columns. The `sample_n()` function is used to randomly sample 500 columns from the dataset if there are more than 500 columns.

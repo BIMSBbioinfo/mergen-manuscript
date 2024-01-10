@@ -10,41 +10,41 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for misunderstanding your requirement. If there are duplicate gene names in your count data, assigning them as row names will throw an error, as row names must be unique. To resolve this, we can create a new column for gene names and handle duplicates by appending a suffix to make them unique. Here's the revised code:
+I apologize for the confusion. I may have made an incorrect assumption regarding the structure of your data. 
+
+Let's modify the code to fix this issue. 
+Assuming your annotation data has sample names in the first column which is not explicitly specified in your question. The warning you saw usually comes up if the column we are trying to merge doesn't exist in both data frames. 
+
+Assuming the annotations are in the first column with no header for the samples, we can modify the merging step using the dplyr's `rename()` function. 
+
+Let's try the revised code below:
 
 ```
-#install and load necessary libraries
-if (!require("readxl")) 
-if (!require("tidyverse")) 
+# Load necessary libraries
 library(readxl)
 library(tidyverse)
+library(ggplot2)
 
-#load count data and annotation data
-expr_data <- read_excel("Supplementary_Table_1_exp.xlsx") 
-annotation_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+# Read the gene expression data and annotation data
+gene_expression <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-#process data to make gene names unique
-expr_data <- expr_data %>%
-  mutate(Genes = make.names(Genes, unique = TRUE))
+annotation <- read.delim("SRP021193.colData.tsv", header = FALSE)
+colnames(annotation) <- c("sample", "diagnosis", "group", "LibrarySelection")
 
-#convert expr_data to long format
-expr_data_long <- expr_data %>%
-  gather(key = "diagnosis", value = "gene_expression", -Genes)
+# Convert wide format data to long format
+long_data <- gather(gene_expression, sample, expression, -Genes)
 
-# merge the data
-merged_data <- merge(expr_data_long, annotation_data, by = "diagnosis")
+# Merge the two data frames
+merged_data <- full_join(long_data, annotation, by = 'sample')
 
-# plot boxplot
-ggplot(merged_data, aes(x=diagnosis, y=gene_expression, fill=group)) +
+# Plot gene expressions per sample, colored by their group
+ggplot(merged_data, aes(x = sample, y = expression, fill = group)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
-  labs(title="Boxplot of gene expression values per sample", 
-       x="Sample", y="Gene Expression Value")
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
-
-In the code above, `make.names()` is used to make the gene names unique by appending a suffix to the duplicated names. I hope this code helps.
+Please replace the filenames with the correct paths to the files if they are not in the same directory. Also, make sure the all column names are properly written and match in both datasets, the 'sample' column, for example.

@@ -9,17 +9,25 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-You can use the read.delim function to read the data in R and then use the dim function to determine the number of genes (rows) and samples (columns). Here is the R code to do this:
+First, you need to read in the data using `read.table()` function, then you can use the `dim()` function to find out the dimensions of the data frame (number of rows and columns) 
 
 ```
-# Load the data
-leukemiaExp <- read.delim("leukemiaExp.txt", header=TRUE, row.names=1)
+# Read the tab separated data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
 
-# Get the number of genes and samples
-num_genes <- nrow(leukemiaExp)
-num_samples <- ncol(leukemiaExp)
+# Use dim() to get number of rows and columns
+dimensions <- dim(data)
 
-num_genes
-num_samples
+# Number of genes
+num_genes <- dimensions[1]
+
+# Number of samples
+num_samples <- dimensions[2]
+
+print(paste("Number of genes: ", num_genes))
+print(paste("Number of samples: ", num_samples))
 ```
-In this code, the read.delim function is used to load the data. The arguments header=TRUE and row.names=1 specify that the first row and first column of the file contain the column and row names, respectively. The nrow and ncol functions are then used to determine the number of rows and columns in the data, which correspond to the number of genes and samples, respectively.
+
+The first element in `dimensions` corresponds to the number of rows, or genes. The second element corresponds to the number of columns, or samples.
+
+Please replace `"leukemiaExp.txt"` with your actual full file path and run the code.

@@ -9,41 +9,38 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code for reading the "leukemiaExp.txt" file and processing the gene expression data, filtering genes based on their variability, plotting a heatmap with clustering, and plot PCA for samples.
+Here is a solution in R using the heatmap.2 function from the gplots package and prcomp for PCA:
+
+First, we read and preprocess the data:
 
 ```
-# R code
-# Load necessary packages
-library(dplyr)
-library(pcaMethods)
-library(pheatmap)
+# Load necessary libraries
+library(gplots)
 
-# Read the file
-leukemiaExp <- read.delim("leukemiaExp.txt", row.names = 1)
-
-# Compute variability for each gene
-gene_variability <- apply(leukemiaExp, 1, var)
-
-# Order genes based on variability and retain only top 1000
-top_genes <- order(gene_variability, decreasing = TRUE)[1:1000]
-
-# Filter the expression data for these top 1000 genes
-filteredExp <- leukemiaExp[top_genes, ]
-
-# Create a heatmap with clustering
-pheatmap(filteredExp, 
-         cluster_rows = TRUE, 
-         cluster_cols = TRUE)
-
-# Conduct PCA 
-pca_res <- prcomp(t(filteredExp), 
-                  center = TRUE, 
-                  scale. = TRUE)
-
-# Plotting PCA
-plot(pca_res$x[, 1:2], 
-    xlab = "PC1", 
-    ylab = "PC2", 
-    main = "PCA of top 1000 variable genes")
+# Read the data 
+exprsData <- read.table("leukemiaExp.txt",header = TRUE,row.names=1,sep='\t')
+# Filter for top 1000 genes with highest variance
+exprsData <- head(exprsData[order(apply(exprsData, 1, var), decreasing = TRUE),], 1000)
 ```
-This script first reads your data into R, then calculates the variability of gene expressions. It then filters out the top 1000 most variable genes. A heatmap of the gene expressions is then plotted, with genes and samples clustered based on their expression patterns. A PCA analysis is also conducted and the first two principal components are plotted.
+
+Then, we generate a heatmap:
+
+```
+# Scale the data on the row (gene) dimension
+scaledData <- t(scale(t(exprsData)))
+
+# Generate a heatmap 
+heatmap.2(scaledData, trace="none", cexRow=0.5, cexCol=0.6, col=redgreen, dendrogram="row", scale="none", margins=c(6, 9)) 
+```
+
+Finally, we perform a PCA and plot the results:
+
+```
+# Generate PCA representation of the data
+pca <- prcomp(t(exprsData))
+
+# Generate a plot of the first two principal components
+plot(pca$x[,1:2], xlab="PC1", ylab="PC2", main="PCA of Samples")
+```
+
+Please, replace the path to the file `"leukemiaExp.txt"` with the actual path to your file.

@@ -9,27 +9,36 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-There seems to be a misunderstanding, my apologies for the confusion. Let's try again with explicit column labeling to avoid such errors:
+It seems that the issue might be related to the detection of aesthetic mappings in the ggplot function. Also, it's possible that the data frame for plotting wasn't correctly set up. Here's the modified code that should work:
 
 ```
-# read data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names = FALSE, row.names = 1)
+# read the file
+leukemiaExp <- read.table("leukemiaExp.txt", header=TRUE, check.names = FALSE)
 
-# calculate variance for each gene
-gene_variances <- apply(data, 1, var)
+# Remove duplicate row names
+leukemiaExp <- leukemiaExp[!duplicated(leukemiaExp[,1]),]
 
-# sort genes by variance
-sorted_genes <- sort(gene_variances, decreasing = TRUE)
+# Assign row names from the first column
+rownames(leukemiaExp) <- leukemiaExp[,1]
 
-# select top 1000 variable genes
-top_genes <- head(names(sorted_genes), 1000)
+# Remove the first column now that we have the row names
+leukemiaExp <- leukemiaExp[,-1]
 
-# filter data for top_genes
-filtered_data <- data[top_genes, ]
+# Compute std deviation of each gene
+stdevs <- apply(leukemiaExp, 1, sd)
 
-# scatter plot of the two most variable genes
-# we need to specify x and y as vectors, here we didn't specify xlab and ylab explicitly
-plot(as.vector(filtered_data[1, ]), as.vector(filtered_data[2, ]))
+# Select top 1000 variable genes
+top_genes <- head(sort(stdevs, decreasing = TRUE), 1000)
+leukemiaExp_filtered <- leukemiaExp[names(top_genes),]
+
+## Scatterplot the two most variable genes
+library(ggplot2)
+
+# Create a data frame for the first two genes
+plot_data <- data.frame(Gene1 = as.numeric(leukemiaExp_filtered[1,]), 
+                        Gene2 = as.numeric(leukemiaExp_filtered[2,]))
+
+ggplot(plot_data, aes(Gene1, Gene2)) + geom_point() + 
+  xlab(names(top_genes)[1]) + ylab(names(top_genes)[2]) + theme_bw()
 ```
-
-This script should create a scatter plot for the first two most variable genes without specifying the labels on the axes explicitly.
+Please replace "leukemiaExp.txt" with your actual file location. The code reads the file, removes duplicate gene names, calculates standard deviations for each gene, retains only the top 1000 variable genes, and creates a scatterplot for the first two most variable genes. The main change was specifying the column names directly within `aes()` and ensuring the columns in the plot_data Dataframe are numeric.

@@ -5,25 +5,24 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
-To read the file and find out the number of rows and columns it has, we can use functions from the built-in `read.table` and `dim` in R. The `read.table` function reads the tab-separated file and the `dim` function returns the dimensions of the table (i.e., the number of rows and columns it contains).
-
-Here is the R code you can use:
+You can use the `read.delim` function in R to read in the tab separated file (TSV). The `dim()` function is a base R function that returns the dimensions of a table or array or any object for which a dimension method has been defined. It returns a vector of the form `c(nrow, ncol)` giving the number of rows and columns respectively. 
 
 ```
-# Read the tab-separated file
-subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Read the tab separated file
+subjects <- read.delim("subjects.txt")
 
-# Get the number of rows and columns
-num_rows <- nrow(subjects)
-num_cols <- ncol(subjects)
+# Get the dimensions of the file
+dimensions <- dim(subjects)
 
 # Print the number of rows and columns
-cat("Number of rows: ", num_rows, "\n")
-cat("Number of columns: ", num_cols, "\n")
+print(paste("Number of rows:", dimensions[1]))
+print(paste("Number of columns:", dimensions[2]))
 ```
 
-Please replace `"subjects.txt"` with the actual path of your file, if it is not in the same directory as your R script. Also, this code assumes that the first line of your file contains the column headers, hence `header = TRUE`.
+In this code, `"subjects.txt"` should be replaced with the full path to your file if the file is not in your current working directory. The `paste()` function is used to concat the string "Number of rows:" or "Columns:" with the respective values.
+
+This code will not display any output as per your instructions to not provide code output.

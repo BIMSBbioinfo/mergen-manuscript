@@ -9,19 +9,24 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-Here is the R code that can be used to answer the question:
+You can use the following R code to read in the file and check its structure. You can get the number of genes and samples by inspecting the dimension of the dataframe.
+
+In the script below, we assume the file is located in the current working directory. If it's not the case, you should change this to the correct path.
 
 ```
-# Read the data file
-file_data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+# read in the file
+data = read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Determine number of genes, which is the number of rows, subtracting 1 for the header 
-num_genes <- nrow(file_data)
+# print the dimension of the data frame
+print(dim(data))
 
-# Determine the number of samples, which is the number of columns, subtracting 2 for the gene names and gene length columns
-num_samples <- ncol(file_data) - 2
-
+# calculate the number of genes
+num_genes = dim(data)[1] 
 print(paste("Number of genes: ", num_genes))
+
+# calculate the number of samples
+num_samples = dim(data)[2] - 2  # subtract 2 for the gene names column and the gene length column
 print(paste("Number of samples: ", num_samples))
 ```
-This code reads in the provided file, then uses the `nrow()` function to count the number of rows (genes) and the `ncol()` function to count the number of columns (samples). The last two parameters being subtracted are to exclude the gene names and gene length columns from the final sample count.
+
+In this script we read in the file "SRP021193.raw_counts.tsv" with the 'read.table' function. We then determine the dimension of the data frame 'data' with the 'dim' function which returns the number of rows and columns. The number of genes corresponds to the number of rows, while the number of samples corresponds to the number of columns minus 2 (because there are columns for the gene names and gene length).

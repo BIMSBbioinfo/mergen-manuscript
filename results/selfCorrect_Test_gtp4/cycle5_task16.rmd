@@ -10,44 +10,47 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Apologies for the confusion earlier. This issue is typically due to duplicate column names, or duplicate values in the identifier variable being used for joining the two data frames (in the `left_join` function).
-
-Given that we're merging on the basis of sample IDs, let's first confirm that they're unique in the annotation file ("SRP021193.colData.tsv"), and then we can proceed with the merging and plotting.
-
-Here's the revised code:
+Apologies for the confusion. The error might be derived from an improper handling of the gene names. Your gene names might have not been properly applied to the correct data frame object. Also, it seems like the order of the columns in your metadata file doesn't match with the order of your expression data. Here is the corrected code:
 
 ```
-# Load necessary libraries
 library(readxl)
-library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
 
-# Read .xlsx file
-data_exp <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Load the gene expression data
+expr <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Read .tsv file
-data_anno <- read_tsv("SRP021193.colData.tsv")
+# Load the sample metadata
+metadata <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
 
-# Validate that the sample IDs in annotation file are unique
-if(length(unique(data_anno$LibrarySelection)) != nrow(data_anno)) {
-  stop("LibrarySelection variable in the annotation file contains duplicate values. It should be unique for merging.")
-}
+# Combine the data from the two sources.
+# Note: Assumes that order of samples is same in both files.
 
-# Transpose data_exp so that it matches the format of data_anno for merging
-data_exp_transposed <- data_exp %>% 
-  pivot_longer(-Genes, names_to = "LibrarySelection", values_to = "Expression")
+samples <- colnames(expr[, 2:ncol(expr)])
+gene_names <- expr$Genes
 
-# Merge data
-data_merged <- left_join(data_anno, data_exp_transposed, by = "LibrarySelection")
+# Transposition
+exp_values <- as.data.frame(t(expr[, 2:ncol(expr)]))
+colnames(exp_values) <- gene_names
+rownames(exp_values) <- samples
 
-# Create boxplot
-ggplot(data_merged, aes(x = LibrarySelection, y = Expression, fill = group)) +
+# Merge the two datasets
+merged_data <- cbind(metadata, exp_values)
+
+# Melt the data for ggplot
+melted_data <- melt(merged_data,  id.vars=c('diagnosis', 'group', 'LibrarySelection'), variable.name="gene", value.name="expression",  stringsAsFactors=FALSE)
+melted_data$expression <- as.numeric(melted_data$expression)
+
+# Create the boxplot, color by group
+ggplot(melted_data, aes(x = diagnosis, y = expression, fill = group)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element.text(angle = 45, hjust = 1)) +
+  labs(x = "Sample", y = "Expression Value")
 ```
-
-Please provide the full path to your file if they're not in the current working directory. And make sure that the column names in your files match with those used in the code. For instance, I expect "`Genes`", "`LibrarySelection`", and "`group`" to be present in your files. If they're named differently, please update the code accordingly.
+This code reads the .xlsx file and .tsv file into R data frames, combines data according to sample names, and melts the dataframe for plotting in ggplot2 with boxplots representing gene expression. Please replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with your actual file paths.

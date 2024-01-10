@@ -10,65 +10,66 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Apologies for the confusion earlier. The error suggests that an incorrect object is being passed to the `plotPCA` function. We actually need to calculate variance stabilizing transformed data using `vst` function for PCA plot. Here's the correct code:
+I apologize for the misunderstanding. In this situation, it appears that there might be some confusion because 'FILE_PATH_TO_BE_REPLACED' is a placeholder. You need to replace 'FILE_PATH_TO_BE_REPLACED' with the actual file path to your input files. 'FILE_PATH_TO_BE_REPLACED' is not a valid file path and that's why you're encountering an error. 
+
+Without knowledge of your computer's file system and where the 'Supplementary_Table_1_exp.xlsx' and 'SRP021193.colData.tsv' files are located, it's impossible for me to provide the precise file paths you should use. 
+
+Usually, if the 'Supplementary_Table_1_exp.xlsx' file is located in the Documents directory on a Windows computer, the path could be something like 'C:/Users/YourUsername/Documents/Supplementary_Table_1_exp.xlsx'. The path to a file on MacOS could look something like '/Users/YourUsername/Documents/Supplementary_Table_1_exp.xlsx'.
+
+Here is the correct code block, assuming that the two files are in your working directory:
 
 ```
-# load necessary packages
+# Installing necessary packages from Bioconductor
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    
+BiocManager::install("DESeq2")
+
+# Install and load other packages
+
+   
+# Loading necessary packages
 library(DESeq2)
 library(readxl)
-library(ggplot2)
 library(dplyr)
+library("FactoMineR")
+library("factoextra")
 
-# read the count data
-countdata <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = T)
+# Loading gene expression data and metadata
+# IMPORTANT: Replace 'YOUR_FILE_PATH' with your own file paths
+path_to_count_data <- "YOUR_FILE_PATH/Supplementary_Table_1_exp.xlsx"
+path_to_meta_data <- "YOUR_FILE_PATH/SRP021193.colData.tsv"
 
-# check and handle duplicate row names
-countdata$Genes <- make.unique(as.character(countdata$Genes))
+countdata <- read_excel(path_to_count_data)
+coldata <- read.delim(path_to_meta_data, header=TRUE, sep="\t")
 
-# set rownames
-rownames(countdata) <- countdata$Genes
-countdata$Genes <- NULL
+row.names(countdata) <- countdata$Genes
+countdata <- countdata[,-1] 
 
-# read the annotation data
-coldata <- read.delim("SRP021193.colData.tsv", header = TRUE, row.names = 1)
+# Create DESeqDataSet
+dds <- DESeqDataSetFromMatrix(countData = countdata,
+                              colData = coldata,
+                              design = ~ group)
 
-# ensure the order of samples matches between two data frames
-countdata <- countdata[, rownames(coldata)]
-
-# define the DESeq2 dataset
-dds <- DESeqDataSetFromMatrix(countData = countdata, colData = coldata, design = ~ group)
-
-# normalize and transform the data
+# Differential gene expression analysis
 dds <- DESeq(dds)
-dds <- vst(dds)
+res <- results(dds)
 
-# perform statistical testing for each group
-resList <- lapply(levels(coldata$group), function(g){
-  res <- results(dds, contrast = c("group", g, "other group name"))
-  return(res)
-})
+# Subset data with adjusted p-value < 0.05 
+sig_genes <- subset(res, padj < 0.05)
 
-# list of differentially expressed genes for each group
-degList <- lapply(resList, function(x){ rownames(x)[which(x$padj < 0.05)] })
+# PCA on significant genes
+pca_data <- prcomp(t(counts(dds, normalized=TRUE)[rownames(sig_genes), ]))
+res.pca <- PCA(pca_data$x, graph = FALSE)
 
-# plot PCA only using group-specific genes
-plotPCA <- function (dds, intgroup = "group", ntop = 500, returnData = FALSE) {
-  data <- plotPCA(dds, intgroup = intgroup, ntop = ntop, returnData = TRUE)
-  percentVar <- round(100 * attr(data, "percentVar"))
-  rv <- ggplot(data, aes(PC1, PC2, color = dds$group)) +
-    geom_point(size = 3) +
-    xlab(paste0("PC1: ", percentVar[1], "% variance")) +
-    ylab(paste0("PC2: ", percentVar[2], "% variance")) +
-    coord_fixed()
-  if (returnData)
-    return(rv)
-  print(rv)
-}
-plotPCA(dds, intgroup = "group")
+# Plot PCA and color by group
+fviz_pca_biplot(res.pca, 
+                col.ind = coldata$group, 
+                legend.title = "Group")
 ```
-As before, replace "other group name" with the appropriate group name from your study. The code calculates group-specific genes, carries out variance stabilization transformation, and plots a PCA plot colored by "group". Please ensure the appropriate packages installed for this script.
+
+Please replace 'YOUR_FILE_PATH' with the actual path to your files on your local machine.

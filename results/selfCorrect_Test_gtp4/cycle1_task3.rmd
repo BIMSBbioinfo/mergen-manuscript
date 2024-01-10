@@ -10,24 +10,32 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-You would firstly need to install the 'readxl' package and load it to your environment. Then, you can use the read_excel() function to import the excel file to a data frame. Lastly, you can use the dim() function to get the number of rows (genes) and columns (samples). 
+First, you need to install the "readxl" package in R, which is used to read excel files.
 
-Here is the R code to perform this:
+You can then use the `read_excel` function in the readxl package to read your excel file. The function returns a data frame where rows correspond to the genes and columns correspond to the different cases (or specific gene expression data from different samples).
+
+After reading the data into R, you can use the `nrow` and `ncol` functions to count the number of rows (genes) and columns (samples) in the data set respectively. 
+
+Here is script you can use:
 
 ```
-# Installing the package (you only need to do this once)
+# Firstly, you need to install the "readxl" package
 
 
-# Loading the package
+# Then load the package
 library(readxl)
 
-# Reading the excel file
+# Read the excel file into R
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Getting the number of genes and samples
-num_genes <- dim(data)[1]
-num_samples <- dim(data)[2] - 1  # subtract 1 to exclude the column of gene names
+# Count the number of genes(rows) and samples(columns)
+num_genes <- nrow(data)      # number of genes
+num_samples <- ncol(data)-1  # number of samples
 
-num_genes
-num_samples
+# print out the results
+print(paste("Number of genes: ", num_genes))
+print(paste("Number of samples: ", num_samples))
 ```
+
+Note: We subtract 1 from the number of columns to get the number of samples, because the first column is not a sample but the gene names.
+

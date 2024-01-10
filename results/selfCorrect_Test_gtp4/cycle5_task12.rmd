@@ -10,37 +10,31 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-In R, you will use the 'readxl' package to read the xlsx file and 'read.delim()' function to read tsv file. Here is the code to perform this task:
+The following R code may be used to read, display the number of rows and columns of each of the Excel and tsv data, which are Supplementary_Table_1_exp.xlsx and SRP021193.colData.tsv respectively. 
 
 ```
-# Load necessary package
-  
+# Load required packages
 library(readxl)
+library(readr)
 
-# Read the .xlsx file
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
+# Read count table from excel file
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Check the dimension of this count table
-nrow_count_table <- nrow(count_table)
-ncol_count_table <- ncol(count_table)
+# Display number of rows and columns of count table
+print(paste("Count table rows: ", nrow(count_table)))
+print(paste("Count table columns: ", ncol(count_table)))
 
-# Read the .tsv file
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, sep="\t")
+# Read annotation data from tsv file
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Check the dimension of this annotation data
-nrow_annotation_data <- nrow(annotation_data)
-ncol_annotation_data <- ncol(annotation_data)
-
-## Output the number of rows and columns for each table
-nrow_count_table
-ncol_count_table
-nrow_annotation_data
-ncol_annotation_data
+# Display number of rows and columns of annotation data
+print(paste("Annotation data rows: ", nrow(annotation_data)))
+print(paste("Annotation data columns: ", ncol(annotation_data)))
 ```
-This R script reads in each of the two files, calculates number of rows and columns using the utility functions nrow() and ncol(), then prints out these values. You will need to replace the file paths with your actual file paths.
 
+This code presumes that the required files are located in the current working directory and that you have required packages installed. If not, you should install by executing ``.

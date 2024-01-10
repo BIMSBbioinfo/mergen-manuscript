@@ -9,29 +9,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is a simple R solution using built-in R functions:
+To filter the most variable genes, we can calculate the standard deviation for each gene across all samples. The higher the standard deviation, the higher the variability. We then sort the genes by standard deviation and keep the top 1000.
+
+Here is your R code:
 
 ```
-# Read expression data
+# First, read the data into R, with the first column of gene names preserved as row names
 leukemiaExp <- read.delim("leukemiaExp.txt", row.names = 1)
 
-# Compute variance for each gene
-gene_var <- apply(leukemiaExp, 1, var)
+# Calculate standard deviation for each gene
+leukemiaExp$SD <- apply(leukemiaExp, 1, sd)
 
-# Sort genes by variance in descending order
-gene_var_sorted <- sort(gene_var, decreasing = TRUE)
+# Order the genes by standard deviation
+leukemiaExp <- leukemiaExp[order(leukemiaExp$SD, decreasing = TRUE),]
 
-# Get top 1000 most variable genes
-top_genes <- names(gene_var_sorted[1:1000])
-
-# Filter expression data for top 1000 most variable genes
-leukemiaExp_filtered <- leukemiaExp[top_genes, ]
+# Keep the top 1000
+leukemiaExpTop1000 <- leukemiaExp[1:1000,]
 ```
 
-This code block does the following:
-
-1. Reads the tab-separated file into a data frame, with the gene names as row names.
-2. Computes the variance of expression for each gene using the `apply` function with `MARGIN=1` to apply it to each row.
-3. Sorts the computed variances in decreasing order using the `sort` function with `decreasing=TRUE`.
-4. Gets the names of the top 1000 most variable genes. The names of the genes are the names of the elements in the sorted vector of variances, and we use array indexing `[1:1000]` to get the top 1000.
-5. Filters the original expression data for the selected top 1000 most variable genes using array indexing with the selected gene names.
+With this code, "leukemiaExpTop1000" will contain the top 1000 most variable genes. Keep in mind that this might not work properly if you have missing values in your table. In such a case, you might need to impute or remove those before calculating standard deviations. Please, replace "leukemiaExp.txt" with your actual file-path (if it's not in the current working directory).

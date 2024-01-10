@@ -9,20 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+Here is the R code for reading in the text file, calculating the variability (standard deviation) of each gene across different samples, and selecting the top 1000 genes based on their variability.
+
 ```
-# Read the tsv file
-leukemiaExp <- read.table('leukemiaExp.txt', header=TRUE, row.names=1, sep="\t")
+# Read in the text file
+data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
 
-# Calculate variance for each row/gene
-variance <- apply(leukemiaExp, 1, var)
+# Calculate the standard deviation of each gene across samples, which measures gene variability
+gene_variability <- apply(data, 1, sd)
 
-# Order the genes by their variance, from highest to lowest
-ordered_variance <- sort(variance, decreasing=TRUE)
+# Order the genes based on their variability
+ordered_genes <- order(gene_variability, decreasing = TRUE)
 
-# Select the top 1000 most variable genes
-top_genes <- names(ordered_variance)[1:1000]
-
-# Index using variable gene names to obtain top 1000 most variable genes
-filtered_leukemiaExp <- leukemiaExp[top_genes, ]
+# Select the top 1000 genes
+top_genes <- data[ordered_genes[1:1000], ]
 ```
-This block of code reads the table file 'leukemiaExp.txt', then calculates the variance for each gene across all samples. The variance is used as a measure of the gene's variability. The genes are then ordered by their variance in a descending order. The top 1000 genes with the highest variances are selected and used to filter the original gene expression table. The resulting table, 'filtered_leukemiaExp', contains only the top 1000 most variable genes.
+
+This code assumes that the standard deviation is an appropriate measure of variability for your scenario. Other measures of variability could potentially be used depending on the exact requirements of your analysis.

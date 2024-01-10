@@ -9,20 +9,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Below is the R code to read the tab separated file, "leukemiaExp.txt", check if the number of samples (columns) is more than 500. If yes, it randomly selects 500 samples (columns) from the dataset:
+Here is a way to randomly select 500 columns from a data frame read from the leukemiaExp.txt file using R's built-in functions. The first column is preserved as it contains the gene names.
 
 ```
-# Read gene expression data
-gene_exp_data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Read the table
+leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Check if number of columns (samples) is more than 500
-if(ncol(gene_exp_data) > 500) {
- 
-  # Randomly select 500 columns/samples
-  selected_samples <- sample(colnames(gene_exp_data), 500)
-  
-  # Create a subset of the data containing only the selected columns
-  subset_data <- gene_exp_data[, selected_samples]
+# Get the total number of samples (subtract 1 to account for gene name column)
+total_samples <- ncol(leukemiaExp) - 1
+
+# If number of samples is greater than 500, randomly choose 500 of them
+if (total_samples > 500) { 
+  sample_columns <- sample(2:(total_samples+1), 500)
+  leukemiaExp_subset <- leukemiaExp[c(1, sample_columns)]
+} else {
+  leukemiaExp_subset <- leukemiaExp
 }
 ```
-Note: replace "leukemiaExp.txt" with the actual path of the file if the file is not in the current working directory.
+
+This will result in a new data frame called `leukemiaExp_subset` containing the gene names and randomly sampled 500 columns if the total number of samples exceeded 500. Please adjust the path of the file in the `read.table` function according to your working directory. If you have less than or equal to 500 samples, the original `leukemiaExp` data frame remains the subset.

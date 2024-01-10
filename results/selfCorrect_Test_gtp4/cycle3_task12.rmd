@@ -10,32 +10,33 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Below is the R code that can be used to perform the task:
+You can use the `readxl` package in R to read data from an Excel file and the `read.table` function to read data from a tsv file. Here is the code:
 
 ```
-#load required packages
+# Load required library
+
 library(readxl)
-library(readr)
 
-#read the count table
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the data from "Supplementary_Table_1_exp.xlsx"
+exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-#display the dimensions of the count table
-print(paste("Number of rows in the count table: ", nrow(count_data)))
-print(paste("Number of columns in the count table: ", ncol(count_data)))
+# Count number of rows and columns for the expression data
+nrow_exp <- nrow(exp_data)
+ncol_exp <- ncol(exp_data)
 
-#read the annotation data
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Read the data from "SRP021193.colData.tsv"
+col_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-#display the dimensions of the annotation data
-print(paste("Number of rows in the annotation data: ", nrow(annotation_data)))
-print(paste("Number of columns in the annotation data: ", ncol(annotation_data)))
+# Count number of rows and columns for the annotations data
+nrow_col <- nrow(col_data)
+ncol_col <- ncol(col_data)
 
+list(nrow_exp = nrow_exp, ncol_exp = ncol_exp, nrow_col = nrow_col, ncol_col = ncol_col)
 ```
 
-Please ensure that the paths to the files "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" in the code are correct. If these files are not in your R working directory, full paths to the files may need to be provided.
+This code first reads the data from the two files, then counts the number of rows and columns in each data frame, and then returns these values in a list. The `read.table` function uses TAB as the separator (`sep = "\t"`), as this is the standard separator in a `.tsv` file. Note that the path of your files might differ from the one given in the code.

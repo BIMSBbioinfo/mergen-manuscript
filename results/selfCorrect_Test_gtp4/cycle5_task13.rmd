@@ -10,33 +10,28 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Here is the R code to solve your problem.
-
-First, we will load the necessary libraries and read our two tables. I'm assuming that the "Supplementary_Table_1_exp.xlsx" file is an Excel file, so we'll need to use the `read_excel()` function from the `readxl` library, and for "SRP021193.colData.tsv" use `read.table()` function. Then I will rename columns of the SRP021193.colData.tsv file to correctly merge it with the count data. After merging data, to calculate the number of columns, just use the `ncol()` function.
-
 ```
+#Load necessary libraries
 library(readxl)
-library(dplyr)
+library(readr)
 
-# Read data
-exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-col_data <- read.table("SRP021193.colData.tsv", sep="\t", header = TRUE)
+#Read the gene expression data
+gene_exp_data <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
 
-# rename first column of annotation data to merge
-names(col_data)[1] <- "Genes"
+#Read the sample annotation data
+sample_ann_data <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
 
-# Merge the two dataframes by "Genes" 
-merged_data <- left_join(exp_data, col_data, by = "Genes")
+#Merge the two dataframes by common column values
+merged_data <- merge(gene_exp_data, sample_ann_data, by.x = colnames(gene_exp_data)[2], by.y = colnames(sample_ann_data)[1])
 
-# Calculate the number of columns
-num_of_columns <- ncol(merged_data)
+#Calculate the number of columns
+num_cols <- ncol(merged_data)
 
-num_of_columns
+num_cols
 ```
-
-Please replace the path of your file for the "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" files in the `read_excel()` and `read.table()` functions, respectively.
+In this snippet, two R libraries are first loaded: `readxl` for reading Excel files and `readr` for reading tsv files. The gene expression data and sample annotation data are then read into data frames using `read_excel` and `read_tsv` respectively, with column names option enabled. The two data frames are then merged using the `merge` function, by matching the names of the first column in gene_exp_data with the names of the first column in sample_ann_data, resulting in a merged data frame. Finally, the number of columns in the merged data frame is calculated using the `ncol` function, and this number is stored in the variable `num_cols`. It will print the number of columns when `num_cols` is called.

@@ -9,21 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-To find out how many genes and samples the dataset has, you can simply read the file into R and use the `dim` function to get the dimensions of the resulting data frame. Here is the code:
+The task requires the number of rows (genes) and columns (samples) in the dataset. This can be done using R's built-in functions for reading tab-separated files and finding the dimensions of a data frame.
+
+The below R code will load the data using `read.table`, assuming that the data is in the same directory, column and row names are present (default for `read.table`). The function `dim` will then output a vector where the first element is the number of rows (genes) and the second element is the number of columns (samples).
+
+For example:
 
 ```
-# Read the data into R
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Load the leukemia data
+leukemia_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Find out the dimensions of the data frame
-dimensions <- dim(data)
-
-# dimensions[1] gives the number of rows (genes),
-# dimensions[2] gives the number of columns (samples).
-
-# Print out the number of genes and samples
-print(paste("Number of genes: ", dimensions[1]))
-print(paste("Number of samples: ", dimensions[2]))
+# Find and print the number of genes and samples
+num_genes <- dim(leukemia_data)[1]
+num_samples <- dim(leukemia_data)[2]
+print(paste0("Number of genes: ", num_genes))
+print(paste0("Number of samples: ", num_samples))
 ```
-
-Please replace `"leukemiaExp.txt"` with the actual path of your file if it is not in the working directory.
+This code assumes that you already have the file "leukemiaExp.txt" in your working directory. If not, then replace the "leukemiaExp.txt" in the `read.table` function with the appropriate path to your file.

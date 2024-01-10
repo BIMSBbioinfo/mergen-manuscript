@@ -9,54 +9,38 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the oversight, there seems to be an issue with the dimensions of the objects when applying the row or column names. Understanding that the first column is for Gene names, and subsequent columns are the Cel files, this is how the revised code should look:
+I apologize for the confusion. The error is suggesting that the input matrix resulting from the subsetting is not valid. This most likely indicates a problem with how the top variable genes are selected. Let's correct this:
 
 ```
-# load required libraries
+# Load required libraries
 library(readr)
-library(dplyr)
+library(ggplot2)
+library(gplots)
 library(factoextra)
-library(pheatmap)
-library(RColorBrewer)
 
-# read in the data
-data <- read_delim("leukemiaExp.txt", delim = "\t")
+# Read gene expression data
+data <- read_delim("leukemiaExp.txt", "\t", escape_double = FALSE, col_names = TRUE, trim_ws = TRUE)
 
-# specify gene names and remove the column
-gene_names <- data[, 1]
-data <- data[, -1]
+# Format data for analysis
+rownames(data) <- data[,1]
+data[,1] <- NULL
+data <- as.data.frame(sapply(data, as.numeric))
 
-# calculate and order standard deviations
-std_devs <- apply(data, 1, sd)
-sorted_indices <- order(-std_devs)
+# Compute variances for genes
+variances <- apply(data, 1, var)
 
-# filter top 1000 variable genes
-most_variable <- sorted_indices[1:1000]
-data_var <- data[most_variable, ]
+# Select top 1000 genes by variance
+top_genes <- rownames(data)[order(variances, decreasing = TRUE)][1:1000]
+filtered_data <- data[top_genes,]
 
-# transpose data for heatmap
-data_t <- t(data_var)
+# Generate heatmap
+heatmap.2(as.matrix(filtered_data),
+          main="Heatmap of Top 1000 Variable Genes",
+          trace="none", 
+          margins = c(5,10))
 
-# assign rownames for heatmap
-rownames(data_t) <- gene_names[most_variable]
-
-# create heatmap
-pheatmap::pheatmap(data_t, 
-                   main = "Heatmap of top 1000 variable genes", 
-                   show_rownames = F, 
-                   color = colorRampPalette(brewer.pal(n=9,'Blues'))(100))
-
-# perform PCA
-data_pca <- prcomp(data_t, scale= TRUE)
-
-# draw PCA
-fviz_pca_ind(data_pca, 
-             geom.ind = "point", 
-             pointshape = 19, 
-             title = "PCA plot of samples", 
-             caption = "Top 1000 most variable genes", 
-             palette = "jco")
+# Perform PCA and generate PCA plot
+pca_results <- prcomp(t(filtered_data), center = TRUE, scale. = TRUE)
+fviz_pca_ind(pca_results, geom.ind="point", col.ind="cos2")
 ```
-The script now reads the data, calculates standard deviations for each gene, and orders them in decreasing order. It picks the top 1000 most variable genes and creates a heatmap. The same data is transposed for PCA, which is then performed and plotted.
-
-Please note to replace "leukemiaExp.txt" with the actual path to your file, and make sure all listed R packages are installed and loaded. The script assumes the first column of the file contains gene names. If the format is different, please adjust the code accordingly.
+This script should correctly select the top 1000 genes by variance, create a heatmap of these genes, perform principal components analysis (PCA) on the transposed data, and generate a plot of the PCA results. Remember to replace `"leukemiaExp.txt"` with the path to your actual file.

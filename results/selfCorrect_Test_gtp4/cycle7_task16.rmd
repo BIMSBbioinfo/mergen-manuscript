@@ -10,35 +10,45 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-The error arises because we are trying to combine character and numerical columns in a table, which is not permissible. We can see that the 'Genes' column is of character type, and the other columns in gene expression dataset appear to have numerical values representing gene counts. And trying to merge these file format is not really appropriate in the given context and there's no common column as well, it will be more efficient if we map them together using a common key such as sample ids but alas, your annotation file sample "SRP021193.colData.tsv" only contains one record which doesn't help. However, if we assume that your annotation file contains all the samples present in the expression dataset, a simpler and accurate way to process this would be as follows:
+Here's the R code to accomplish the tasks.
+
+First, I load the required libraries - ggplot2 for data visualization and readxl and tidyverse for data manipulation. Then I read the input files. I'm using the `read_xlsx` function from the `readxl` package to read the excel (.xlsx) file, and `read.delim()` for the tsv file. The `merge()` function merges the annotation data and the gene expression tables.
+
+The `gather()` function in the `tidyverse` package is used to reshape the dataframe into a tidy format for plotting. The `ggplot()` function is used to create boxplots of gene expressions.
+
+Finally, I set a seed for replicability and use `scale_fill_brewer()` to color the boxplots based on the 'group'.
+
+The final code is:
 
 ```
-# Necessary libraries
+# Load necessary libraries
 library(readxl)
-library(readr)
-library(dplyr)
-library(tidyr)
+library(tidyverse)
 library(ggplot2)
 
-# Read in the data
-exp_data <- read_xlsx("Supplementary_Table_1_exp.xlsx")
-sample_data <- read_delim("SRP021193.colData.tsv", "\t")
+# Read the input .xlsx and .tsv files
+df1 <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+df2 <- read.delim("SRP021193.colData.tsv", header = T)
 
-# Reshape data from wide to long format for plotting.
-exp_data_long <- pivot_longer(exp_data, -Genes, names_to = "Sample", values_to = "Expression")
+# Merge the two data frames
+merged_df <- merge(df1, df2, by.x = "Genes", by.y = "diagnosis", all.x = TRUE)
 
-# Merge the reshaped gene expression data with the sample data.
-full_data <- merge(exp_data_long, sample_data, by.x="Sample", by.y="diagnosis", all=TRUE)
+# Reshape the merged data frame into a tidy format
+tidy_df <- gather(merged_df, sample, expression, -Genes, -group, -LibrarySelection)
 
-# Boxplots of expression values per sample, colored by group.
-ggplot(data = full_data, aes(x = Sample, y = Expression, fill = group)) +
+# Create boxplots for gene expression values per sample, color code by group
+set.seed(1)
+ggplot(tidy_df, aes(x=sample, y= expression, fill = group)) +
   geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust=0.5))
+  theme_bw() +
+  labs(title = 'Boxplots of gene expression values', x = 'Sample', y = 'Expression') +
+  scale_fill_brewer(palette="Set1") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
-Please replace the "Expression" with the actual name of the gene count column in the full_data. This code also assumes that your library selection is consistent with samples.
-
+Please replace `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` in the above code with valid paths to these files on your system.
+This script assumes that the TSV file uses tabs as separators and has a header. If it doesn't, please adjust the `read.delim` call accordingly.

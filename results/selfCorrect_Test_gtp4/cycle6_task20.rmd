@@ -10,56 +10,60 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Apologies for the confusion earlier. The error indicates that the sample order in the gene expression data (gene_data) does not match the sample order in the annotation data (sample_data). The names in both datasets need to match and also be in the same order for the analysis to work. Here is the corrected code. 
-
-In this corrected code, we'll re-order the columns in gene_data based on the row order in sample_data to ensure they are matched correctly:
+My apologies for the error. Let's read the gene names directly from the Excel file. We will correct it in the following code as shown:
 
 ```
-# Import the required libraries
-library("DESeq2")
-library("readxl")
-library("readr")
+library(readxl)
+library(edgeR)
+library(FactoMineR)
+library(ggplot2)
 
-# Import gene expression data
-gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# load the count matrix and sample annotation
+count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+rownames(count_data) <- count_data[,1]
+count_data <- as.matrix(count_data[,-1])
 
-# Import sample annotation data
-sample_data <- read_tsv("SRP021193.colData.tsv")
+sample_anno <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+rownames(sample_anno) <- sample_anno[,1]
+sample_anno <- sample_anno[, -1]
 
-# Create unique gene labels
-gene_data <- gene_data %>% mutate(Genes = make.names(Genes, unique = TRUE))
+# ensure the sample order is consistent
+common_samples <- intersect(colnames(count_data), rownames(sample_anno))
+count_data <- count_data[, common_samples]
+sample_anno <- sample_anno[common_samples, ]
 
-# Set the row names of the gene_data as the 'Genes' column
-rownames(gene_data) <- gene_data$Genes
+group <- factor(sample_anno$group)
+y <- DGEList(counts = count_data, group = group)
+y <- calcNormFactors(y) 
 
-# Remove the 'Genes' column
-gene_data$Genes <- NULL
+design <- model.matrix(~group)
+y <- estimateDisp(y, design)
+fit <- glmQLFit(y, design)
 
-# Reorder the columns of gene_data to match the row order in sample_data
-gene_data <- gene_data[, rownames(sample_data)]
+group_specific_genes <- list()
+for (g in levels(group)) {
+  contrast <- makeContrasts(contrasts = paste0("group", g, " - group", setdiff(levels(group), g)), levels = design)
+  qlf <- glmQLFTest(fit, contrast = contrast)
+  de_genes <- topTags(qlf, Inf)
+  group_specific_genes[[g]] <- rownames(de_genes)
+}
 
-# Build DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = gene_data, colData = sample_data, design = ~ group)
+pca_genes <- unique(unlist(group_specific_genes))
+group_specific_counts <- count_data[pca_genes,]
+PCA <- PCA(group_specific_counts, scale.unit=TRUE)
 
-# Run DESeq
-dds <- DESeq(dds)
+PCA_sample_scores <- data.frame(sample_scre = PCA$ind$coord, sample = rownames(PCA$ind$coord), group = group)
 
-# Get result
-res <- results(dds)
-
-# Handle NAs in p-adjust
-res <- na.omit(res)
-
-# Extract group-specific genes
-group_specific_genes <- res[res$padj < 0.05,]
-
-# Plot PCA for group-specific genes using DESeq2
-plotPCA(dds, intgroup = "group")
+ggplot(PCA_sample_scores, aes(PC1, PC2, color = group)) +
+  geom_point() +
+  labs(title = "PCA plot of different groups.", x = "PC1", y = "PC2") +
+  theme_classic() +
+  theme(legend.position = "bottom")
 ```
 
-Please take note that for the right analysis, replace 'group' with actual group labels from your data. Also, make sure that after re-ordering you assert again if the column order of gene_data matches the row order of sample_data.
+I apologize for the earlier confusion. This code corrects the process of reading gene names from the excel file, flags significantly differentially expressed genes for each group, and visualizes them inspired by given group information in a PCA plot.

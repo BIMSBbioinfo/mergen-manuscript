@@ -10,48 +10,53 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Based on the error message you received, it appears that there may be duplicate column names in gene expression data. It's crucial that all column names are unique when performing this type of data manipulation. The warning message is likely due to problems parsing numbers out of the Excel file in the first instance, or it may be due to characters or other non-numeric data types mixed in the expression column.
+I apologize for the confusion. It seems there's an issue with the color specification in ggplot() function.
 
-You may want to check the data for duplicates or unusual values. Since you did not give me the complete information, I will use the function `make.names` to ensure that all column names are unique:
+The error suggests that there might be cases in your data where 'group' variable is NA or it has only one level. The code should handle cases where group variable is NA or has only one level.
+
+Here is the revised code:
 
 ```
-# load needed libraries
+# Load necessary R packages
 library(readxl)
+library(readr)
 library(tidyverse)
 
-# read gene expression data
-gene_expr <- read_excel("Supplementary_Table_1_exp.xlsx", col_types = "text")
+# Read the count data
+countData <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# read annotations
-annotations <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
+# Transpose the count data
+transposedCountData <- gather(countData, -Genes, key="Sample", value="Expression")
 
-# transpose gene expression data to turn columns into rows
-transposed_gene_expr <- t(gene_expr[-1])  # disregard gene names column for now
-colnames(transposed_gene_expr) <- make.names(gene_expr$Genes, unique = TRUE)  # add gene names as column names
+# Read sample annotation data
+annotation <- read_tsv("SRP021193.colData.tsv")
 
-# turn the matrix into a data frame and add sample names as a column
-df_gene_expr <- as.data.frame(transposed_gene_expr)
-df_gene_expr$sample <- rownames(df_gene_expr)
+# Rename the column "diagnosis" to "Sample" in annotation to match with transposedCountData
+names(annotation)[names(annotation) == "diagnosis"] <- "Sample"
 
-# merge with annotations (assuming "sample" matches "diagnosis" in annotations)
-merged_data <- inner_join(df_gene_expr, annotations, by = c("sample" = "diagnosis"))
+# Merge the count data and the annotation
+data <- merge(transposedCountData, annotation, by="Sample", all.x=TRUE)
 
-# reshape data for plotting
-long_data <- gather(merged_data, Genes, Expression, -c(sample, group, LibrarySelection))
+# If 'group' column has NAs, replace them with "Unknown"
+data$group[is.na(data$group)] <- "Unknown"
 
-# convert expression to numeric
-long_data$Expression <- as.numeric(long_data$Expression)
-
-# generate boxplot with ggplot2
-ggplot(long_data, aes(x = sample, y = Expression, fill = group)) +
-  geom_boxplot() +
-  theme_bw() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  labs(title = "Gene Expression per Sample", x = "Sample", y = "Expression")
+# Create a boxplot of gene expression values per sample
+# Color code boxplots based on the group variable
+# If 'group' column has only one unique value (including "Unknown"), use a default color, otherwise use 'group' to fill color
+if (length(unique(data$group)) <= 1) {
+  ggplot(data, aes(x=Sample, y=Expression)) +
+    geom_boxplot() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+} else {
+  ggplot(data, aes(x=Sample, y=Expression, fill=group)) +
+    geom_boxplot() +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1))
+}
 ```
-Please remember to check your data beforehand for any duplicate values, missing values, or other inconsistencies that may affect the result.
+
+This modified code will handle the situation when the 'group' variable doesn't exist, has NA values, or doesn't have variability. If 'group' column has only one unique value (including "Unknown"), the boxplot will use a default color. Otherwise, it will use 'group' variable to fill color.

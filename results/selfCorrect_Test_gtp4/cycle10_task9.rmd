@@ -9,32 +9,34 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the code to perform the tasks:
+Here is a basic demonstration of how to approach this task in R:
 
 ```
-# Necessary libraries
-library(data.table)
+
+# load required libraries
 library(ggplot2)
-library(factoextra)
+library(ggfortify)
 library(pheatmap)
 
-# Read the gene expression data
-leukemia <- fread("leukemiaExp.txt", header = TRUE, check.names = FALSE, data.table = FALSE)
+# read the expression data
+exp_data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep="\t")
 
-# Transpose the data to make the genes as columns and the samples as rows,
-leukemia_t <- t(leukemia[-1])
-row.names(leukemia_t) <- colnames(leukemia)[2:ncol(leukemia)]
-colnames(leukemia_t) <- leukemia[,1]
+# use the standard deviation as the measure of variability and select 1000 genes with the highest variabilities
+variable_genes <- exp_data[order(apply(exp_data, 1, sd), decreasing = TRUE)[1:1000], ]
 
-# Filter genes based on variability
-var_gene <- apply(leukemia_t, 2, var)
-most_var_genes <- leukemia_t[,names(sort(var_gene, decreasing=TRUE)[1:1000])]
+# plot the heatmap
+pheatmap(variable_genes)
 
-# Heatmap
-pheatmap(as.matrix(most_var_genes), scale = "row", clustering_distance_rows = "correlation", clustering_distance_cols = "correlation")
+# perform PCA
+pca_results <- prcomp(t(variable_genes), scale.=TRUE)
 
-# PCA
-leukemia_pca <- prcomp(leukemia_t, scale. = TRUE)
-fviz_pca_ind(leukemia_pca, geom.ind = "point", col.ind = as.factor(row.names(leukemia_t)))
+# plot PCA
+autoplot(pca_results)
 ```
-This script first reads in and transposes the data, then sorts the genes based on their variance and filters out the top 1000 most variable genes. Then, it creates a heatmap using the filtered data. Lastly, it performs Principal Component Analysis (PCA) and visualizes the samples in a scatterplot based on the first two principal components. The 'fviz_pca_ind' function from 'factoextra' package is used to create this scatterplot.
+
+Notes:
+- This code assumes that the file "leukemiaExp.txt" is in your working directory. If it is not, you need to provide the full path to the file.
+- This code uses standard deviation as a measure of variability to select the top 1000 most variable genes. Different measures of variability may give different results.
+- Also, it's recommended to use `prcomp` with `scale.=TRUE` inside, so each gene would have the same influence on the computation of principal components, regardless of their original scales.
+- The `ggfortify` package provides 'autoplot' function, which provides convenient plotting of PCA objects.
+

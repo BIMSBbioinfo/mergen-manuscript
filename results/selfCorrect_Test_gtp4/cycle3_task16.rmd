@@ -10,48 +10,50 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-It appears the error was caused because there's only one group in your annotation data. When ggplot2 tries to create a separate color for each level of the factor in the 'group' column, it fails because there's only one level to work with. So, let's add a check to see if there's only one group, in that case we won't include a fill aesthetic that tries to apply different colors to different groups.
-
-Please see the revised code below:
+I see. My apologies for the confusion. It seems there might be a mismatch in column names used for merging annotation and gene expression data. The code below takes into account that the first column in the annotation data is named `diagnosis`, and that the column for sample names in the transposed gene expression data is named `sample`.
 
 ```
-# load the necessary libraries
-library(dplyr)
-library(tidyr)
+# Load libraries
 library(readxl)
-library(ggplot2)
+library(tidyverse)
 
-# read the gene expression data
-gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read in data
+gene_expression <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+annotation <- read_tsv("SRP021193.colData.tsv")
 
-# read the annotation data
-annot_data <- read.delim("SRP021193.colData.tsv")
+# Transpose the gene expression data (excluding the first column i.e. Gene names)
+gene_expression_t <- t(gene_expression[,-1])
 
-# reshape the data to a long format
-long_gene_data <- gene_data %>%
-  pivot_longer(cols = -Genes, names_to = "diagnosis", values_to = "Expression")
+# Convert the transposed data to a data frame and name the columns as the Gene names
+gene_expression_transposed <- as.data.frame(gene_expression_t, 
+                                            row.names = 1, 
+                                            col.names = gene_expression[[1]])
 
-# merge the two datasets based on the common column "diagnosis"
-merged_data <- left_join(long_gene_data, annot_data, by = "diagnosis")
+# Add "sample" as a column in gene_expression df based on its row names
+gene_expression_transposed$sample <- rownames(gene_expression_transposed)
 
-# generate boxplot
-n_groups <- length(unique(merged_data$group))
+# Convert "sample" column to a character (not factor) to avoid issues with join operation
+gene_expression_transposed$sample <- as.character(gene_expression_transposed$sample)
 
-if(n_groups > 1) {
-    p <- ggplot(merged_data, aes(x = diagnosis, y = Expression, fill = group)) +
-       geom_boxplot() +
-       theme(axis.text.x = element_text(angle = 90, hjust = 1))
-} else {
-    p <- ggplot(merged_data, aes(x = diagnosis, y = Expression)) +
-       geom_boxplot() +
-       theme(axis.text.x = element_text(angle = 90, hjust = 1))
-}
+# Similarly, convert the 'diagnosis' column of annotation data to character
+annotation$diagnosis <- as.character(annotation$diagnosis)
 
-print(p)
+# Merge data
+merged_data <- left_join(annotation, gene_expression_transposed, by = c("diagnosis" = "sample"))
+
+# Now, you can plot box plots for each sample based on their 'group' variable.
+
+ggplot(gather(merged_data, Gene, Expression, -diagnosis, -group, -LibrarySelection),
+       aes(x = diagnosis, y = Expression, fill = group)) +
+  geom_boxplot() +
+  theme(axis.text.x=element_text(angle = 90, hjust = 1)) + 
+  ylab("Gene Expression") +
+  xlab("Samples")
 ```
-This code checks the number of unique groups in the merged data, if there's more than one group it colors the boxplots based on group. Otherwise, it produces a boxplot without color-coding.
+
+Specifically, this code now transforms data as before but uses the correct column names based on your annotation file. It then joins the two data sets based on these columns and plots the resulting merged data.

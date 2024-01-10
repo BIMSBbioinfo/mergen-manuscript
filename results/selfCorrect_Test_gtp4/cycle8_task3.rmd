@@ -10,25 +10,24 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-```
-# You need to install the readxl package if you haven't installed it. 
-# Use the following command to install 
-# 
+To read an Excel file in R, you can use the readxl package. First, you need to install it if you haven't done this before, using the command ``. 
 
-# Once done, load the package
+Here is the R code to read the data and get the number of genes and samples:
+
+```
+# Load necessary library
 library(readxl)
 
-# Read the excel file
+# Load data
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Number of genes can be obtained by subtracting 1 from the number of rows (excluding header)
-num_genes <- nrow(data) - 1
-
-# Number of samples can be obtained by subtracting 1 from the number of columns (excluding gene names)
-num_samples <- ncol(data) - 1
+# Get the number of genes and samples
+num_genes <- nrow(data)
+num_samples <- ncol(data) - 1  # Subtract 1 to not count the gene names column
 
 # Print the number of genes and samples
 print(paste("Number of genes: ", num_genes))
 print(paste("Number of samples: ", num_samples))
 ```
-This code will read your excel file into the R data frame and calculate the number of genes and samples from it. Remember to replace the file path in read_excel() with your actual file path if your file is located elsewhere.
+
+In this code, `read_excel` function is used to read the Excel data, `nrow` function is used to get the number of rows (i.e., genes), and `ncol` function is used to get the number of columns (i.e., samples) in the data. The 1 is subtracted from the number of columns (using `- 1`) to exclude the column for the gene names. The final result is printed once the code is run.

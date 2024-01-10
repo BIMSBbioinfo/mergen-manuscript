@@ -9,28 +9,26 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is one way you can do this:
+Here is the R code to achieve the requested task. This code first reads the tab separated file using the `read.table` function. It checks the number of columns (samples) in the data frame. If the number of columns is more than 500, it randomly selects 500 columns and creates a subset of the data.
 
 ```
-# Load library
-library(dplyr)
+# Read tab separated file
+data <- read.table(file = "leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Import data
-data <- read.table("leukemiaExp.txt", header=TRUE, row.names=1, sep="\t", check.names=FALSE)
-
-# Check if there are more than 500 columns
-if (ncol(data) > 500){
-  # Get a random sample of 500 columns
-  rand_sample <- sample(ncol(data), 500)
+# Check if there are more columns (samples) than 500
+if(ncol(data) > 500){
+  # Randomly sample 500 samples (columns) 
+  sample_index <- sample(c(2:ncol(data)), 500)
   
-  # Create a subset
-  data_subset <- data[, rand_sample]
+  # Create a subset of the data using selected samples
+  subset_data <- data[,sample_index]
 } else {
-  # No need to create a subset since we have less than 500 columns
-  data_subset <- data
+  subset_data <- data
 }
+
+# Now subset_data is the required data subset
 ```
 
-In this code, we first import the data file as a data frame with the `read.table` function in R, and set `row.names=1` to use the first column (gene names) as the row names of the data frame. `header=TRUE` indicates that the first row of the source file is a table header.
+Please replace `"leukemiaExp.txt"` with the actual path of your file if it resides in a different directory.
 
-We then check the number of columns and if it's over 500, a random sample of 500 column indices is drawn using the `sample` function, and applied to subset the data frame. This sample is taken without replacement, so you'll get 500 unique samples. Note that because each column corresponds to a single sample, we're effectively randomly sampling the samples themselves. If there are less than or equal to 500 columns, the original dataset is used.
+Note: The structure of your data assumes that the first column (row.names) contains gene names, and the remaining columns are samples.

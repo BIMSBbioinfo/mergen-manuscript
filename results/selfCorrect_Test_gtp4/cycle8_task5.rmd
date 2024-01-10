@@ -9,17 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+To achieve this task we are going to use the `read.delim` function from base R to import the data, then use the `apply` function to calculate the standard deviation for each gene (row). Then, we will order the genes based on their standard deviations in descending order and select the top 1000. Here's how this can be achieved with R:
+
 ```
-# Load the data
-leukemia_exp_data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
+# Import data
+data <- read.delim("leukemiaExp.txt", check.names = FALSE, row.names = 1)
 
-# Calculate variability for each gene (row)
-gene_variability <- apply(leukemia_exp_data, 1, var)
+# Calculate standard deviation for each gene (row)
+std_dev <- apply(data, 1, sd)
 
-# Get the index of the 1000 most variable genes
-most_variable_genes <- order(-gene_variability)[1:1000]
+# Order genes based on standard deviation (desc order)
+ordered_genes <- order(std_dev, decreasing = TRUE)
 
-# Subset the data to retain only the top 1000 most variable genes
-filtered_leukemia_exp_data <- leukemia_exp_data[most_variable_genes, ]
-```
-Note: Replace `"leukemiaExp.txt"` with the actual path to your tab-separated file. The code assumes that the first column contains the gene names and the remaining columns contain the sample data. The code calculates the variance (as an estimate of variability) for each gene and retains the top 1000 most variable genes. If a different measure of variability is needed, the function `var` can be replaced in the `apply` function. Also note that the function `var` returns `NA` if there is only one value for the gene (row) and thus there is no variability. The code does not handle `NA` values; please pre-process your data to handle / remove `NA` values if necessary.
+# Select top 1000 genes
+data_top_1000 <- data[ordered_genes[1:1000], ]
+``` 
+
+This results in a new data frame, `data_top_1000` containing the top 1000 most variable genes based on their standard deviations.

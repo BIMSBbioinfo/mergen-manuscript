@@ -10,63 +10,60 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the confusion. The issue seems to be with duplicated gene names. Rows in a data frame in R must have unique names. Here, I'll add check for duplicated gene names and if duplicated gene names exist, a suffix will be added to make all gene names unique.
-
-Here is the corrected code:
-
+Apologies for the confusion earlier. Here is an updated version of the code:
 ```
-# Load necessary libraries
-library("DESeq2")
-library("readxl")
-library("tidyverse")
+# Import required libraries
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
 
-# Read the data
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-col_data <- read_tsv("SRP021193.colData.tsv")
+# Load gene count file
+gene_counts <- read_excel("Supplementary_Table_1_exp.xlsx")
+col_data <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors=FALSE, sep="\t")
 
-# Check for duplicate gene names and make all gene names unique
-if (any(duplicated(count_data$Genes))) {
-  count_data$Genes <- make.unique(as.character(count_data$Genes))
+# Ensuring that sample names in annotation data and count data are identical
+rownames(col_data) <- col_data$diagnosis
+colnames(gene_counts) <- c("Genes", rownames(col_data))
+
+# Redefining rownames in count data
+rownames(gene_counts) <- gene_counts$Genes
+gene_counts <- gene_counts[,-1]
+
+# Checking for duplicate row names and removing them if any
+dup <- anyDuplicated(rownames(gene_counts))
+if (dup > 0) {
+  gene_counts <- gene_counts[-dup, ]
 }
 
-# Set rownames to gene names and remove 'Genes' column
-rownames(count_data) <- count_data$Genes
-count_data$Genes <- NULL
-
-# Convert count data to DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = count_data,
-                              colData = col_data,
-                              design = ~ group)
-
-# Perform differential expression analysis
+# Running DESeq2 
+dds <- DESeqDataSetFromMatrix(countData = gene_counts, colData = col_data, design = ~ group)
 dds <- DESeq(dds)
 
-# Get differentially expressed genes
+# Extracting group specific genes
 res <- results(dds)
+group_specific_genes <- subset(res, padj < 0.05)
 
-# Get significantly differentially expressed genes
-sig_genes <- subset(res, padj < 0.05)
-sig_genes <- rownames(sig_genes)
+# Performing PCA
+pca_data <- prcomp(t(assay(dds)[rownames(group_specific_genes), ]))
 
-# Subset the count data with significant genes only
-count_data_sig <- count_data[sig_genes, ]
+# prepare data for ggplot
+df <- data.frame(pca_data$x, group = col_data$group)
 
-# Run PCA on the transposed dataset
-pca <- prcomp(t(count_data_sig))
-
-# Get a dataframe for plotting
-df <- data.frame(pca$x, diagnosis = col_data$diagnosis)
-
-# Make the plot
-ggplot(df, aes(PC1, PC2, color = diagnosis)) +
+# generating PCA plot
+p <- ggplot(df, aes(x = PC1, y = PC2, color = group)) + 
   geom_point() +
-  theme_minimal() +
-  labs(title = "PCA Plot", x = "PC1", y = "PC2")
-```
+  ggtitle("PCA plot colored by group") +
+  xlab("PC1") + 
+  ylab("PC2") +
+  theme_minimal()
 
-This code checks for duplicate gene names, and if there are any, it makes them unique by adding a suffix. It then sets the rownames of the count_data dataframe to this gene list and removes the 'Genes' column. It runs PCA only on the significant genes and plots them colored by the 'diagnosis' variable from your annotation data.
+print(p)
+```
+This updated code makes sure the count data and annotation data have identical sample names, handles duplicate row names, and correctly segments data for DESeq analysis.

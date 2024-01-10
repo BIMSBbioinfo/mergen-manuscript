@@ -10,69 +10,51 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-The "error: more columns than column names" error means that your files might contain more columns than what's specified in the file headers. This error usually occurs if the data file is not formatted correctly or if there is a mismatch between the data and their header. To resolve this error, you need to open your data and manually inspect it for irregularities, such as extra columns or typo in the header.
+I see, it seems that all samples in the column 'group' have the same value. This is problematic for differential expression analysis, which relies on comparing different groups. If there is only a single group, no comparisons can be made.
 
-However, as we don't have access to your actual data files, here is the example from previously provided data snippets to demonstrate the process:
+Below is the modified code that does not require a design formula as there is a single group.
 
 ```
-library(DESeq2)
+# Required Packages
 library(readxl)
+library(DESeq2)
 library(ggplot2)
-library(tibble)
+library(readr)
 
-# load count data
-data <- read_excel("Supplementary_Table_1_exp.xlsx")
-rownames(data) <- data$Genes
-data$Genes <- NULL
+# Loading data
+rna <- read_excel("Supplementary_Table_1_exp.xlsx", col_names=TRUE)
+coldata <- read_tsv("SRP021193.colData.tsv")
 
-# Make a copy of data to avoid changes in original data
-newdata <- data
+# Row names as gene names for RNA seq. Count table
+rownames(rna) <- rna$Genes 
+rna <- rna[,-1]
 
-# If there are more column than column names,
-# add anonymous names to unnamed columns
-if(ncol(newdata) > length(names(newdata))) {
-  missing <- ncol(newdata) - length(names(newdata))
-  names(newdata) <- c(names(newdata), paste0("V", seq_along(missing)))
-}
+# Order the coldata in the same order as columns in the count data
+coldata <- coldata[match(colnames(rna), coldata$LibrarySelection),]
 
-# load annotation data 
-annotation <- read.table("SRP021193.colData.tsv", header = TRUE)
-rownames(annotation) <- annotation$LibrarySelection
-colData <- DataFrame(annotation)
+# Remove or fill NA's in group column if they exists
+# let's replace NA values with 'Unknown'
+coldata$group[is.na(coldata$group)] <- 'Unknown'
 
-# construct DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = newdata, colData = colData, design = ~ group)
+# CountDataSet from DESeq2 package
+dds <- DESeqDataSetFromMatrix(countData = rna, colData = coldata, design = ~ 1)
 
-# perform differential expression analysis
-dds <- DESeq(dds)
+# Variance stabilizing transformation
+vst_dds <- vst(dds)
 
-# find genes specific for each "group"
-resList <- lapply(unique(colData$group), function(gene) results(dds, contrast=c("group", gene)))
-
-rld <- rlog(dds)
-data <- assay(rld)
-
-# Extract group specific genes
-sigGenes <- unique(unlist(lapply(resList, function(x) rownames(x[which(x$padj < 0.1), ]))))
-
-# Subset the data to include only group specific genes
-data_subset <- data[sigGenes, ]
-
-# Perform PCA
-pca <- prcomp(t(data_subset))
-
-# Prepare data for ggplot2
-df <- data.frame(pca$x)
-df$group <- colData$group
-
-# Generate PCA plot
-ggplot(df, aes(PC1, PC2, color = group)) +
-  geom_point(size = 3) +
-  theme_classic()
+# PCA plot for group specific genes
+pcaData <- plotPCA(vst_dds, intgroup="group", returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, color=group)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed()
 ```
-Please make sure to check your data files for any irregularities that could lead to errors. I recommend visually inspecting your data file to ensure there's no unexpected elements that may cause this error.
+
+In this version of the script, I've used the 'vst' function from the DESeq2 package, which performs variance stabilizing transformations on the count data, without the need for differential expression analysis. This method can be used when you want to explore data with principal component analysis (PCA), but you have only a single group.

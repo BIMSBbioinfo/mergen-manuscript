@@ -9,23 +9,19 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-To solve this task, we'll have to load the file and then access the attributes of the resultant data.frame object which will give us the number of genes and samples. 
-
 ```
-# Load required libraries
-library(readr)
+# Read the data into R
+leukemia_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Load the data into a dataframe
-leukemiaData <- read_tsv("leukemiaExp.txt")
+# Get the dimensions of the data. This returns the number of rows (genes) and columns (samples).
+dimensions <- dim(leukemia_data)
 
-# Get number of genes and samples
-num_genes <- nrow(leukemiaData)
-num_samples <- ncol(leukemiaData) - 1 # We subtract 1 to exclude the column of gene names
+# Extract the number of genes and samples
+num_genes <- dimensions[1]
+num_samples <- dimensions[2]
 
-# Print results
-print(paste("Number of genes: ", num_genes))
-print(paste("Number of samples: ", num_samples))
+# Print the number of genes and samples
+print(paste("Number of genes:", num_genes))
+print(paste("Number of samples:", num_samples))
 ```
-
-This code will print out the number of genes (rows in the dataset minus the row of column names) and the number of samples (columns in the dataset minus the column of gene names). Please make sure that the path given to read_tsv is the correct path where your "leukemiaExp.txt" file is located.
-Notice how the `read_tsv` function is used instead of the more common `read.table` function. This is because `read_tsv` is specifically designed to read tab separated values, which is what our data is in.
+This R code will read the gene expression data into R, retrieve the dimensions of the data, and extract and print the number of genes and samples. The `read.table` function is used to read the data into R. The `dim` function is used to get the dimensions of the data. The function `paste` is used to concatenate strings for printing.

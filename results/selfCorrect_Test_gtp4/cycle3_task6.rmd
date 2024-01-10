@@ -9,25 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is a sample R code to subset the data based on the number of columns:
+Here is the R code to randomly sample the columns if there are more than 500 samples:
 
 ```
-# Read data
-gene_expression <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Read the data
+data <- read.table("leukemiaExp.txt", header = TRUE, check.names = FALSE, sep = "\t")
 
-# Check if the number of columns is more than 500
-if (ncol(gene_expression) > 500) {
-  # Select 500 columns randomly
-  columns_sample <- sample(ncol(gene_expression) - 1, 500) + 1
-  
-  # Subset data
-  gene_expression_subset <- gene_expression[, c(1, columns_sample)]
+# Check the number of samples
+if(ncol(data) > 500){
+  # Randomly sample columns if there are more than 500. 
+  # First column (gene names) is preserved, and 500 columns are randomly selected from the rest.
+  sampled_data <- data[, c(1, sample(2:ncol(data), 500))]
 } else {
-  # If the number of columns is less than or equal to 500, keep the data as it is
-  gene_expression_subset <- gene_expression
+  sampled_data <- data
 }
-
-
 ```
 
-In the code above, we first read the data into R using the `read.table()` function. Then, we check if the number of columns is more than 500. If yes, we randomly sample 500 column indices (excluding the first column which contains gene names) and subset the data to include only these columns. If the number of columns is not more than 500, we keep the data unchanged.
+This R code first reads the data from the file "leukemiaExp.txt" into a data frame. If the number of columns (i.e., samples) is more than 500, it randomly selects 500 columns from the data frame excluding the first column (i.e., gene names). The selected columns and the gene names column are kept in a new data frame. If the number of columns is less than or equal to 500, no subsetting action is taken.

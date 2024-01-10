@@ -5,22 +5,17 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
-You can read the file using `read.table` or `read.csv` function in R and then use `dim` function to get the number of rows and columns. Here is the code.
+Here is your R script:
 
 ```
-# Read the file
-subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Use read.delim() function from the utils package to read the tab separated file
+subjects_df <- read.delim("subjects.txt", header = TRUE, check.names = FALSE)
 
-# Print number of rows and columns
-nrow(subjects)
-ncol(subjects)
+# Print the dimensions of the dataframe
+print(dim(subjects_df))
 ```
-Above code will first read the file named "subjects.txt" into a DataFrame named subjects. Then it prints the number of rows and columns in the DataFrame. 
-
-The `read.table` function is used to read the file, `header = TRUE` is used because the first line of the file contains column names, and `sep = "\t"` is used because the file is tab-delimited.
-
-The `nrow` function is used to get the number of rows and `ncol` function is used to get the number of columns in the DataFrame.
+This script will first load the data into a data frame in R, and then print the number of rows and columns of the data frame. The output of the dim() function gives you a vector where the first element is the number of rows and the second element is the number of columns.

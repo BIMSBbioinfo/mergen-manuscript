@@ -9,20 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Below is the R code to complete the task. It reads the data into R, calculates the standard deviation (a measure of variability) for each gene across all samples, sorts the genes based on their standard deviations in descending order, and then selects the top 1000 most variable genes.
+Here is the required R script for the task.
+It reads the leukemiaExp.txt file into R as a data.frame (with row names being the first column of the data), computes the standard deviation (a measure of variability) for each gene across samples, ranks the genes based on this measure (in descending order), and then selects the top 1000 genes based on this ranking.
 
 ```
 # Read the data
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
+leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Calculate standard deviation for each gene
-gene_variability <- apply(data, 1, sd)
+# Compute a measure of variability for each gene
+gene_variability <- apply(leukemiaExp, 1, sd)
 
-# Sort the genes based on standard deviation in descending 
-sorted_genes <- sort(gene_variability, decreasing = TRUE)
+# Rank the genes based on this measure
+gene_ranking <- order(gene_variability, decreasing = TRUE)
 
-# Select the top 1000 most variable genes
-top_genes <- head(names(sorted_genes), 1000)
+# Select the top 1000 genes
+top_genes <- leukemiaExp[gene_ranking[1:1000],]
 ```
-
-This will leave you with a character vector `top_genes` containing the names of the 1000 most variable genes. Also keep in mind that R's `apply` and `sort` functions assume that higher values indicate greater variability. If your measure of variability is such that lower values indicate greater variability, you would need to adjust the code accordingly.
+In this code, `read.table` function is used to read the file, `apply` function is used with `sd` (standard deviation, a measure of variability) to compute variability for each gene. Then `order` function is applied to sort the genes in decreasing order of variability. Finally, the top 1000 genes are selected based on the gene ranking.

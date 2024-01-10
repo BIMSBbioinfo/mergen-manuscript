@@ -10,51 +10,65 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the persistent error. There may be confusion due to how the coldata is matched to the countdata. Let's reorder coldata according to the columns of countdata. For duplicates, Use the `duplicated` function of R in the row names of countdata. 
-
-Below is the corrected R code:
+I apologize for the errors. My previous assumptions might not have been correct. It seems the row names for `colData_df` are NULL. So it is important to ensure that the column order in `colData_df` matches that of `cnts_m`. Also, you might need to set rownames for `colData_df` using `row.names` function.
 
 ```
-# library
-library(readxl)
-library(DESeq2)
-library(tidyverse)
+# Load necessary libraries
 library(ggplot2)
+library(DESeq2)
+library(readxl)
+library(tidverse)
 
-# load data
-countdata <- read_xlsx("Supplementary_Table_1_exp.xlsx") %>% column_to_rownames(var="Genes")
+# Read in the count data
+cnts <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Remove duplicates from the count data
-countdata <- countdata[!duplicated(rownames(countdata)), ]
+# Convert the count data to matrix and set rownames
+cnts_m <- as.matrix(cnts[, -1])
+rownames(cnts_m) <- cnts$Genes
 
-coldata <- read.table("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
+# Read in the sample data
+colData <- read_tsv("SRP021193.colData.tsv", col_types = cols())
 
-# reorder coldata to match countdata
-coldata <- coldata[match(colnames(countdata), coldata$diagnosis), ]
+# Arrange the columns of count data according to order in colData
+cnts_m <- cnts_m[, colData$diagnosis]
 
-# create DESeq2 dataset
-dds <- DESeqDataSetFromMatrix(countData = countdata, colData = coldata, design = ~ diagnosis)
+# Convert to DataFrame and set rownames
+colData_df <- DataFrame(colData)
+row.names(colData_df) <- colData_df$diagnosis
 
-# normalize counts
-dds <- estimateSizeFactors(dds)
-norm.counts <- counts(dds, normalized = TRUE)
+# Create the DESeq2 object
+dds <- DESeqDataSetFromMatrix(
+  countData = cnts_m,
+  colData = colData_df,
+  design = ~ group  # adjust the design as per your experiment
+)
 
-# principal component analysis
-pca <- prcomp(t(norm.counts))
+# Perform normalization
+dds <- DESeq(dds)
 
-# plot: color coded by group
-df <- as.data.frame(pca$x)
-df$group <- coldata$group
-ggplot(df, aes(x = PC1, y = PC2, color = group)) + geom_point() 
+# Rlog transformation
+rld <- rlog(dds, blind = FALSE)
 
-# plot: color coded by LibrarySelection
-df$LibrarySelection <- coldata$LibrarySelection
-ggplot(df, aes(x = PC1, y = PC2, color = LibrarySelection)) + geom_point() 
+# PCA plot colored by 'group'
+df <- plotPCA(rld, intgroup="group", returnData=TRUE)
+percentVar <- round(100 * attr(df, "percentVar"))
+ggplot(df, aes(PC1, PC2, color=group)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+  coord_fixed()
+
+# PCA plot colored by 'LibrarySelection'
+df <- plotPCA(rld, intgroup="LibrarySelection", returnData=TRUE)
+percentVar <- round(100 * attr(df, "percentVar"))
+ggplot(df, aes(PC1, PC2, color=LibrarySelection)) +
+  geom_point(size=3) +
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+  coord_fixed()
 ```
-
-In this version of the code, first check if the row names of count data have duplicates, if true, they are removed. Then, coldata is reordered to match countdata. It uses the match function to correctly associate columns in the countdata to the rows in the coldata. Then normalized counts are calculated, and PCA plots are created.

@@ -9,42 +9,41 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the confusion. The 'some_value' is meant to be replaced by an actual integer indicating the number of clusters you want. If you want, for instance, to make 3 clusters, replace 'some_value' with 3.
-
-Let's assume that we desire 3 clusters. Here's your revised instructions:
+I apologize for the confusion, The `pheatmap` object is a `grob` object which cannot be subsetted using `$` or `[[`. The class of objects returned by `pheatmap` isn't a structure that allows easy extraction of attribute, so we can directly calculate the clusters from distance matrix. Here is the fixed and complete code block:
 
 ```
-# load necessary packages
-library(dplyr)
+# Load required packages
+library(tidyverse)
 library(pheatmap)
+library(cluster)
 
-# read the gene expression data, assuming the file is in the same directory as this R script.
-data <- read.delim("leukemiaExp.txt", header = TRUE, row.names = 1)
+# Load gene expression data
+data <- read.delim("leukemiaExp.txt", row.names = 1, header = TRUE)
 
-# calculate the standard deviation of gene expression for each gene
-data$sd = apply(data, 1, sd)
+# Compute variance for genes across samples
+gene_var <- apply(data, 1, var)
 
-# select the top 1000 genes with highest standard deviation (variability)
-top1000 = data %>% top_n(1000, sd)
+# Retain most variable top 1000 genes
+variable_genes <- names(sort(gene_var, decreasing = TRUE))[1:1000]
 
-# remove the 'sd' column as it is not needed anymore
-top1000$sd = NULL
+# Extract variable genes matrix
+data_var <- data[variable_genes, ]
 
-# Calculate the distance and the clustering of the samples
-dist_value = dist(t(top1000))
-hc_value = hclust(dist_value)
+# Compute the distance matrix
+dist_matrix <- dist(t(data_var))
 
-# perform hierarchical clustering and plot heatmap
-pheatmap(top1000, clustering_distance_rows = dist_value, clustering_distance_cols = dist_value, 
-         clustering_method = "complete", show_rownames = F)
+# Fit hierarchical clustering
+cluster_info <- hclust(dist_matrix, method="ward.D2")
 
-# extract the clusters
-cutree_res = cutree(hc_value, k=3)
+# Cut the dendrogram into 5 clusters
+gene_cluster <- cutree(cluster_info, k=5)
 
-# get cluster-specific genes
-cluster1 = top1000[cutree_res == 1, ]
-cluster2 = top1000[cutree_res == 2, ]
-cluster3 = top1000[cutree_res == 3, ]
+# Extract cluster specific genes for each cluster
+cluster_genes <- lapply(1:max(gene_cluster), function(x) variable_genes[gene_cluster == x])
+
+# Prints out a list object with cluster_ids as names and each cluster's genes as a vector.
+names(cluster_genes) <- paste0("Cluster", 1:max(gene_cluster))
+cluster_genes
 ```
 
-This code will perform the same actions but now with 3 clusters and will not produce an error regarding 'some_value'.
+In this corrected code, we directly calculate the clusters from distance matrix using `hclust` and `cutree` to cutting dendrogram into determined number of clusters. Then  `lapply` function to extract genes specific for each cluster based on the cluster assignments from the `cutree` function.

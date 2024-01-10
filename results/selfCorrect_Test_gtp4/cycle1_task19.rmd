@@ -10,74 +10,62 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Here is the R code for your task. You may need to install packages if not done already.
-
-First we load the DESeq2 and ggplot packages,  read in the count data and the sample annotation data, and create a DESeqDataSet from the count data. Then normalize the count data.
-For PCA plotting, we extract the rlog transformed values for plotting and make PCA plot. Colors of points in PCA plot are based on "group" and "LibrarySelection".
-
-Here is the R code:
+First, the necessary packages must be installed and then imported. Then the data must be imported:
 
 ```
-# Install necessary packages 
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    
-BiocManager::install("DESeq2")
+# Install required packages
+if (!require("DESeq2")) {}
+if (!require("ggplot2")) {}
+if (!require("readxl")) {}
+if (!require("readr")) {}
 
-
-
-
-# Load necessary packages
+# Load required packages
 library(DESeq2)
 library(ggplot2)
 library(readxl)
-library(tidyverse)
+library(readr)
 
-# Read in the count data
-count_data <- read_excel('Supplementary_Table_1_exp.xlsx')
+# Load data
+table <- read_excel("Supplementary_Table_1_exp.xlsx")
+colData <- read_delim("SRP021193.colData.tsv", "\t")
+```
 
-# Read in the sample annotation data
-col_data <- read_delim('SRP021193.colData.tsv', delim = '\t')
+Next, a DESeqDataSet is created and the counts are normalized. Then two Principal Component Analyses are performed on the normalized data:
 
-# Make sure that the sample names match 
-rownames(col_data) <- col_data$diagnosis
-all(colnames(count_data)[-1] %in% rownames(col_data))
-
+```
 # Create a DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = count_data[, -1], colData = col_data, design = ~ 1)
+dds <- DESeqDataSetFromMatrix(countData = table[, -1], colData = colData, design = ~ group + LibrarySelection)
 
 # Normalize counts
 dds <- estimateSizeFactors(dds)
-norm_counts <- counts(dds, normalized=TRUE)
+norm_counts <- counts(dds, normalized = TRUE)
 
-# PCA plot
-# We are using rlog transformation for PCA plot which is better for making PCA plots since it does not over emphasize the very highly expressed genes for determining the direction of the PC's.
-rld <- rlog(dds)
-pcadata <- plotPCA(rld, intgroup = c("group", "LibrarySelection"), returnData = TRUE)
-percentVar <- round(100*attr(pcadata, "percentVar"))
+# Run PCA on normalized counts
+pca_res <- prcomp(t(norm_counts))
 
-# Create PCA plots color coded by different factors.
-# PCA plot color code by Group.
-ggplot(pcadata, aes(PC1, PC2, color=group)) +
-  geom_point(size=3) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
-  coord_fixed() +
-  ggtitle("PCA plot (Colored by Group)") +
-  theme_bw()
+# Prepare data for ggplot
+pca_data <- as.data.frame(pca_res$x)
+pca_data$group <- colData$group
+pca_data$LibrarySelection <- colData$LibrarySelection
 
-# PCA plot color code by LibrarySelection.
-ggplot(pcadata, aes(PC1, PC2, color=LibrarySelection)) +
-  geom_point(size=3) +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
-  coord_fixed() +
-  ggtitle("PCA plot (Colored by LibrarySelection)") +
-  theme_bw()
+# Plot PCA color coded by "group"
+ggplot(pca_data, aes(x = PC1, y = PC2, color = group)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot color-coded by group")
 
+# Plot PCA color coded by "LibrarySelection"
+ggplot(pca_data, aes(x = PC1, y = PC2, color = LibrarySelection)) +
+  geom_point() +
+  xlab("PC1") +
+  ylab("PC2") +
+  ggtitle("PCA plot color-coded by LibrarySelection")
 ```
-You need to replace file paths with actual paths of the files in your local machine.
+
+In this code, DESeq2's `DESeqDataSetFromMatrix` function is used to create a DESeqDataSet from the count matrix. The `estimateSizeFactors` function is then used to normalize the count data. The DESeq2 package is not required to run PCA, but it is used here because it contains useful functions for RNA-seq data processing and analysis. PCA is done on the transpose of the normalized counts with R's base `prcomp` function, which calculates the principal components of a numerical matrix. The resulting PCA object is transformed into a data frame so that it can be plotted with ggplot2.

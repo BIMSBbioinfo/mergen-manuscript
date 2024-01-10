@@ -10,42 +10,29 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Here is the R code to read in the count table from the xlsx file and the sample annotations from the TSV file and to get the dimensions of each.
-
-First, you will need to install the necessary R packages: "readxl" for reading Excel files, and "readr" for reading TSV files. 
+Sure, you can use the `readxl` and `read.delim` functions from tidyverse packages to read Excel and tsv files respectively. And `dim` function to get the number of rows and columns. Here is the R code to perform your task.
 
 ```
-# Install necessary packages
-
-
 # Load necessary packages
 library(readxl)
 library(readr)
+
+# Read Excel file
+exp_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# Check the number of rows and columns
+cat('The number of rows and columns in the count table: ', dim(exp_table), '\n')
+
+# Read annotation tsv file
+annotation_table <- read_delim("SRP021193.colData.tsv", delim = '\t')
+
+# Check the number of rows and columns
+cat('The number of rows and columns in the annotation table: ', dim(annotation_table), '\n')
 ```
 
-Then, read in the data from the Excel file (stored in the variable `count_table`) and the TSV file (stored in the variable `annotations`):
-
-```
-# Read the count table from the xlsx file
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Read the sample annotations from the TSV file
-annotations <- read_tsv("SRP021193.colData.tsv")
-```
-
-Finally, print the dimensions of each:
-
-```
-# Get the number of rows and columns in the count table
-cat("The count table has", nrow(count_table), "rows and", ncol(count_table), "columns.\n")
-
-# Get the number of rows and columns in the annotations table
-cat("The annotations table has", nrow(annotations), "rows and", ncol(annotations), "columns.")
-```
-
-Note: Make sure you replace `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the actual paths to those files on your system if they are not in your working directory.
+Please replace the file paths with the actual ones where your files are stored. The code assumes that the files are in the current working directory of R environment.

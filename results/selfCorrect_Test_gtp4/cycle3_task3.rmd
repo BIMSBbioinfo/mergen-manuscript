@@ -10,24 +10,17 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-To find out the number of genes and samples in the dataset, you can use the readxl function to read the dataset and then use the dim function to get the number of rows (genes) and the columns (samples). To do this, you first need to install and load the readxl package. Here's how to do it:
-
 ```
-# Check whether package 'readxl' is installed then install it and load
-if (!require(readxl)) 
+# First, you need to install and load the necessary libraries
 
-library(readxl)
+library("readxl")
 
-# read the xlsx file into a dataframe
-dataset <- read_excel("Supplementary_Table_1_exp.xlsx")
-  
-# find the number of genes and samples
-num_genes <- nrow(dataset) - 1  # We subtract 1 here because the first row is the header
-num_samples <- ncol(dataset) - 1  # Subtract 1 here because the first column is not a sample, but the gene names
+# Now, read the Excel data into a dataframe in R
+excel_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# print the number of genes and samples
-cat("Number of genes:", num_genes, "\n")
-cat("Number of samples:", num_samples)
+# Print the number of genes and samples
+num_genes <- nrow(excel_data)
+num_samples <- ncol(excel_data)-1 # subtract 1 because the first column is gene names
+
+cat("Number of genes:", num_genes, "\nNumber of samples:", num_samples)
 ```
-
-Please note that this code assumes that the file "Supplementary_Table_1_exp.xlsx" is in your current working directory. If not, you'll need to provide the full path. Also, we subtract one from the number of rows and the number of columns to account for the header row and the column containing gene names.

@@ -10,67 +10,42 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the error in the previous code. It stands to reason that DESeq cannot handle missing values in the design formula. To address this issue, we need to eliminate any rows of the metadata that contain NAs (missing values). Please see the modified code below:
+Apologies once again for the confusion. I used `/actual/path/to/` as a placeholder. You should replace it with the actual path to your excel and tsv files in your computer. For instance, if you have stored your files in the desktop within a folder named "dataset", replace `/actual/path/to/` with `~/Desktop/dataset/`. If your files are under Documents, you replace `/actual/path/to/` with `~/Documents/`.
+
+Here is the skeleton of the code with placeholder paths. Replace `your_file_path_here` with the path to your files:
 
 ```
-# Load necessary packages
-library(DESeq2)
-library(readxl)
-library(readr)
-library(ggplot2)
-library(ggfortify)
+# load the required libraries
+library("readxl")
+library("DESeq2")
+library("FactoMineR")
+library("factoextra")
 
-# Read the count data
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-count_data$Genes <- make.unique(as.character(count_data$Genes))
-rownames(count_data) <- count_data$Genes
-count_data <- count_data[, -1]
+# read count data from excel file
+exp_data <- read_excel("your_file_path_here/Supplementary_Table_1_exp.xlsx")
+rownames(exp_data) <- exp_data$Genes
+exp_data$Genes <- NULL
 
-# Read the metadata
-col_data <- read_tsv("SRP021193.colData.tsv")
+# read colData from a tsv file
+col_data <- read.delim("your_file_path_here/SRP021193.colData.tsv", row.names=1)
 
-# Remove NAs from metadata
-col_data <- col_data[complete.cases(col_data), ]
+# Create a DESeqDataSet
+dds <- DESeqDataSetFromMatrix(countData = exp_data, colData = col_data, design= ~group)
 
-# Ensure count_data and col_data have the same samples
-common_samples <- intersect(colnames(count_data), rownames(col_data))
-count_data <- count_data[, common_samples]
-col_data <- col_data[common_samples, ]
+# perform normalization
+dds_normalized <- DESeq(dds)
 
-# Create DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = as.matrix(count_data), 
-                              colData = col_data, 
-                              design = ~ group)
+# compute PCA
+pca <- prcomp(t(assay(dds_normalized)))
 
-# Normalize the counts
-dds_norm <- estimateSizeFactors(dds)
+# PCA plot color coded by 'group'
+fviz_pca_ind(pca, label = "none", habillage = dds$group, title='PCA plot by group', palette = "jco")
 
-# PCA for samples, color coded by "group"
-vsd <- vst(dds_norm, blind=FALSE)
-data_frame <- plotPCA(vsd, intgroup = "group", returnData=TRUE)
-percentVar <- round(100 * attr(data_frame, "percentVar"))
-p <- ggplot(data_frame, aes(PC1, PC2, color = group)) +
-  geom_point(size = 3) +
-  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
-  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
-  coord_fixed()
-p
-
-# PCA for samples, color coded by "LibrarySelection"
-vsd <- vst(dds_norm, blind=FALSE)
-data_frame <- plotPCA(vsd, intgroup = "LibrarySelection", returnData=TRUE)
-percentVar <- round(100 * attr(data_frame, "percentVar"))
-p <- ggplot(data_frame, aes(PC1, PC2, color = LibrarySelection)) +
-  geom_point(size = 3) +
-  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
-  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
-  coord_fixed()
-p
+# PCA plot color coded by 'LibrarySelection'
+fviz_pca_ind(pca, label = "none", habillage = dds$LibrarySelection, title='PCA plot by LibrarySelection', palette = "jco")
 ```
-
-The `complete.cases()` function is employed here to remove entire rows of the metadata that have missing values. After that, it'll make sure that the count data only includes samples that are also found in the metadata. This code should eliminate the problem and allow you to generate PCA plots without any issues.

@@ -9,17 +9,26 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-You can use the `read.table` function to load the data into R. This function has an argument `header` which we set to `TRUE` because the first line of the file contains the names of the samples and gene. Then count the number of rows and columns in the data frame for genes and samples respectively. Note that we need to subtract 2 from the `ncol` value because the first column represents the gene names and the last one is the gene length.
+You can use the `read.table` method in R to read the dataset and then you use the `dim` function to get the number of rows and columns in the dataset. Because the first column contains the gene names and the last column is gene length, you subtract two from the column count to get the sample count.
+
+Here is the R code:
 
 ```
-# load the data
+# load the .tsv file
 data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# count the number of genes
-gene_count <- nrow(data)
+# get total number of genes (rows)
+num_genes <- nrow(data)
 
-# count the number of samples
-sample_count <- ncol(data) - 2
+# get total number of columns
+num_columns <- ncol(data)
 
-print(paste("The number of genes is", gene_count, "and the number of samples is", sample_count))
+# get total number of samples (subtract 2: one for gene names column and one for gene length)
+num_samples <- num_columns - 2
+
+# print the count
+print(paste("Number of genes: ", num_genes))
+print(paste("Number of samples: ", num_samples))
 ```
+
+Please replace "SRP021193.raw_counts.tsv" with the correct path and filename where your file is located.

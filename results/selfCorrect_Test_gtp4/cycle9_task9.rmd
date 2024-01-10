@@ -9,38 +9,30 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is R code to solve the task:
+I apologize for the confusion. The `autoplot` function from `ggfortify` takes labels from the `prcomp` result itself, hence `xlab` and `ylab` are not required. Here is the corrected code:
 
 ```
-# Load required libraries
-library(tidyverse)
-library(heatmaply)
-library(factoextra)
+# Load the required packages
+library(ggplot2)
+library(ggfortify)
+library(pheatmap)
 
 # Load the data
-data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Compute variability for each gene (row), I will use standard deviation as the variability measure
-data_std <- apply(data, 1, sd)
+# Ensure data is numeric
+data <- data.frame(lapply(data, as.numeric))
 
-# Retain only the genes with highest variability (top 1000)
-top_genes <- names(sort(data_std, decreasing = TRUE))[1:1000]
-data_filtered <- data[top_genes, ]
+# Filter based on variability
+variable_genes <- data[order(apply(data, 1, var), decreasing = TRUE)[1:1000],]
 
-# Generate a heatmap with clustering, using heatmaply package
-heatmaply(data_filtered, title = "Heatmap of top 1000 genes with highest expression variability", colors = heat.colors(256), hclust_method = "average")
+# Generate the heatmap with clustering
+pheatmap(variable_genes)
 
-# PCA Analysis
-pca_results <- prcomp(t(data_filtered), scale=TRUE)
+# Run PCA on the filtered data
+pca <- prcomp(t(variable_genes), scale = TRUE)
 
-# Prepare data for plot
-explained_variance <- fviz_contrib(pca_results, choice = "var")
-
-# Draw PC1 vs PC2
-fviz_pca_ind(pca_results,
-             col.var = "contrib",
-             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
-             repel = TRUE
-)
+# Plot the PCA
+autoplot(pca, colour = 'blue', main = 'PCA for samples')
 ```
-Note: It could be necessary to install needed packages that have been used above. You can install them by typing ``. Also, PCA plot shows the distribution of top genes in 2D space where axis represents first and second principal components, and color intensity shows the contribution of each sample to variability.
+This version of the code should correctly create the heatmap and PCA plot without errors. The principal component labels will automatically be assigned by the `autoplot` function based on the output of `prcomp`.

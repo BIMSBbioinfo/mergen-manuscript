@@ -10,63 +10,58 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the confusion. The error message indicates that there may be duplicate gene names in your count data file. In dealing with RNA-seq data, it's good practice to ensure all gene names are unique. However, if this is not possible, we can append a string to duplicate gene names to make them unique. Here's the updated code:
+Apologies for the confusion. Since the actual files and their locations are unknown, please replace 'Insert_Your_Directory_Path_Here' in the below code block with the actual path to your files on your computer. Furthermore, you may need to adjust the way the files are read in, depending on whether they're locally stored or online. 
+
+An example of a local path could be "C:/Users/YourUsername/Documents" on windows or "/Users/YourUsername/Documents" on macOS.
+
+Here's the R code:
 
 ```
-# Load necessary libraries
+# Load required libraries
 library(DESeq2)
+library(ggplot2)
 library(readxl)
-library(dplyr)
+library(readr)
 
-# Import and pre-process gene counts data
-count_data <- read_xlsx("Supplementary_Table_1_exp.xlsx")
-# Append a suffix for duplicated gene names to make them unique
-dup_genes <- duplicated(count_data$Genes)
-if(any(dup_genes)){
-  count_data$Genes[dup_genes] <- paste(count_data$Genes[dup_genes], '_dup', 1:sum(dup_genes), sep='')
-}
-rownames(count_data) <- count_data$Genes
-count_data$Genes <- NULL  # remove the Genes column as it is now useless
+# Replace this with your local directory path to the Supplementary_Table_1_exp.xlsx and SRP021193.colData.tsv files
+dir_path <- "Insert_Your_Directory_Path_Here"
 
-# Import and pre-process annotation data
-col_data <- read_delim("SRP021193.colData.tsv")
-rownames(col_data) <- col_data[, 1]
-col_data <- col_data[, -1]  # remove the first column as it is now useless 
+# Load the RNASeq counts and the sample annotations
+RNASeq_counts <- read_excel(file.path(dir_path, "Supplementary_Table_1_exp.xlsx"))
+rownames(RNASeq_counts) <- RNASeq_counts$Genes
+RNASeq_counts <- RNASeq_counts[, -1]
 
-# Ensure the sample names in the count data are in the same order as in the column data
-count_data <- count_data[, rownames(col_data)]
+sample_annotations <- read_tsv(file.path(dir_path, "SRP021193.colData.tsv"))
+sample_annotations <- sample_annotations[row.names(RNASeq_counts), ]
 
-# Create DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = as.matrix(count_data), colData = col_data, design = ~ group)
+# Create a DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = RNASeq_counts,
+                              colData = sample_annotations,
+                              design = ~ group)
 
-# Normalize counts using DESeq2
+# Normalize counts
 dds <- estimateSizeFactors(dds)
-normalized_counts <- counts(dds, normalized = TRUE)
+norm_counts <- counts(dds, normalized=TRUE)
 
-# Perform PCA on the normalized counts
-pca_res <- prcomp(t(normalized_counts))
+# Perform Principal Component Analysis
+pca_result <- prcomp(t(norm_counts))
 
-# Prepare the PCA results for ggplot
-pca_df <- data.frame(PC1 = pca_res$x[,1], PC2 = pca_res$x[,2])
-pca_df$Sample_id <- rownames(pca_df)
-pca_df <- left_join(pca_df, col_data, by = "Sample_id")
+#Plot PCA, color-coded by group
+df <- data.frame(pca_result$x)
+df$group <- sample_annotations$group
+ggplot(df, aes(PC1, PC2, color=group)) +
+  geom_point(size=3) +
+  theme_bw() 
 
-# PCA plot color-coded by "group"
-ggplot(pca_df, aes(x = PC1, y = PC2, color = group)) +
-  geom_point() +
-  theme_minimal() +
-  labs(title = "PCA plot color-coded by group")
-
-# PCA plot color-coded by "LibrarySelection"
-ggplot(pca_df, aes(x = PC1, y = PC2, color = LibrarySelection)) +
-  geom_point() +
-  theme_minimal() +
-  labs(title = "PCA plot color-coded by LibrarySelection")
+#Plot PCA, color-coded by LibrarySelection
+df$LibrarySelection <- sample_annotations$LibrarySelection
+ggplot(df, aes(PC1, PC2, color=LibrarySelection)) +
+  geom_point(size=3) +
+  theme_bw()
 ```
-
-This version of the R script will alter the duplicate gene names by appending a suffix to make them unique. Please replace the argument in `design = ~ group` with your correct experimental design if it's not "group".
+Remember to replace `"Insert_Your_Directory_Path_Here"` with your actual directory path.

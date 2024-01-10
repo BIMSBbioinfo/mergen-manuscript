@@ -9,37 +9,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-The error "vector memory exhausted" occurs when the R session runs out of memory. This can happen when working with large datasets, or when there's a need to create large vectors or matrices, which could be due to transposing a large data frame. 
-
-We can optimize the code by not transposing the data and instead reshaping it with `melt` function. Before that, let's ensure the gene column remains as row names and remove it from the dataset to save space:
+Here is an R code that reads the data, checks the number of samples (columns), randomly samples the samples if more than 500 and then produces a boxplot of the selected samples.
 
 ```
-# Import necessary library
-library(reshape2)
+# Read the data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Import the data
-leukemia_data <- read.table("leukemiaExp.txt", header=TRUE, check.names = FALSE)
+# Check number of columns (samples)
+ncol <- ncol(data)
 
-# Make the gene names as rownames and remove them from the dataset
-rownames(leukemia_data) <- leukemia_data[,1]
-leukemia_data <- leukemia_data[,-1]
-
-# Check the number of columns, which equal to the number of samples
-num_samples <- ncol(leukemia_data)
-
-# If there are more than 500 samples, randomly sample 500 columns
-if(num_samples > 500){
-  cols <- sample(num_samples, 500)
-  leukemia_sub <- leukemia_data[,cols]
-} else {
-  leukemia_sub <- leukemia_data
+# If more than 500 samples (columns), randomly select 500
+if(ncol > 500){
+  data <- data[, sample(ncol, 500)]
 }
 
-# Reshape the dataframe into a format compatible with boxplot using melt function
-leukemia_melted <- melt(as.matrix(leukemia_sub))
-
-# Create a boxplot for each of the samples(columns)
-boxplot(value ~ Var2, data = leukemia_melted, main = "Expression Levels", xlab = "Sample", ylab = "Expression")
+# Generate boxplot of the data
+boxplot(data, main = "Boxplot of Samples", ylab = "Expression", xlab = "Samples")
 ```
-
-The `melt` function from 'reshape2' package allows us to reshape the data in a form that `boxplot` requires.
+This code assumes that the file "leukemiaExp.txt" is in your current working directory in R. It also assumes that the file is tab-delimited. If your file uses a different delimiter, you will need to adjust the 'sep' parameter in the read.table() function accordingly.
+Also, the boxplot created represents the expression level of each sample.(each column)

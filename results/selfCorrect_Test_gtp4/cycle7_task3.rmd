@@ -10,21 +10,27 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-Here is the R code to find out the number of genes and samples in the dataset. It assumes that the data is tabulated such that each row represents a gene (excluding the first row of names) and each column represents a sample (excluding the first column of gene names).
+You can use the readxl package in R to read the excel file. Then you can use the dim() function to get the number of rows and columns which represents the number of genes and samples respectively.
+
+Here is the R code:
 
 ```
-# install and load packages
-
+# Load required packages
 library(readxl)
 
-# load data
+# Read the excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# get number of genes and samples
-num_genes <- nrow(data) 
-num_samples <- ncol(data) -1
+# Printing the structure of the data
+# This will show the number of observations (genes) and variables (samples)
+str(data)
 
-# print results
-print(paste("The dataset has", num_genes, "genes and", num_samples, "samples."))
+# Alternatively, you can use the dim() function to directly get the number of genes and samples
+genes <- dim(data)[1]
+samples <- dim(data)[2] - 1  # Subtract 1 because the first column is gene names
+
+print(paste0("Number of genes: ", genes))
+print(paste0("Number of samples: ", samples))
 ```
-This R code installs and loads the `readxl` library to import the excel data. It then uses the `nrow` function to get the number of rows in the data (representing the genes), and `ncol` function to get the number of columns (representing the samples), subtracting 1 to account for the column of gene names. The results are then printed to the console.
+
+This code reads the Excel file and retrieves the structure of the data, which by default includes the number of observations (genes) and variables (samples). The number of samples is minus one because the first column is gene names.

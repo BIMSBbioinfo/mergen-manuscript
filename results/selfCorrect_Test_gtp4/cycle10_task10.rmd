@@ -9,37 +9,35 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-First we read the data, transpose so that genes are columns and samples are rows, calculate the standard deviation for each gene, order based on the standard deviation and keep the top 1000 variable genes. This assumes that the files are tab separated and have a header. 
+Here is a simple solution:
 
 ```
-# load the required packages
+# Load required libraries
 library(dplyr)
-
-# Read the data
-dat <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names=FALSE, row.names = 1)
-
-# transpose the data
-dat <- t(dat)
-
-# Calculate standard deviation for each gene
-sd_genes <- apply(dat, 2, sd)
-
-# Order the genes based on standard deviation
-ordered <- order(sd_genes, decreasing = TRUE)
-
-# Take top 1000 genes
-top_genes <- ordered[1:1000]
-
-# Subset original dataset to keep only these genes
-filtered_dat <- dat[, top_genes]
-
-# clustering 
 library(cluster)
-result <- kmeans(filtered_dat, centers = 2)
+library(fpc)
 
-# Get the cluster specific genes
-cluster1_genes <- filtered_dat[result$cluster==1, ]
-cluster2_genes <- filtered_dat[result$cluster==2, ]
+# Load your data
+data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
+# Standard deviation for each row (which represents a gene)
+data_stdev <- apply(data, 1, sd)
+
+# Indexes for the top 1000 genes
+topgenes <- order(data_stdev, decreasing = TRUE)[1:1000]
+
+# Filter the data
+filtered_data <- data[topgenes,]
+
+# Cluster data
+dist_matrix <- dist(scale(t(filtered_data)))
+clustering <- cutree(hclust(dist_matrix), k = 2)  # Change "k" if you want more than 2 clusters
+
+# Extract cluster-specific genes
+for (i in 1:max(clustering)){
+  cluster_genes <- colnames(filtered_data)[clustering == i]
+  assign(paste("cluster", i, "genes", sep = "_"), cluster_genes)
+}
 ```
-To interpret the above cluster-specific genes, you may analyze them respectively. The above codes divided genes into two clusters, you could choose the appropriate number of clusters based on the specific nature of your data.
+
+Please note that this code assumes that there are at least 1000 genes in the dataset and that you want to break your samples into 2 clusters. If you want to adjust the number of genes, change the number 1000 to different value. If you want to change the number of clusters, change the "k" argument in the cutree function. Also, keep in mind that the definition of "cluster-specific genes" might vary depending on the scientific question, the clustering algorithm and parameters used. Therefore, the specific implementation might need to be adjusted.

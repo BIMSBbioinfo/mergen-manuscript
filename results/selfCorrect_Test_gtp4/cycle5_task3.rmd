@@ -10,29 +10,27 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-To handle this task, you can use the `readxl` package in R which allows to read data from excel file. Then, the number of rows and columns can be identified using `nrow()` and `ncol()` functions respectively. If the first column contains gene names, the number of samples would be total number of columns minus one.
+If you want to load this Excel file into R, you will need to install and load the "readxl" package which is used to import Excel files in R. 
 
-Here is the R code:
+Below is the code to count genes and samples in the dataset:
 
 ```
-# Installing 'readxl' package which is needed to read an Excel file
+# installing required package
 
 
-# Loading 'readxl' package
-library(readxl)
+# loading package
+require(readxl) 
 
-# Reading the excel file
+# reading excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Print out the dimensions of the dataframe : number of rows (genes) and columns (samples +1)
-print(dim(data))
+# counting number of genes (subtracting 1 to exclude the header row)
+num_genes <- nrow(data) - 1
 
-# number of genes
-num_genes <- nrow(data)
-print(paste("The dataset has", num_genes, "genes"))
+# counting number of samples (using first row length and subtracting 1 to exclude the gene names column)
+num_samples <- length(data[1, ]) - 1
 
-# number of samples
-num_samples <- ncol(data) -1
-print(paste("The dataset has", num_samples, "samples"))
+num_genes
+num_samples
 ```
-You should replace "Supplementary_Table_1_exp.xlsx" with the correct path to your Excel file if it's not in the working directory.
+This code assumes that the excel file is located in your current working directory in R. If it's somewhere else, replace "Supplementary_Table_1_exp.xlsx" with the full path to the file.

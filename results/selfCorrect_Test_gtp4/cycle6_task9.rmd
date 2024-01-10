@@ -9,36 +9,41 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is a code snippet for the tasks you asked, which first load the data, then compute the standard deviation for each gene expression across samples, filter the top 1000 variable genes by standard deviation, makes a heatmap and plot a PCA of samples. We'll use the 'pheatmap', 'dplyr' and 'prcomp' R functions to do these tasks.
+Here is your R code for the task. The code reads gene expression data from the file, computes variance of each gene across all the samples, selects top 1000 genes based on the variability, draws a heatmap with clustering and carry out PCA for samples. 
 
 ```
-# Load required libraries
+# Import required libraries
 library(pheatmap)
-library(dplyr)
+library(vegan)
 
-# Load leukemia data
-leukemia <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep="\t", check.names = FALSE)
+# Read data
+data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Compute standard deviation for each gene
-leukemia$sd <- apply(leukemia, 1, sd)
+# Compute row variances
+variances <- apply(data, 1, var)
 
-# Filter top 1000 genes by standard deviation
-top_genes <- leukemia %>% top_n(1000, wt = sd)
+# Order variances in decreasing order
+ordered_vars <- order(variances, decreasing = TRUE)
 
-# Remove the standard deviation column
-top_genes <- top_genes[,-ncol(top_genes)]
+# get top 1000 variable genes
+top_genes <- head(ordered_vars, 1000)
 
-# Create heatmap
-pheatmap(top_genes, clustering_distance_rows = "correlation", clustering_distance_cols = "correlation", scale = "row")
+# Filter data
+filtered_data <- data[top_genes, ]
 
-# Transpose the data for PCA, PCA requires samples as rows and genes as columns
-leukemia_T <- t(leukemia)
+# Plot heatmap with clustering
+pheatmap(filtered_data, clustering_distance_rows = "euclidean", clustering_distance_cols = "euclidean")
 
-# Perform PCA
-pca <- prcomp(leukemia_T, scale. = TRUE)
+# For PCA, transpose the top 1000 genes data because prcomp wants samples as rows and genes as columns
+filtered_data_t <- t(filtered_data)
+
+# scale variables
+scl_data <- scale(filtered_data_t)
+
+# PCA
+pca_result <- prcomp(scl_data, scale = FALSE)
 
 # Plot PCA
-plot(pca, type = "l")
+plot(pca_result$x[, 1:2])
 ```
-Please note that you might need to adjust the parameters according to your specific needs. Also note that the PCA plots the principal components and not the individual samples. The heatmap may be very large and slow to render with 1000 genes.
-
+Please replace "leukemiaExp.txt" with your actual file path if it's not in the current directory. Also please install the required packages 'pheatmap' and 'vegan' if they are not installed.

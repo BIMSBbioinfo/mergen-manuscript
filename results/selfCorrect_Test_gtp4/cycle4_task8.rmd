@@ -9,34 +9,31 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the confusion. The issue is still with the `plot()` function which has a conflict with column names and xlab argument. We can create a scatter plot without the explicit column names and then add them later with the `xlab` and `ylab` functions.
+I'm sorry for the trouble you've encountered. Here's the correct way to identify genes based on their variability and then constructing a scatter plot:
 
 ```
-# Load necessary package
-library(dplyr)
+# Read the data
+data <- read.delim("leukemiaExp.txt", header = TRUE, row.names = 1)
 
-# Read the gene expression data
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names = FALSE, row.names = 1)
+# Calculate the standard deviation for each gene
+gene_sd <- apply(data, 1, sd)
 
-# Compute the standard deviation for each row (gene)
-gene_data$std_dev <- apply(gene_data, 1, sd)
+# Ranking the genes based on their standard deviation
+gene_rank <- rank(gene_sd, ties.method = "average")
 
-# Order the genes by their standard deviation in descending order
-ordered_gene_data <- gene_data %>% arrange(desc(std_dev))
+# Select the top 1000 genes with the highest standard deviation
+top1000_genes <- names(gene_rank)[gene_rank>length(gene_rank)-1000]
 
-# Select the top 1000 most variable genes
-top_1000_genes <- ordered_gene_data[1:1000, ]
+# Subset the data with top 1000 genes
+data_sub <- data[top1000_genes, ]
 
-# Remove the standard deviation column
-top_1000_genes <- top_1000_genes[,-which(names(top_1000_genes) == "std_dev")]
+# Calculate the standard deviation for each of the top 1000 genes
+top_genes_sd <- apply(data_sub, 1, sd)
 
-# Extract the expression levels of the two most variable genes
-top_2_genes <- top_1000_genes[1:2, ]
+# Get the two most variable genes
+top2_genes <- tail(sort(top_genes_sd), 2)
 
-# Create a scatter plot of the two most variable genes
-plot(t(top_2_genes[1, ]), t(top_2_genes[2, ]), xlab='', ylab='')
-title(main="Scatterplot of the Two Most Variable Genes",
-      xlab=rownames(top_2_genes)[1], 
-      ylab=rownames(top_2_genes)[2])
+# Create scatterplot of these two genes
+plot(data_sub[row.names(data_sub) %in% names(top2_genes), ], main = "Scatterplot of the two most variable genes", xlab = names(top2_genes[1]), ylab = names(top2_genes[2]))
 ```
-The `plot()` function is now given two vectors, without explicit column names, extracted by transposing the first two rows of the `top_2_genes` data frame. The `xlab` and `ylab` functions are then used to label the x-axis and y-axis after the scatter plot is created.
+This code calculates the standard deviation for each gene, assumes standard deviation as variability for each gene. It then finds the top 1,000 genes with the highest standard deviation, and further identifies the two most variable genes from these 1,000 selected genes and creates a scatterplot of these two most variable genes.

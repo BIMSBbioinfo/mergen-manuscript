@@ -5,18 +5,20 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
+To accomplish this task, you first have to read the tab-separated file into an object in R. I'll utilize `read.table()` function to read the file. And then, provide the number of rows and columns it has using the `dim()` function.
+
+Here is the R code for this:
+
 ```
-# we can use the read.table function in R to read in a tab separated file
+# Read the file
 subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# You can use the dim function to find the number of rows and columns
-dimensions <- dim(subjects)
-
-# You can print out the number of rows and columns like this
-print(paste("Number of rows: ", dimensions[1]))
-print(paste("Number of columns: ", dimensions[2]))
+# Number of rows and columns
+dim(subjects)
 ```
+
+The `dim()` function, when applied to a data frame in R, returns a vector with two elements. The first element corresponds to the number of rows and the second element to the number of columns.

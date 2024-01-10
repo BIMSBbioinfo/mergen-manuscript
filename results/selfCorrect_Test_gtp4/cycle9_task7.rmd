@@ -9,28 +9,41 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+Here is the R code that loads and processes the gene expression data "leukemiaExp.txt". If there are more than 500 samples, it subsets the data to a random 500 of them, and then creates a boxplot of the columns.
+
+First, let's read the data from "leukemiaExp.txt" using the function read.table:
+
 ```
-# Load required package
-library(tidyverse)
+leu_exp <- read.table("leukemiaExp.txt", header = TRUE)
+```
 
-# Read the data
-data = read_tsv("leukemiaExp.txt", col_names = TRUE)
+Now we need to check if the number of columns (i.e., samples) is greater than 500:
 
-# Check if the number of samples (columns) exceeds 500
-if (ncol(data) > 500) {
-  # Randomly sample 500 columns
-  sample_columns = sample(2:ncol(data), 500)
-  
-  # Subset the data
-  data_subset = data[, c(1, sample_columns)]
-} else {
-  data_subset = data
+```
+if (ncol(leu_exp) > 500) {
+  leu_exp <- leu_exp[, sample(ncol(leu_exp), 500)]
+}
+```
+
+Finally, let's create a boxplot of the columns:
+
+```
+boxplot(leu_exp, las = 2)
+```
+
+The option las = 2 rotates the labels on the x-axis to make them easier to read. The entire code is:
+
+```
+# Load data
+leu_exp <- read.table("leukemiaExp.txt", header = TRUE)
+
+# If there are more than 500 columns (samples), subset data
+if (ncol(leu_exp) > 500) {
+  leu_exp <- leu_exp[, sample(ncol(leu_exp), 500)]
 }
 
-# Convert data to long form for boxplot
-data_long = gather(data_subset, sample, expression, -1)
-
 # Create a boxplot of the columns
-boxplot(expression ~ sample, data = data_long, las = 2)
+boxplot(leu_exp, las = 2)
 ```
-This code reads the input file as a dataframe. It then checks if the number of columns in the dataframe (samples) exceeds 500, if yes, it randomly selects 500 samples and subsets the data accordingly. The data is then transformed to long form for easier plotting. Finally, a boxplot of the expression values for each sample is created using the boxplot function. The 'las = 2' option is used to make the labels on the x-axis vertical for easier reading when there are many samples.
+
+Please replace "leukemiaExp.txt" with the actual path to your file, if it's located in another directory. Note that the random sampling is done without replacement, which means each column (sample) will be picked only once.

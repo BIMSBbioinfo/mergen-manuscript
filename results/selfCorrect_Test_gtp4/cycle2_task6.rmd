@@ -9,23 +9,18 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code to sample columns if they are more than 500:
+Here is an R code snippet that reads the "leukemiaExp.txt" file, and checks if the number of columns (samples) exceeds 500. If it does, it randomly samples 500 samples and creates a subset of the original data.
 
 ```
-# read the data
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
+# Read the data
+leukemia_data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t", row.names=1)
 
-# check number of columns
-col_num <- ncol(leukemiaExp)
-
-# sample columns if there are more than 500
-if(col_num > 500){
-  set.seed(123)   # set seed for reproducibility
-  col_indices <- sample(col_num, 500)
-  leukemiaExp_sub <- leukemiaExp[,col_indices]
+# Check the number of columns (samples). If more than 500, randomly select 500.
+if(ncol(leukemia_data) > 500){
+  columns_to_keep <- sample(2:ncol(leukemia_data), 500) # select random 500 indexes after the first column (gene names) 
+  leukemia_data_subset <- leukemia_data[,c(1, columns_to_keep)] # keep the first column (gene names) and the selected sample indexes
 } else {
-  leukemiaExp_sub <- leukemiaExp
+  leukemia_data_subset <- leukemia_data
 }
 ```
-
-In this code, we first read the data from the txt file and store it in the `leukemiaExp` data frame. Then, we get the number of columns in the data frame. If the number of columns is more than 500, we use the `sample()` function to get a sample of 500 column indices. Then, we use these indices to create a new data frame `leukemiaExp_sub` that contains only the sampled columns. If the number of columns is not more than 500, we just keep the data frame as it is.
+Here the "read.table" function reads the tab-separated file and the "row.names=1" argument informs that row names are provided in the first column. The "sample" function is then used to randomly select 500 sample indices, and the subset of the genes is then selected from the original data. If there are less than or equal to 500 samples, the original data is retained as is.

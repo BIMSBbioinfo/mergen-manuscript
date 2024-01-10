@@ -9,21 +9,27 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-You can load your dataset using the `read.table()` function and then use the `dim()` function to check the number of genes and samples the dataset has:
+Here's an R script that will give you the number of genes and samples in your dataset.
+
+First of all, import the data using the `read.table()` function. This function imports the data into a data frame in R. 
+
+Assuming that the first column is the gene and last column is the gene length, all the other columns are samples. To get the number of samples, you can subtract two from the number of columns of your data frame (one for the gene name column and one for the gene length column). To get the number of genes, simply count the number of rows in your data frame. 
+
+Here is the R code for this:
 
 ```
-# Load the dataset
-data <- read.table("SRP021193.raw_counts.tsv", header=TRUE, sep="\t")
+# Import data
+data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Calculate the number of genes
-n_genes <- dim(data)[1]
+# Count samples
+num_samples <- ncol(data) - 2 
 
-# Calculate the number of samples
-n_samples <- dim(data)[2] - 2  # Subtract 2 to remove the gene names and gene length columns
+# Count genes
+num_genes <- nrow(data) 
 
 # Print the results
-print(paste("Number of genes: ", n_genes))
-print(paste("Number of samples: ", n_samples))
+print(paste("Number of samples: ", num_samples))
+print(paste("Number of genes: ", num_genes))
 ```
-
-With this code, the variable "n_genes" contains the number of genes, which is the number of rows in the table, and "n_samples" contains the number of samples, which is the number of columns minus 2 (because the first column with gene names and the last column with gene length are not samples).
+In this code, `ncol()` returns the number of columns in the data frame and `nrow()` returns the number of rows.
+The `-2` in the calculation of `num_samples` is because we are excluding the gene names and gene length columns in the count of samples.

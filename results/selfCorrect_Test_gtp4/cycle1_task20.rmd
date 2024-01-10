@@ -10,65 +10,56 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the issue you're encountering. The error means that there are samples in your expression data file not found in your colData file, or vice versa.
+I apologize for the confusion. You're right. If the matrix is empty (i.e., no group-specific genes), the `prcomp()` function will not work properly. This can happen if there are no genes satisfying the criteria of differential expression set (padj < 0.05 & abs(log2FoldChange) > 1). 
 
-I also noted that we were not treating the first column of the `colData` (diagnosis) as row names. Let's try fixing those issues:
+We should add a condition check before running PCA. Here is the revised code:
 
 ```
-# Load necessary packages
+# Load necessary libraries
 library(DESeq2)
-library(readxl)
+library(readxl) 
 library(tidyverse)
 
-# Import data files
-expression_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read your count data and column data
+countData <- read_excel("Supplementary_Table_1_exp.xlsx")
 colData <- read_delim("SRP021193.colData.tsv", "\t")
 
-# Set diagnosis as rownames for colData
-rownames(colData) <- colData$diagnosis
-colData$diagnosis <- NULL
+# Make sure the column names of countData match the row names of colData
+rownames(colData) <- colData[[1]]
+colData[[1]] <- NULL
 
-# Reorder colData to match order of columns in expression_data
-colData <- colData[match(colnames(expression_data)[-1], rownames(colData)),]
-
-# Check if there is any mismatch between the samples
-if (any(is.na(colData))) {
-  stop("The samples in the count matrix and the colData are not matching.")
-}
-
-# Set 'Genes' column in expression_data as rowname
-rownames(expression_data) <- expression_data$Genes
-expression_data$Genes <- NULL
-
-# Create a DESeq2 dataset and run the model
-dds <- DESeqDataSetFromMatrix(countData = expression_data, 
-                              colData = colData, 
+# Create a DESeq dataset
+dds <- DESeqDataSetFromMatrix(countData = countData[,-1],
+                              colData = colData,
                               design = ~ group)
+
+# Differential expression analysis
 dds <- DESeq(dds)
+res <- results(dds, contrast=c("group","CASE","CTRL"))
 
-# Extract the results
-res <- results(dds)
+# Identify group specific genes and check if there are any
+group_specific_genes <- rownames(res)[which(res$padj < 0.05 & abs(res$log2FoldChange) > 1)]
 
-# Filter the results to get group-specific genes
-group_specific_genes <- rownames(res)[which(res$log2FoldChange > 1 & res$padj < 0.05)]
+if(length(group_specific_genes) == 0) {
+  print("No group specific genes found.")
+} else {
+  # If there are group specific genes, do PCA and plotting
+  rld <- rlog(dds)
+  select_genes_data <- assay(rld)[group_specific_genes,]
+  
+  # Calculate PCA
+  pca <- prcomp(t(select_genes_data))
 
-# Perform variance stabilizing transformation and PC analysis.
-vst_transform <- vst(dds, blind = FALSE)
-pca_data <- plotPCA(vst_transform, 
-                    intgroup="group", 
-                    returnData=TRUE)
-
-# Create a ggplot object for PCA
-pca_plot <- ggplot(pca_data, aes(PC1, PC2, color=group)) +
-                geom_point(size=3) +
-                theme_bw()
-
-print(pca_plot)
+  # Generate the PCA plot
+  pcaData <- data.frame(PC1 = pca$x[,1], PC2 = pca$x[,2], group = colData$group)
+  ggplot(pcaData, aes(x = PC1, y = PC2, color = group)) + geom_point() + labs(x = "PC1", y = "PC2") + ggtitle("PCA Plot")
+}
 ```
-Do remember to check if the sample names in the expression data file matched those in the colData file before running the analysis. If the error persists, there might be spelling difference or additional/missing samples in either of the files. Please ensure that the datasets are compatible.
+Please replace "CASE" and "CTRL" with your actual group names in the `results()` function. This will pause the process if no group-specific genes are found and will only run PCA when there are group-specific genes.
 
+It is not rare to have no genes pass the differential expression criteria, especially when the sample size is small, the variance is high, or the difference between groups is subtle. You may want to adjust the cutoffs (`padj` and `log2FoldChange`) based on the specific context of your data analysis.

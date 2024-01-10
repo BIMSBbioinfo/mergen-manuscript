@@ -9,19 +9,19 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code that will read the gene expression data file and will output the number of genes and samples in it.
+To start off, you would use the `read.table` function to import the tab-separated leukemiaExp.txt as a dataframe. The argument `row.names = 1` specifies that the first column of the dataframe contains the row names (gene names in your case).
+
+Then the numbers of genes and samples in the dataset are the numbers of rows and columns respectively in the dataframe. You can use `nrow` and `ncol` functions to get them.
 
 ```
-# read data from tab-separated file
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
+# Import gene expression data
+leukemiaExp <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
 
-# number of genes
-num_genes <- nrow(data)
-print(paste('Number of genes:', num_genes))
+# Get number of genes
+num_genes <- nrow(leukemiaExp)
+print(paste("Number of genes: ", num_genes))
 
-# number of samples
-num_samples <- ncol(data)
-print(paste('Number of samples:', num_samples))
+# Get number of samples
+num_samples <- ncol(leukemiaExp)
+print(paste("Number of samples: ", num_samples))
 ```
-
-This code reads the data from the file "leukemiaExp.txt", which is a tab separated file. The 'row.names = 1' parameter is used to take the gene names as row names. The number of rows 'nrow(data)' gives the number of genes and the number of columns 'ncol(data)' gives the number of samples. The 'print' statements print the number of genes and samples respectively.

@@ -10,29 +10,22 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-You can use the "readxl" R package to read your data from the Excel file. To get the number of genes and samples, we will use the dim() function, which will return the number of rows (genes) and columns (samples) in your data. As first column is gene names, number of samples would be number of columns - 1.
-
-Here's the R code:
+To get the number of genes and samples in this data, you can use functions from the `readxl` and `dplyr` packages in R. Here is the code:
 
 ```
-# Install the package if you haven't installed it before
-# 
-
-# Load the required package
+# load package
 library(readxl)
+library(dplyr)
 
-# Read the excel file data
-data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# read the excel file
+df <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Get the number of genes
-num_genes <- dim(data)[1]
+# count the number of genes and samples
+num_genes <- nrow(df)
+num_samples <- ncol(df) - 1
 
-# Get the number of samples (subtract 1 for the Genes column)
-num_samples <- dim(data)[2] - 1
-
-print(paste("Number of genes : ", num_genes))
-print(paste("Number of samples : ", num_samples))
+num_genes
+num_samples
 ```
 
-Please replace the file name and its path in the read_excel() function if the Excel file is not in your current working directory. The code will print the number of genes and samples in your data set.
-Note: as the content of Excel file is not provided, the code uses the filename directly. There might be necessary adjustments such as sheet name if there are multiple sheets, or skip if there are headers or additional rows.
+The `read_excel` function reads an excel sheet into a data.frame in R. Then, `nrow` gives the number of rows in the data.frame (which is the number of genes), and `ncol` gives the number of columns in the data.frame minus 1 (to account for the first column of gene names, hence gives the number of samples).

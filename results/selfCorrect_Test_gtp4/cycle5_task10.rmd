@@ -9,28 +9,34 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is a possible solution using the `read.delim()`, `apply()`, `order()`, `hclust()` and `cutree()` functions in R. 
+Here is the R code:
 
 ```
-# Read the data
-dat <- read.delim("leukemiaExp.txt", row.names = 1, check.names = F)
+#read the table
+data <- read.table('leukemiaExp.txt', sep='\t', header=TRUE, row.names=1)
 
-# Compute the variance for each gene across samples
-var_genes <- apply(dat, 1, var)
+#calculate standard deviation
+data$sd <- apply(data, 1, sd)
 
-# Order the genes based on variance and keep the top 1000
-top_var_genes <- order(var_genes, decreasing = TRUE)[1:1000]
+#sort and select top 1000
+data <- data[order(-data$sd), ]
+top_var_genes <- head(data, 1000)
 
-# Filter the data to retain only those top variable genes
-filtered_dat <- dat[top_var_genes, ]
+#remove the sd column for clustering 
+top_var_genes <- top_var_genes[,1:(ncol(top_var_genes)-1)]
 
-# Perform hierarchical clustering on the samples based on these top variable genes
-clust <- hclust(dist(t(filtered_dat)))
+# scale the data
+scaled_data = scale(t(top_var_genes)) 
 
-# Cut the dendrogram to obtain 2 clusters (change the number 2 to the desired number of clusters)
-clusters <- cutree(clust, 2)
+#clustering
+hc <- hclust(dist(scaled_data))
+plot(hc)
 
-# Extraction of cluster-specific genes (Cluster 1 here as an example)
-cluster1_genes <- filtered_dat[, clusters == 1]
+#cutting tree into 2 clusters
+groups <- cutree(hc, k = 2)
+
+#Extract cluster specific genes
+cluster1genes <- rownames(top_var_genes)[groups == 1]
+cluster2genes <- rownames(top_var_genes)[groups == 2]
 ```
-Please replace the `"leukemiaExp.txt"` with your file path and you can modify the number of clusters according to your needs. This code will first compute the variance of gene expression across samples for each gene, and then keep only the most variable 1000 genes. It then performs hierarchical clustering of the samples based on these highly variable genes. From the resulting cluster, you can extract the genes specific to each cluster. This example shows how to extract genes specific to the first cluster.
+This code calculates the standard deviation for each gene (row) and filters out the least variable genes. Then it clusters samples using hierarchical clustering (distance is calculated by Euclidean method and linkage by complete method) and cuts the tree into two clusters. Then it extracts the genes that are specific for each cluster. adjust the k parameter in cutree() functions as needed to change number of clusters.

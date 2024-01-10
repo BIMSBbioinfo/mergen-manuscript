@@ -9,26 +9,26 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here we will read the file and transpose it so that genes correspond to rows, and samples are in the columns. We'll calculate the variances of each row and select the top 1000 with the highest variance. Finally, we'll create a scatterplot of the two genes with the highest variance.
+Based on the error message, it seems that `plot()` is having problems processing the labels for the x and y axes. There might be a confusion between the gene names (row names from the data frame) and the x and y labels as some dimensions are treated as matrices instead of vectors. The `unlist()` function can be used to treat them as vectors:
 
 ```
-# Read the file and transpose it
-expData <- read.table("leukemiaExp.txt", header=TRUE, row.names=1, sep="\t")
-expData <- t(expData)
+# Read the data into a data frame
+exp_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Calculate variance for each gene and sort
-variances <- apply(expData, 1, var)
-variances_sorted <- sort(variances, decreasing=TRUE)
+# Calculate the variance of each gene expression across all samples
+exp_var <- apply(exp_data, 1, var)
 
-# Select top 1000 genes
-top_genes <- head(names(variances_sorted), 1000)
-filtered_expData <- expData[top_genes, ]
+# Sort the variances in decreasing order and select the top 1000 
+top_genes <- names(sort(exp_var, decreasing = TRUE))[1:1000]
 
-# Select the two most variable genes and plot them
-gene1 <- filtered_expData[1, ]
-gene2 <- filtered_expData[2, ]
+# Reshape the data to only include the top 1000 most variable genes
+filtered_data <- exp_data[top_genes, ]
 
-plot(gene1, gene2, xlab = "Gene 1", ylab = "Gene 2", 
-     main = "Scatterplot of Two Most Variable Genes")
+# Create a scatter plot of the two most variable genes
+plot(unlist(filtered_data[1, ]), unlist(filtered_data[2, ]),
+     xlab = "Expression of the most variable gene",
+     ylab = "Expression of the 2nd most variable gene",
+     main = "Scatterplot of two most variable genes")
 ```
-This code calculates the variance of each gene expression across all samples, then selects the top 1000 highest variance genes for further analysis. Then it plots the scatterplot of the top 2 most variable genes.
+
+The `unlist()` function is used to flatten the data into a vector, which helps `plot()` understand the inputs more clearly.

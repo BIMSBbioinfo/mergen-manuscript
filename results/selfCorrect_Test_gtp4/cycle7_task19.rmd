@@ -10,63 +10,55 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-My apologies for the oversight. This issue arises from incorrectly subsetting the count data. The count matrix should be numeric. The error arises because the `TRUE` marker in the subsetting operation is treating the entire matrix as a logical entity. We need to select the 'group' index. 
-
-Below is the updated R code:
+I apologize for the confusion. Let's revise the code to match the column names of our count data to our colData object's order.
 
 ```
-# load necessary packages
-library(readxl)
 library(DESeq2)
-library(ggplot2)
-library(FactoMineR)
 library(tidyverse)
+library(readxl)
+library(ggplot2)
+library(ggrepel)
 
 # read files
-counts <- read_excel("Supplementary_Table_1_exp.xlsx")
-colData <- read_tsv("SRP021193.colData.tsv")
+count_data <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+coldata <- read.table("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE, sep = "\t")
 
-# make sure samples in count data and colData are in the same order
-samples_order <- colnames(counts)[-1]
-colData <- colData[samples_order, ]
+# Set the diagnosis as rownames
+rownames(coldata) <- coldata$diagnosis
 
-# drop samples from counts and colData where "group" is NA
-has_group <- !is.na(colData$group)
-colData <- colData[has_group, ]
-counts <- counts[, c(1, which(has_group)+1)] # adjust indexing to retain gene names
+# Reorder the count data based on coldata order
+count_data <- count_data[, c(1, match(rownames(coldata), colnames(count_data[-1])) + 1)]
 
-# create DESeq dataset
-dds <- DESeqDataSetFromMatrix(countData = as.matrix(counts[,-1]), 
-                              colData = colData, 
+# Check if they are in the same order
+all(colnames(count_data[-1]) == rownames(coldata))
+
+# create DESeq2 dataset
+dds <- DESeqDataSetFromMatrix(countData = count_data[,-1],
+                              colData = coldata,
                               design = ~ group)
 
-# normalize counts
-vsd <- vst(dds, blind=FALSE)
+# perform size factor estimation for normalization
+dds <- estimateSizeFactors(dds)
+norm_counts <- counts(dds, normalized = TRUE)
 
-# perform PCA
-pc <- PCA(t(assay(vsd)))
+# Perform PCA
+ pca_data <- prcomp(t(norm_counts))
 
-# convert result to data frame
-pca_df <- as.data.frame(pc$ind$coord)
-colnames(pca_df) <- c("Dim.1", "Dim.2")
+# Create PCA plots
+ ggplot(pca_data$x, aes(x = PC1, y = PC2, color = coldata$group)) +
+    geom_point() +
+    theme_minimal() +
+    labs(color = "group")
 
-# merge the PCA and colData
-pca_df <- cbind(pca_df, colData)
-
-# plot PCA for group
-ggplot(pca_df, aes(x=Dim.1, y=Dim.2, color=group)) +
-  geom_point() +
-  ggtitle("PCA plot color-coded by group")
-
-# plot PCA for LibrarySelection
-ggplot(pca_df, aes(x=Dim.1, y=Dim.2, color=LibrarySelection)) +
-  geom_point() +
-  ggtitle("PCA plot color-coded by LibrarySelection")
+ ggplot(pca_data$x, aes(x = PC1, y = PC2, color = coldata$LibrarySelection)) +
+    geom_point() +
+    theme_minimal() +
+    labs(color = "LibrarySelection")
 ```
+In this code, I reordered count_data to match the order of the coldata by matching the rownames of the coldata with the count_data column names. This way, the samples in the count_data and coldata dataframe are in the same order, which is a requirement for creating the DESeqDataSet.
 
-This script should now properly omit samples with missing "group" assignment while keeping gene names and count data intact.

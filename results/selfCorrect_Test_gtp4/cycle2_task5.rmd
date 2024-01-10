@@ -9,17 +9,21 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code to perform the task. We read the data from the file. We will then calculate the standard deviation of each gene's expression across the samples. We sort the data by this metric (in descending order) and retain only the first 1000 rows, which corresponds to the top 1000 most variable genes.
+Here is the R code that reads the "leukemiaExp.txt" file, calculates variances for each gene expression data across all samples and retains the top 1000 genes with the most variability.
 
 ```
-# Read the data
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names =1, sep="\t")
+library(dplyr)
+    
+# Read the data file
+exp_df <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1, check.names = FALSE)
 
-# Compute standard deviation for each gene across all samples 
-sd_values <- apply(data, 1, sd)
+# Compute variances
+var_df <- data.frame(Gene = row.names(exp_df), Variance = apply(exp_df, 1, var), row.names=NULL)
 
-# Filter the top 1000 genes
-top_genes <- data[order(sd_values, decreasing = TRUE)[1:1000],]
+# Sort by variance（descending）and retain the top 1000
+top_var_df <- var_df %>% arrange(desc(Variance)) %>% head(1000)
+
+# Filter the original dataframe to include only the top 1000 variable genes
+filtered_exp_df <- exp_df[rownames(exp_df) %in% top_var_df$Gene, ]
 ```
-
-The object 'top_genes' now contains the top 1000 most variable genes according to their expression levels across all samples in the dataset. These genes have been sorted in descending order by their variability.
+This code first generates a new dataframe (var_df) containing the variance for each gene and then selects top 1000 genes based on their variance. The original expression data is then filtered to include only these top 1000 variable genes.

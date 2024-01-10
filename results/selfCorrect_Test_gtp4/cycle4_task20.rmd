@@ -10,62 +10,54 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the confusion. The error might be resulting because the annotation data does not match with count data.
-
-To ensure proper gene selection and calculation, let's first read the excel file and assign its first column as rownames. After reading the files, we will make sure column names of the count data and rownames of coldata data frame (representing samples) are in the same order.
-
-Here's the reworked code:
+I apologize for the confusion. This error typically occurs when trying to assign row names that are not unique. So to prevent this error, you should ensure that the row names are unique before assigning them. For gene expression data, there will be rare cases where the gene names could be duplicated, generally though, they're unique or you may want to make sure they are. Here's the corrected code:
 
 ```
-# load necessary packages
-library(DESeq2)
-library(readxl)
-library(dplyr)
-library(factoextra)
+library("DESeq2")
+library("ggplot2")
 
-# read count data from excel file
-count_data <- read_xlsx("Supplementary_Table_1_exp.xlsx")
+# Load the count table and annotation
+exprs <- read.delim("Supplementary_Table_1_exp.xlsx", header = TRUE, check.names = FALSE)
+row.names(exprs) <- make.names(exprs$Genes, unique = TRUE)  # Ensure unique row names
+exprs$Genes <- NULL  # Remove redundant column
 
-# make sure gene names in 'Genes' column are unique
-count_data$Genes <- make.unique(as.character(count_data$Genes))
+colData <- read.delim("SRP021193.colData.tsv", header = TRUE, check.names = FALSE)
+row.names(colData) <- make.names(colData[,1], unique = TRUE)  # Ensure unique row names
 
-# set 'Genes' column as rownames 
-rownames(count_data) <- count_data$Genes 
-count_data <- count_data[,-1] # remove the first column (genes)
+# Create DESeq2 data sets for each group
+ddsList <- lapply(unique(colData$group), function(grp){
+  dds <- DESeqDataSetFromMatrix(countData=exprs[,colData$group==grp],
+                                colData=colData[colData$group==grp,],
+                                design=~LibrarySelection)
+  DESeq(dds)
+})
 
-# read sample annotation data
-col_data <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
+# Identify differentially expressed genes in each group
+resList <- lapply(ddsList, function(dds){
+  results(dds)
+})
 
-# make sure the sample order in count data and col data match
-correct_order <- match(col_data$diagnosis, colnames(count_data))
-count_data <- count_data[, correct_order]
+# Combine results and filter out genes that are not specific for some group
+allRes <- do.call(rbind, resList)
+grpspecific_genes <- rownames(allRes)[apply(allRes, 1, function(x){
+  any(x$padj < 0.05)
+})]
 
-# ensure rownames of col data is sample names
-rownames(col_data) <- col_data$diagnosis
+# Calculate PCA only using group-specific genes
+pcExprs <- log2(exprs[grpspecific_genes,]+1)
+pca <- prcomp(t(pcExprs), center = TRUE, scale. = TRUE)
 
-# create DESeqDataSet
-dds <- DESeqDataSetFromMatrix(countData = count_data, colData = col_data, design = ~group)
+# Create PCA data for plotting
+pcaDat <- data.frame(PC1=pca$x[,1], PC2=pca$x[,2], group=colData$group)
 
-# run DESeq2 analysis
-dds <- DESeq(dds)
-res <- results(dds)
-
-# find genes that are specific to each group - use an absolute log2FoldChange cutoff of 2
-group_specific_genes <- rownames(res)[abs(res$log2FoldChange) > 2]
-
-# subset count data for those genes
-group_specific_count_data <- count_data[group_specific_genes, ]
-
-# perform PCA
-pca_res <- prcomp(t(group_specific_count_data))
-
-# create PCA plot, coloring by "group"
-fviz_pca_ind(pca_res, habillage = col_data$group, title = "PCA - group specific genes")
+# Plot PCA
+ggplot(pcaDat, aes(x=PC1, y=PC2, color=group)) +
+  geom_point() +
+  theme_classic()
 ```
-
-This code should be able to conduct differential expression analysis to identify group-specific genes and visualize them through PCA plot with groups color-coded.
+Replace the "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with your actual file paths. Note that you will need to replace LibrarySelection with the actual column name from the colData dataframe in the formula inside DESeqDataSetFromMatrix.

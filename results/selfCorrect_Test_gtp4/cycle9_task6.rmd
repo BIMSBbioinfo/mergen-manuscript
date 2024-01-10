@@ -9,21 +9,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is a R script that reads the file with gene expression data, checks the number of columns (which corresponds to the number of samples) and if it is more than 500, randomly samples 500 columns to create a subset of the data.
+Below is the R code that loads the gene expression `leukemiaExp.txt` file, checks if it contains more than 500 samples, and if so, randomly selects 500 samples:
 
 ```
-# Read gene expression data
-gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Read the file
+gene_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
 
-# Get the number of columns (samples)
+# Check the number of samples
 num_samples <- ncol(gene_data)
 
-# If there are more than 500 samples, randomly sample 500 samples
+# If number of samples is more than 500, randomly sample the dataset
 if (num_samples > 500) {
-  sample_indices <- sample(num_samples, 500)
-  gene_data_subset <- gene_data[, sample_indices]
-} else {
-  gene_data_subset <- gene_data
+  set.seed(123) # for reproducibility
+  selected_samples <- sample(1:num_samples, 500)
+  gene_data_sub <- gene_data[, selected_samples]
+}else{
+  gene_data_sub <- gene_data
 }
 ```
-This script creates a new variable `gene_data_subset` which will contain the whole dataset if there are 500 or less samples, or a subset of the dataset with 500 randomly sampled samples if there are more than 500 samples. Please replace "leukemiaExp.txt" with the correct path of your file. Also, this script assumes that your file is located in the current working directory, use setwd() to change the current working directory if needed.
+
+This code first loads the data into memory using `read.table()`, specifying that the file is tab-separated and the first column (gene names) should be treated as row names. It then checks the number of columns (i.e., samples) using `ncol()`. If there are more than 500 samples, it will randomly select 500 column indices using `sample()`, and create a new subset dataframe using those selected samples.
+

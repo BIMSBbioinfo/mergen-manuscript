@@ -9,23 +9,40 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-```
-# read data
-df <- read.table("leukemiaExp.txt", header=T, sep="\t", check.names = F, row.names = 1)
+If you see a "vector memory exhausted" error, it means R has run out of memory. This is likely because your data is too large for R to handle. A typical solution is to increase the memory limit in R.
 
-# Randomly sample the samples column if the column number more than 500
-if(ncol(df) > 500) {
-  set.seed(123) # for reproducibility
-  df_sub <- df[, sample(ncol(df), 500)]
-} else {
-  df_sub <- df
+However, in some cases, that might not be possible. Thus, we may need to work with a smaller subset of data. In such cases, you could read in a subset of the rows. Here's an updated R code to read a subset of data in a streamed way, which should help to manage memory usage better:
+
+For this, we use the `readr` package’s `read_lines` function to read in only the first 500 samples. The `read_tsv` reads in the selected lines as tab-delimited data.
+
+```
+# Load necessary library
+library(readr)
+
+# Count total columns
+first_row <- read_lines("leukemiaExp.txt", n_max = 1)
+total_cols <- length(strsplit(first_row, "\t")[[1]])
+
+# If more columns than needed
+if (total_cols > 500) {
+  # Randomly select 500 columns
+  set.seed(123)
+  cols_to_keep <- c(1, sample(2:total_cols, 499))
+
+  # Read again, only the necessary columns
+  con <- file("leukemiaExp.txt", "r")
+  first_line <- readLines(con, n = 1)
+  close(con)
+
+  column_classes <- rep("numeric", total_cols)
+  column_classes[-cols_to_keep] <- "skip"
+
+  data <- read_tsv("leukemiaExp.txt", col_types = column_classes)
+  
+  # transpose data for boxplot 
+  data <- data.frame(t(data))
+
+  # create boxplot
+  boxplot(data, las = 2, cex.axis = 0.6, main = "Gene Expression Boxplot", ylab = "Expression level")
 }
-
-# create a boxplot of the columns
-boxplot(df_sub, las = 2, col = rainbow(ncol(df_sub)), main = "Box plots of gene expression data")
 ```
-Here, function `read.table` is used to read the txt file. The file is tab-separated, so we set `sep="\t"`. `check.names` argument set to FALSE to force R to keep the original header names and `row.names` argument set to 1 to use the 1st column as row names. 
-
-`sample(ncol(df), 500)` is used to randomly sample 500 columns if the total number of columns is more than 500. `set.seed(123)` ensures the result is reproducible.
-
-Lastly, `boxplot` function is used to create the boxplots of the subsetted data. The `las = 2` rotates the y-axis labels so they're more readable and `col = rainbow(ncol(df_sub))` makes each boxplot a different color.

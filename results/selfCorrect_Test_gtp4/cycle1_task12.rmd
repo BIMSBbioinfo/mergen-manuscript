@@ -10,30 +10,39 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-To complete this task, you can use the R functions `read.xlsx` (from the `readxl` package) for reading the .xlsx file and `read.delim` for reading the .tsv file. Here is the code:
+The R code provided will read the data from the given files and display the number of rows and columns for each.
+
+Firstly, you'll need to have the required libraries installed. As you are dealing with excel and tsv files, I'm using `readxl` and `readr` libraries. If not already installed, install them using `install.packages()` function.
+
+Here is the code:
 
 ```
-# Required library
+# Load the required libraries
 library(readxl)
+library(readr)
 
-# Read Supplementary_Table_1_exp.xlsx file
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Specify file locations
+# Replace file paths in quotes with your actual file paths
+count_file_path = "Supplementary_Table_1_exp.xlsx"
+annotation_file_path = "SRP021193.colData.tsv"
 
-# Print the number of row and columns in count_table
-print(paste("Count table rows:", nrow(count_table)))
-print(paste("Count table columns:", ncol(count_table)))
+# Read the excel and tsv files as data frames
+count_data <- read_excel(count_file_path)
+annotation_data <- read_tsv(annotation_file_path)
 
-# Read SRP021193.colData.tsv file
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE)
-
-# Print the number of row and columns in annotation_data
-print(paste("Annotation data rows:", nrow(annotation_data)))
-print(paste("Annotation data columns:", ncol(annotation_data)))
+# Display the number of rows and columns for each dataframe
+print(paste("Count data : ", nrow(count_data), "rows ", ncol(count_data), "columns"))
+print(paste("Annotation data : ", nrow(annotation_data), "rows", ncol(annotation_data), "columns"))
 ```
 
-This code will load both files into memory, and then print out the number of rows and columns in each data frame. Note that you have to install the `readxl` package in R before using the `read_excel` function. If not installed, you can do so using `` in R.
+This R code does the following:
+
+1. Loads the required libraries.
+2. Specifies the file locations of the .xlsx and .tsv files.
+3. Reads the excel and tsv files into R as data frames.
+4. Prints the number of rows and columns for each data frame.

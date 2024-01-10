@@ -10,33 +10,38 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I'm sorry for the confusion. However, based on the information available it's challenging to provide an accurate solution. Here's an updated approach assuming that both files have the same samples in the same order. But remember, just always make sure to check the sample names match exactly between these two data sets before you proceed.
+First, you need to load necessary libraries and read the excel and tsv files into dataframes. Then merge annotation data and gene expression tables using `merge()` function.
+
+Here is the R code.
 
 ```
-# read libraries
+# Load necessary libraries
 library(readxl)
-library(readr)
+library(dplyr)
 
-# Read excel data
+# Read excel file into a data.frame 
 exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Annotate data 
-ann_data <- read_tsv("SRP021193.colData.tsv")
+# Read tsv file into a data.frame
+annot_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# combine the count data with the annotation data
-ann_data <- t(ann_data) # transpose column data to match format of the expression data
-names(ann_data) <- ann_data[1, ] # set row names to the sample names
-ann_data <- ann_data[-1, ] # remove the row of sample names
+# Rename column of annotation data to match with the count table 
+names(annot_data)[1] <- "Genes"
 
-combined_data <- rbind(ann_data, exp_data) # bind the data
+# Merge annotation data and gene expression tables
+merged_data <- merge(exp_data, annot_data, by = "Genes")
 
 # Calculate number of columns
-num_cols <- ncol(combined_data)
-num_cols
+num_columns <- ncol(merged_data)
+
+num_columns
 ```
-This code will read the expression and annotation data from your files, transpose the annotation data to fit with the gene expression data (resulting in a row for each sample), and combine the two sets of data. After data cleansing to ensure integrity, it calculates the resulting number of columns.
+
+Please replace the file paths in `"Supplementary_Table_1_exp.xlsx"` and `"SRP021193.colData.tsv"` with the correct paths on your machine. You also need to add check point(s) e.g., `head()`, `str()`, `summary()`, etc. after each step in order to ensure your commands are working fine.
+
+Note: The column names in the question do not seem to be align properly. They might cause errors when running the code. Please make sure the column names in the actual files match those used in the code.

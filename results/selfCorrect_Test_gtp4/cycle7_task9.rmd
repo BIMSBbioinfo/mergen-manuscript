@@ -9,38 +9,39 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-It appears that there is an issue with setting the row names in the data. The first column (gene names) should be set as the row names. We'll use `read.csv` in place of `read_delim` which will allow the first column to be read as row names directly. Also, it seems that the data need to be converted to numeric as it might likely contain string representations. Here's the corrected code:
+I apologize for the confusion. The `prcomp` function is part of the `stats` package which comes preinstalled with R. You don't need to install this package separately. Here is the corrected code.
 
 ```
-# Load required libraries
-library(dplyr)
+# load required libraries
 library(ggplot2)
-library(heatmaply)
+library(ComplexHeatmap)
 
-# Load the data file
-data <- read.csv("leukemiaExp.txt", row.names = 1, sep = "\t", check.names = FALSE)
+# read the data
+exp_data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Convert data to numeric
-data <- sapply(data, as.numeric)
+# calculate standard deviation
+exp_sd <- apply(exp_data, 1, sd) 
 
-# Filter the most variable top 1000 genes
-data_var <- apply(data, 1, var)
-top_genes <- order(data_var, decreasing = TRUE)[1:1000]
-filtered_data <- data[top_genes, ]
+# filter top 1000 variable genes
+filtered_genes <- names(sort(exp_sd, decreasing = TRUE))[1:1000]
+filtered_data <- exp_data[filtered_genes, ]
 
-# Clustered heatmap
-heatmaply::heatmaply(filtered_data)
+# plot heatmap
+heatmap_matrix <- as.matrix(filtered_data)
+ComplexHeatmap::Heatmap(heatmap_matrix)
 
-# PCA
-pca <- prcomp(t(filtered_data))
-df_pca <- as.data.frame(pca$x)
+# PCA on filtered data
+pca_object <- stats::prcomp(t(filtered_data))
 
-# Plot PCA
-ggplot(df_pca, aes(x = PC1, y = PC2)) +
-  geom_point(size = 2, alpha = 0.6) +
+x <- pca_object$x[,1]
+y <- pca_object$x[,2]
+df <- data.frame(x, y)
+
+ggplot(df, aes(x=x, y=y)) + 
+  geom_point() +
   xlab("PC1") +
   ylab("PC2") +
-  theme_bw()
+  ggtitle("PCA plot")
 ```
+In this corrected code, the namespaces (`ComplexHeatmap::` and `stats::`) are explicitly defined before the function calls (`Heatmap` and `prcomp` respectively) to avoid any ambiguity.
 
-Remember to replace `"leukemiaExp.txt"` with the path to your file if it's not in the current working directory. Also, ensure you've installed the necessary packages (`dplyr`, `ggplot2`, and `heatmaply`). If not, install them using `install.packages()`.

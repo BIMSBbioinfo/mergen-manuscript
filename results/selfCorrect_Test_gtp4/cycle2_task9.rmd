@@ -9,36 +9,33 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for that. 'prcomp' is a function in the stats package which is usually loaded automatically in R and not a standalone package. Here is the corrected code:
+Here is the R code to perform this task. 
 
 ```
-# Importing necessary libraries
-library(ggplot2)
-library(pheatmap)
-library(ggfortify)
+# Read in the data
+expData <- read.table("leukemiaExp.txt", header=T, row.names=1, sep="\t")
 
-# Read the data
-data <- read.table("leukemiaExp.txt", header=T, row.names=1, sep="\t", check.names = F)
+# Compute gene variances 
+variances <- apply(expData, 1, var)
 
-# Compute standard deviation across rows (genes)
-sd_dev <- apply(data, 1, sd)
+# Sort and retain top 1000 variable genes 
+topvarGenes <- names(sort(variances, decreasing=TRUE))[1:1000]
 
-# Select top 1000 variable genes
-top_variable_genes <- names(sort(sd_dev, decreasing = TRUE)[1:1000])
+# Subset the data for these genes
+expDataSub <- expData[topvarGenes,]
 
-# Create a subset of the original data frame using these genes
-top_variable_df <- data[top_variable_genes, ]
+# Plot heatmap
+library(gplots)
+heatmap.2(as.matrix(expDataSub), trace="none", margins = c(15, 15))
 
-# Perform clustering and plot heatmap
-pheatmap(top_variable_df, cluster_rows = TRUE, cluster_cols = TRUE, 
-         color = colorRampPalette(c("navy", "white", "firebrick3"))(25))
+# For PCA, we first scale the data
+expDataSub_scaled <- scale(t(expDataSub))
 
-# Perform PCA on samples
-pca_res <- prcomp(t(top_variable_df))
+# Compute PCA
+pca <- prcomp(expDataSub_scaled)
 
-# Plot PCA
-autoplot(pca_res, label = TRUE, label.size = 3, size = 0.5)
+# Plot the samples on the first two principal components
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", main="PCA of expression data")
 ```
-The code reads the data, calculates the standard deviation across all genes, and selects the 1000 genes with the highest standard deviation. The code then uses this subset of genes to draw a heatmap and perform principal component analysis (PCA). The PCA result is also plotted.
 
-The 'ggfortify' library extends 'ggplot2' for plotting some specifics statistics details automatically. After you do PCA using function 'prcomp', you can use 'autoplot' function (from 'ggfortify') to make the PCA plot.
+First, the code loads in the gene expression data in a table where each row is a unique gene and each column is a unique cell. We then calculate the variance in expression for each gene and sort them in descending order, selecting only the top 1000 variable genes. With this subset of variable genes, we plot a heatmap with the `heatmap.2` function from `gplots` package and also perform a principal component analysis (PCA). Rows need to be scaled before PCA to ensure each gene has equal weight in analysis. The PCA results are plotted with the first two principal components on the x and y axes, respectively.

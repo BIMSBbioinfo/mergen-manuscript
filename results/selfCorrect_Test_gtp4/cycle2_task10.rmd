@@ -9,43 +9,35 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the code to perform the task:
-
 ```
-# Loading the required libraries
+# load required packages
 library(dplyr)
-library(cluster)
-library(factoextra)
+library(gplots)
 
-# Reading the table
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
+# load the gene expression data
+gene_expression <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1, check.names=FALSE)
 
-# Calculating the variance of each row (gene) in the data 
-data.var <- apply(data, 1, var)
+# calculate standard deviation for each gene expression 
+std_deviation <- apply(gene_expression, 1, sd)
 
-# Sorting the genes by their variability (variance in descending order)
-data.var.sorted <- sort(data.var, decreasing = TRUE)
+# get the top 1000 most variable genes
+top_1000_genes <- order(std_deviation, decreasing = TRUE)[1:1000]
 
-# Selecting top 1000 variable genes
-top.var.genes <- head(data.var.sorted, 1000)
+# get data for these genes
+top_1000_data <- gene_expression[top_1000_genes,]
 
-# Filtering the data 
-data.filtered <- data[names(top.var.genes),]
+# perform hierarchical clustering
+dist_matrix <- dist(t(top_1000_data), method="euclidean")
+clustering_results <- hclust(dist_matrix, method="complete")
 
-# Transposing the dataset to prepare it for clustering
-data.transposed <- t(data.filtered)
+# plot the dendrogram
+plot(clustering_results, labels = FALSE, xlab="Samples", ylab="Distance", main="Hierarchical clustering of samples")
 
-# Performing hierarchical clustering
-hc <- hclust(dist(data.transposed))
-plot(hc)
+# cut tree into 2 clusters
+two_clusters <- cutree(clustering_results, k=2)
 
-# Cut tree into clusters, let's say we want to get 3 clusters
-clusters <- cutree(hc, 3)
-
-# Extracting cluster specific genes
-cluster1.genes <- data.transposed[clusters == 1,]
-cluster2.genes <- data.transposed[clusters == 2,]
-cluster3.genes <- data.transposed[clusters == 3,]
+# get cluster-specific genes for each cluster
+cluster1_genes <- colnames(top_1000_data)[two_clusters == 1]
+cluster2_genes <- colnames(top_1000_data)[two_clusters == 2]
 ```
-
-Please replace the number of clusters (3 in this case) with your required number of clusters when setting the `clusters` variable. Also, make sure the directory you're working in includes the 'leukemiaExp.txt' file before executing the code.
+This R code first loads the required packages and the gene expression data into R. It then calculates the standard deviation of expressions for each gene and retains the 1000 genes with the highest variability. After selecting these variable genes, it applies hierarchical clustering to group the samples based on their gene expression patterns. Finally, it identifies cluster-specific genes by dividing the dendrogram into two clusters and identifying the genes specific to each one.

@@ -9,19 +9,19 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-You can read this file into R using `read.table` or `read.csv`. Since it's tab-separated, you would use `\t` as the separator. File is read into a `data.frame`, and you can get the number of genes using the `nrow` function and the number of samples by substracting 2 from the number of columns (using `ncol`).
-
-Here is the R code:
+Here is R code that loads the table from the tsv file using read.table function. Then simply use the ncol() and nrow() functions to get number of samples (columns) and genes (rows) respectively.
 
 ```
-# Read the file
+# Load the data
 data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Get the number of genes and samples
-num_genes <- nrow(data)
-num_samples <- ncol(data) - 2  # Subtracting gene names and length columns
+# Number of samples
+num_samples <- ncol(data) - 2  # Subtract 2 to exclude gene name and gene length columns
 
-print(paste("Number of genes:", num_genes))
-print(paste("Number of samples:", num_samples))
+# Number of genes
+num_genes <- nrow(data)
+
+# Print the results
+print(paste("The dataset has", num_samples, "samples and", num_genes, "genes."))
 ```
-This code assumes that the file is in your working directory. If not, replace `"SRP021193.raw_counts.tsv"` with the full path to the file.
+This code assumes that the file 'SRP021193.raw_counts.tsv' is located in the current working directory. If the file is located in a different directory, you should modify the file path accordingly.

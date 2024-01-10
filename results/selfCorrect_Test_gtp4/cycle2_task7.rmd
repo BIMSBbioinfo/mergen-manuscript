@@ -10,22 +10,18 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# Load required package
+# Load the required libraries
 library(dplyr)
 
-# Read the gene expression data
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
+# Read the data from the file
+data <- read.delim("leukemiaExp.txt", header = TRUE, row.names = 1)
 
-# Check if there are more samples than 500
-if (ncol(data) > 500) {
-  # Randomly sample 500 columns
-  data_subset <- data %>% select(sample(ncol(data), 500))
-} else {
-  data_subset <- data
+# If there are more than 500 samples, randomly sample 500 samples
+if(ncol(data) > 500) {
+  data <- data %>% select(sample(ncol(data), 500))
 }
 
-# Create boxplot of the columns
-boxplot(data_subset, main = "Genes Expression Data", xlab = "Samples", ylab = "Expression", las = 2)
+# Create boxplot of each column
+boxplot(data)
 ```
-
-This R code first reads the leukemia expression data from the leukemiaExp.txt file. It then checks if there are more than 500 samples (columns). If there are, it randomly samples 500 columns from the data; otherwise, it uses the full data. Finally, it creates a boxplot of the gene expression data. The `las = 2` option in the `boxplot()` function is used to rotate the x-axis labels 90 degrees for better readability when there are a lot of labels.
+This code starts by importing the necessary library (dplyr) which will be used for data manipulation. After that, the data file is read into R and stored in the variable `data`. The first column of the data is treated as row names. In the next step, it checks if the number of columns in the data (i.e., the number of samples) is more than 500. If so, it randomly selects 500 columns (samples) from the data. Finally, it creates a boxplot for each column in the processed data. The boxplots illustrate the distribution of gene expression levels in each sample.

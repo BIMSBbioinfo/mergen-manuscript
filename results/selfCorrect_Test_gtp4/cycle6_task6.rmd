@@ -9,16 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is an R code to load and subset the expression data:
-
 ```
-# Load the expression data to data frame
-leukemiaExp <- read.table("leukemiaExp.txt", header=T, row.names=1, sep="\t", check.names=FALSE)
+# first read the file
+gene_exp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# If there are more than 500 samples, randomly sample 500
-if (ncol(leukemiaExp) > 500) {
-  leukemiaExp <- leukemiaExp[, sample(ncol(leukemiaExp), 500)]
+# get the number of samples
+num_samples <- ncol(gene_exp)
+
+# if the number of samples is more than 500, randomly sample 500 columns
+if(num_samples > 500){
+  set.seed(123)
+  sample_index <- sample(1:num_samples, 500)
+  gene_exp_subset <- gene_exp[, sample_index]
+}else{
+  gene_exp_subset <- gene_exp
 }
 ```
-
-This code first loads the data file "leukemiaExp.txt", then if there are more than 500 columns (samples), it randomly selects 500 columns to create a new subset of the data. The `sample` function is used to randomly select the columns. The `check.names=FALSE` argument in `read.table` is to prevent R from substituting problematic characters in the column names; some of the sample names may have characters R typically doesn't allow for column names. The choice of taking random sample would be based on a seed, if the seed is not defined, the sample might be different each time.
+This script reads the file "leukemiaExp.txt", which is a tab-separated file with gene names in the first column. Then it checks the number of available samples. If the number of samples is more than 500, it randomly selects 500 samples (columns)from it. Otherwise, it will use the original data. Please replace the path to "leukemiaExp.txt" with the actual path to your file if it's not located in your working directory.

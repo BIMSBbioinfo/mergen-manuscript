@@ -10,23 +10,27 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-Here's the R code to load an Excel file and inspect its dimensions (number of samples and genes).
+Here is the R code to load the data from the Excel sheet into R and to find out the number of genes and samples in the dataset.
 
-First, you'll need the readxl package. If you haven't installed it yet, remember to do so with .
+We will use the 'readxl' package to read the Excel sheet. Then we will use the 'dim' function to find out the number of rows (which corresponds to the number of genes, since each row is a gene) and the number of columns (which corresponds to the number of samples, since each column is a sample). We subtract 1 from the number of columns to account for the first column with gene names.
 
 ```
-# Load the required package.
+# Load package
+
 library(readxl)
 
-# Load the data.
-data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the data from the Excel sheet
+gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Get the dimensions of the data.
-num_genes  <- nrow(data)                      # Number of genes.
-num_samples <- ncol(data) - 1                  # Number of samples.
+# Get the number of genes
+num_genes <- dim(gene_data)[1]
 
-# Print the results.
-print(paste("This dataset has", num_genes, "genes and", num_samples, "samples."))
+# Get the number of samples
+num_samples <- dim(gene_data)[2] - 1
+
+# Print the results
+print(paste("Number of genes: ", num_genes))
+print(paste("Number of samples: ", num_samples))
 ```
 
-This code assumes that the first column of the dataframe contains the gene names and the rest of the columns have the expression data for each sample. The count of samples is thus the total number of columns minus one.
+In this code block, replace "Supplementary_Table_1_exp.xlsx" with the path to your Excel file if it is not in your working directory.

@@ -10,24 +10,24 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-Here is an example of R code that can accomplish this task.
+You can use the `read_excel` function from the `readxl` package to load your excel data into R. Then, use the `dim` function to check the dimension of your data, which will return a vector containing the number of rows (genes) and columns (samples).
 
-In this code, I am using library `readxl` to read the Excel data into R and then I am using `dim` function to get the number of rows (genes) and columns (samples) from this data. Please note the number of samples is calculated as total columns minus one (as first column contains gene names not the sample data).
+This is done as follows:
 
 ```
-# Load libraries
+# Load necessary package
 library(readxl)
 
-# Read the data
+# Load the excel file
 data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
 # Get the number of genes and samples
-num_genes = nrow(data)
-num_samples = ncol(data) - 1
+num_genes <- dim(data)[1]
+num_samples <- dim(data)[2] - 1
 
-# Print the results
+# Print the number of genes and samples
 print(paste("Number of genes:", num_genes))
 print(paste("Number of samples:", num_samples))
 ```
 
-Please ensure you've installed the required library. If not, you can install it using `` initially. Also, make sure the provided Excel file "Supplementary_Table_1_exp.xlsx" exists in your current working directory in R. To check your current working directory, you can use `getwd()` function in R.
+Remember that the first column contains gene names, so I subtract 1 from the total number of columns to get the number of samples. This code does not check if the data file is actually structured that way, so be careful. If the actual structure of your file is different, adjust the code accordingly.

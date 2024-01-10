@@ -10,27 +10,45 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Below is the R code to achieve your tasks. It uses the `readxl` and `readr` packages to read Excel and tsv file formats respectively. After reading both data files into R as data frames, the `merge` function is used to join them. The number of columns in the final merged data frame is then calculated using the `ncol` function.
+Here is the R code:
 
 ```
-# Load necessary packages
 library(readxl)
 library(readr)
+library(dplyr)
 
-# Read the excel and tsv files
-expr_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-annot_data <- read_tsv("SRP021193.colData.tsv")
+# read the gene expression data from excel file
+gene_expr <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Merge the two data frames based on the sample ids
-merged_data <- merge(expr_data, annot_data, by.x="Genes", by.y="diagnosis", all = TRUE)
+# read the annotation data from tab separated file
+annotation <- read_tsv("SRP021193.colData.tsv")
 
-# Calculate the number of columns
-num_columns <- ncol(merged_data)
+# transpose the gene expression data so that samples become rows
+t_gene_expr <- t(gene_expr)
+
+# add the genenames column to the transposed gene expression data
+t_gene_expr <- data.frame(genenames = rownames(t_gene_expr), t_gene_expr)
+
+# make sure that samples are characters not factor to avoid problems in merging
+annotation$diagnosis <- as.character(annotation$diagnosis)
+t_gene_expr$genenames <- as.character(t_gene_expr$genenames)
+
+# set the rownames to NULL
+rownames(t_gene_expr) <- NULL
+rownames(annotation) <- NULL
+
+# merge the two dataframes by samples
+merged_data <- inner_join(annotation, t_gene_expr, by = c("diagnosis"="genenames"))
+
+# calculate number of columns 
+num_of_columns <- ncol(merged_data)
+
+num_of_columns
 ```
 
-Note: Ensure you properly set your working directory to the folder containing these files before running the code, or include the full path to these files in the `read_excel` and `read_tsv` functions. If the annotation data has column names that also appear in the gene expression data, you may need to adjust the names to avoid duplicates after merging.
+This code reads both the RNA-seq count table and the sample annotation data, and merges them based on the sample IDs (assuming that these IDs in the gene expression data are the same as the 'diagnosis' IDs in the annotation data). Please, replace the file paths with the correct ones on your local system. The number of columns in the merged data is calculated with the ncol function.

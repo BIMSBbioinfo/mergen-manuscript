@@ -9,17 +9,18 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-You can use the read.table function to read in the table of gene expressions and then use the dim function to get the dimensions of the table. This will tell you the number of genes and samples.
+The following R code will count the number of genes (rows) and the number of samples (columns) in the leukemiaExp.txt file. The first column of the file (gene names) will be excluded from the count of samples (columns).
 
 ```
-# Read in the data
-expression_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Read the data
+leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names = FALSE)
 
-# Get the number of genes and samples
-num_genes <- nrow(expression_data)
-num_samples <- ncol(expression_data)
+# Get the number of genes (rows)
+nGenes <- nrow(leukemiaExp)
+print(paste("Number of Genes: ", nGenes))
 
-num_genes
-num_samples
+# Get the number of samples (columns). Subtract 1 to exclude gene names column
+nSamples <- ncol(leukemiaExp) - 1
+print(paste("Number of Samples: ", nSamples))
 ```
-In the code above, row.names = 1 is specified to indicate that the first column contains the gene names, and should be used as the row names in the resulting data frame. After that, nrow and ncol functions are used to obtain the quantity of rows (genes) and columns (samples) respectively.
+This program will print out the number of genes and samples in the data file. Make sure the data file is in the working directory of your R session.

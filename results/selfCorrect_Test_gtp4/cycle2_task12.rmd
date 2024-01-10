@@ -10,40 +10,38 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-To accomplish this task, we can use the `readxl` package to read data from the Excel file and the `readr` package to read data from the TSV file.
-
-Here is the R code:
-
 ```
-# Load necessary packages
+# First, install necessary packages:
+if (!require(readxl)) {
+    
+}
+if (!require(readr)) {
+    
+}
+
+# Load required libraries:
 library(readxl)
 library(readr)
 
-# Read data from Excel file
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Reading the RNA-seq experiment excel file:
+countData <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Print number of rows and columns in count data
-cat("Number of rows in count data: ", nrow(count_data), "\n")
-cat("Number of columns in count data: ", ncol(count_data), "\n")
+# Reading the sample annotations tsv file:
+colData <- read_tsv("SRP021193.colData.tsv")
 
-# Read data from TSV file
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Printing count number of rows and columns for count data:
+cat("Count of rows and columns in the count data:\n")
+nrow(countData)
+ncol(countData)
 
-# Print number of rows and columns in annotation data
-cat("Number of rows in annotation data: ", nrow(annotation_data), "\n")
-cat("Number of columns in annotation data: ", ncol(annotation_data))
+# Printing count number of rows and columns for col data:
+cat("\nCount of rows and columns in the col data:\n")
+nrow(colData)
+ncol(colData)
 ```
-
-This code first reads the data from the Excel file (`read_excel("Supplementary_Table_1_exp.xlsx")`) and stores it in the `count_data` object.
-
-Next, it prints the number of rows and columns in the `count_data` object using the `nrow` and `ncol` functions, respectively.
-
-After that, it reads data from the TSV file (`read_tsv("SRP021193.colData.tsv")`) and stores it in the `annotation_data` object.
-
-Finally, it prints the number of rows and columns in the `annotation_data` object using the `nrow` and `ncol` functions similarly.
-
+Remember to replace `Supplementary_Table_1_exp.xlsx` and `SRP021193.colData.tsv` with the respective path to those files in your local machine or server.

@@ -9,52 +9,37 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Apologies for the error again, it appears there was a mismatch between the column names in the data after it was loaded and the ones specified in the script. In this case, I assume the column with gene names is the first one and doesn't have a named header ('name' in our code). I'll fix the script accordingly.
+I apologize for the syntax error in the previous code.
+
+The correct name of the function is "read.delim", not "read.delimiter". Please see the corrected code below:
 
 ```
-# Load required libraries
-library(tidyverse)
+#Reading the tab-separated expression file
+data <- read.delim("leukemiaExp.txt", header = TRUE, row.names = 1)
 
-# Read the gene expression data file
-data <- read_tsv("leukemiaExp.txt", col_names = TRUE)
+#Ensuring data are numeric
+data <- as.data.frame(sapply(data, as.numeric))
 
-# Assume the first column is gene names
-names(data)[1] <- "gene"
+#Filtering the genes based on their variability
+variance <- apply(data, 1, var) #Finding variance for each gene
+top_var_genes <- order(variance, decreasing = TRUE)[1:1000] #Picking the top 1000
+filtered_data <- data[top_var_genes,] #Subsetting the main data with top 1000 variable genes
 
-# Reshape the data into long format for computing the standard deviation
-data_long <- data %>%
-  pivot_longer(-gene, names_to = "sample", values_to = "expression")
 
-# Compute standard deviation for each gene across samples
-var_genes <- data_long %>%
-  group_by(gene) %>%
-  summarize(variability = sd(expression, na.rm = TRUE))
+#Clustering the samples using Hierarchical Clustering
+d <- dist(t(filtered_data), method = "euclidean") #Distance matrix
+hc <- hclust(d, method = "average") #Hierarchical clustering
+clusts <- cutree(hc, k = 3) #Cut the dendrogram to create 3 clusters
 
-# Select top 1000 most variable genes
-top_genes <- var_genes %>%
-  arrange(desc(variability)) %>%
-  slice(1:1000) %>%
-  pull(gene)
+#Extracting genes that are specific to each cluster
+clust_genes <- lapply(unique(clusts), function(x) {
+  genes <- colnames(filtered_data)[clusts == x]
+  return(genes)
+})
 
-# Filter original data to retain only top variable genes
-data_filtered <- data %>%
-  filter(gene %in% top_genes)
-
-# Convert filtered data to a matrix for clustering
-data_mat <- data_filtered %>%
-  column_to_rownames("gene") %>%
-  as.matrix()
-
-# Perform hierarchical clustering on the samples
-hc <- hclust(dist(t(data_mat)))
-
-# Cut the dendrogram into 2 clusters
-clusters <- cutree(hc, 2)
-
-# Extract the gene names for each cluster
-cluster_genes <- lapply(unique(clusters), function(cl) rownames(data_mat)[clusters == cl])
-
-# Print the cluster-specific genes
-print(cluster_genes)
+# The above created a list with each element representing the genes belonging to a cluster
+# To access the genes of a specific cluster (say, 1), use clust_genes[[1]]
 ```
-This script transforms the data, computes the variability of each gene across samples, selects the top 1000 most variable genes, performs hierarchical clustering on the samples, and then extracts and prints the genes specific to each cluster. Note that the true number of clusters may differ and would ideally be determined using an appropriate method such as the silhouette method or the elbow method.
+Replace `k = 3` with the desired number of clusters. Here, 3 is just an example. The number of clusters should be determined based on the specific research question and data.
+Also, it seems the column names are considered as samples as we had to transpose the data (`t()` function). Be cautious when interpreting the clusters. Some clustering methods do not require transposing the data. You might need to update the code to fit your purpose.
+

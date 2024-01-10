@@ -9,34 +9,43 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the confusion. The error you're encountering occurs when inputs expected to be numeric received non-numeric arguments.
-
-Your data may have non-numeric entries (maybe unidentified or incomplete records), or an extra first row with non-numeric entries due to row names. You need to deal with these issues by cleaning up your data.
-
-Below is a revised code block addressing these problems. The revised code below uses `row.names = 1` in `read.table()` to handle the gene names correctly. 
+I apologize for the error. It seems the error is due to the use of dplyr's `summarise_all()` on a matrix. The `summarise_all()` function operates on data frames, not matrices. Here's a fixed version which first transforms the matrix to a data.frame before performing operations:
 
 ```
 # Load necessary libraries
-library(dplyr)
-library(pheatmap)
+library(cluster)
 
-# Read file
-df <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+# Read data and convert transpose the data to get genes as columns
+data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
+data <- t(data)
 
-# Calculate standard deviations (SD) for each row (gene)
-sdev <- apply(df, 1, sd)
+# Convert to data frame
+data_df <- as.data.frame(data)
 
-# Add SDs into data frame and sort genes by their SD
-df <- df[order(-sdev),]
+# Calculate standard deviation for each gene and select top 1000 variable genes
+var.genes <- apply(data, 2, sd)
+var.genes_sorted <- sort(var.genes, decreasing = TRUE)
+top.genes <- names(var.genes_sorted)[1:1000]
 
-# Select top 1000 genes based on variability
-df_top <- df[1:1000,]
+# Filter data based on variable genes
+data.filtered <- data_df[, top.genes]
 
-# Cluster and Heatmap
-heatmap = pheatmap(df_top, scale = "row", clustering_distance_rows = "euclidean", clustering_method = "complete", show_colnames = F, main = "Heatmap of genes")
+# Use k-means to cluster the samples
+clustering <- kmeans(data.filtered, centers = 3)  # you can adjust the number of centers
 
-# Manually set cutoff for clusters based on the dendrogram and retrieve cluster membership
-clust_membership <- cutree(as.hclust(heatmap$tree_row), h=1.5)
-clust_membership
+# Add cluster assignments to data
+data.filtered$cluster = clustering$cluster
+
+# Split the dataset by cluster
+data.split <- split(data.filtered, data.filtered$cluster)
+
+# Identify representative genes from each cluster (based on highest mean)
+cluster.genes <- lapply(data.split, function(cluster) {
+  gene.means <- colMeans(cluster)
+  top.gene <- names(which.max(gene.means))
+  return(top.gene)
+})
+
+print(cluster.genes)
 ```
-Please make sure that the file path to "leukemiaExp.txt" is correct. Also, replace `h=1.5` in the `cutree` function with the required dendrogram height that determines the number of clusters in your specific case.
+In this fixed version, we calculate the standard deviation for each gene using `apply()` instead of `summarise_all()`. We then sort the gene-standard deviation pairs in descending order and select the names of the top 1000. After clustering the data and assigning cluster labels, we identify the most representative gene from each cluster (the gene with the highest mean expression within the cluster).

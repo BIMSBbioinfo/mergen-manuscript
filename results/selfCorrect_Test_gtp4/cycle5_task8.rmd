@@ -9,36 +9,29 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-It seems the error is because the ggplot function is treating the gene expression values as factors. The code needs to be modified to convert gene expressions to numeric. Here is the corrected code:
+I apologize for the earlier confusion. The error might be due to incompatible character vectors supplied to `xlab` and `ylab`. Here, I will fix that by directly using the names of the genes. 
 
 ```
-# Load necessary libraries
-library(ggplot2)
+#Load the data
+data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t", row.names=1)
 
-# Read the file
-data <- read.table("leukemiaExp.txt", sep="\t", header = TRUE, row.names = 1)
+# Compute standard deviations across all columns (genes)
+data$sd <- apply(data, 1, sd)
 
-# Calculate variance for each gene
-variances <- apply(data, 1, var)
+# Sort genes by standard deviation in descending order, and select the top 1000
+data <- data[order(-data$sd),][1:1000,]
 
-# Get the gene names for the top 1000 most variable genes
-top1000_genes_names <- names(sort(variances, decreasing = TRUE))[1:1000]
+# Subset the two most variable genes
+gene1 <- data[1,]
+gene2 <- data[2,]
 
-# Filter data to get only the most variable genes
-filtered_data <- data[top1000_genes_names,]
+# Remove last column (standard deviation) from the genes
+gene1 <- gene1[1:(length(gene1)-1)]
+gene2 <- gene2[1:(length(gene2)-1)]
 
-# Get the two most variable genes
-top2_genes <- filtered_data[1:2,]
-
-# Create a data frame for the two most variable genes
-data_for_plot <- data.frame(Gene1 = as.numeric(top2_genes[1,]), Gene2 = as.numeric(top2_genes[2,]))
-
-# Create a scatterplot of the two most variable genes
-ggplot(data_for_plot, aes(x = Gene1, y = Gene2)) +
-  geom_point() +
-  xlab(names(top2_genes[1,])) +
-  ylab(names(top2_genes[2,])) +
-  ggtitle("Scatterplot of the Two Most Variable Genes")
+# Create the scatterplot
+plot(as.numeric(gene1), as.numeric(gene2),
+     main="Scatterplot of the Two Most Variable Genes",
+     xlab=row.names(data)[1], ylab=row.names(data)[2])
 ```
-
-The changes are that now the top 2 most variable genes are converted to numeric type when creating the data frame `data_for_plot` for the plot. The `as.numeric()` function is used for this conversion. Now, the scatterplot should be plotted as expected without any errors.
+The revised code now properly handles the `xlab` and `ylab` argument in the `plot()` function by supplying only the first and second row name of the data (which are the gene names) as the labels for `x` and `y` axes. The numerical conversion is performed to ensure that the `plot` function receives the numeric values it expects. Make sure the file "leukemiaExp.txt" is in your working directory or provide the full path to the file in the `read.table` function.

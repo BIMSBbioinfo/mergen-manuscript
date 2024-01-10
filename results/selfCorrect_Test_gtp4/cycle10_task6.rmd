@@ -9,25 +9,14 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-The following R code will load the data and create a subset of samples if the total samples exceed 500.
-
 ```
-# Load the data
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Read the file leukemiaExp.txt
+leukemiaExp <- read.delim("leukemiaExp.txt", row.names=1, header=TRUE, sep="\t")
 
-# Check number of samples (substract one for the gene names column)
-number_of_samples <- ncol(leukemiaExp)-1
-
-# If more than 500 samples create a subset of the data
-if (number_of_samples > 500) {
-  set.seed(123)  # For repeatability of the random selection
-  samples_subset_index <- sample(2:(number_of_samples+1), 500)  # Generate random indices for samples (start from 2 because of gene names column) 
-
-  # Subset the data
-  leukemiaExp_subset <- leukemiaExp[,c(1,samples_subset_index)]  # Include gene names column in the subset
-} else {
-  leukemiaExp_subset <- leukemiaExp
+# If there are more than 500 samples, randomly sample 500 of them
+if(ncol(leukemiaExp) > 500) {
+    set.seed(123) # For reproducibility
+    sample_cols <- sample(ncol(leukemiaExp), 500)
+    leukemiaExp <- leukemiaExp[,sample_cols]
 }
 ```
-Please make sure to update the file path in the `read.table` function to capture the correct location of your `.txt` file. The seed for random number generation (`set.seed(123)`) can be set to any integer value of your choice for repeatability of the random selection of samples.
-

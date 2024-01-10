@@ -10,72 +10,62 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the confusion. That error implies that there is a variable with a constant value which is causing an issue during the PCA transformation.
-
-The problem arises during the `prcomp` function when it attempts to scale all columns to have unit variance, which is not possible when a column or row has constant or zero values.
-
-We can fix this by using the `nearZeroVar` function from the `caret` package to identify and remove constant or near-zero variance variables and then proceed with PCA.
-
-Here's the modified code:
+I apologize for the confusion. It seems your group variable only has a single factor. This means that the contrast argument is not needed. Here is your fixed R script:
 
 ```
-library(DESeq2)
+# load necessary packages
 library(readxl)
-library(tidyverse)
-library(caret)
-set.seed(123)
+library(DESeq2)
+library(ggplot2)
+library(Biobase)
+library(pcaExplorer)
 
-# Load the countData
-countData <- read_excel("Supplementary_Table_1_exp.xlsx", col_names = TRUE)
-rownames(countData) <- paste(countData$Genes, 1:nrow(countData), sep="_")  # fix duplicate row names
-countData <- countData[,-1]
+# Read your data
+RNA_counts <- read_excel("Supplementary_Table_1_exp.xlsx")
+row.names(RNA_counts) <- RNA_counts$Genes
 
-# Load the colData
-colData <- read_tsv("SRP021193.colData.tsv", col_names = TRUE)
+meta_data <- read.csv("SRP021193.colData.tsv", sep="\t", row.names=1, header=TRUE)
 
-# Match sample names between count data and colData
-colData <- colData[match(colnames(countData), colData$diagnosis), ]
+# Check if column names of both dataset matches 
+if(!identical(colnames(RNA_counts)[-1], rownames(meta_data))) {
+  stop("Mismatch between column names of counts data and row names of meta data.")
+}
 
-# Create DESeq2 object
-dds <- DESeqDataSetFromMatrix(countData = countData,
-                              colData = colData,
+# Set up the DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = RNA_counts[,-1], 
+                              colData = meta_data, 
                               design = ~ group)
 
-# Run DESeq2
+# Conduct DESeq2 analysis
 dds <- DESeq(dds)
+results <- results(dds)
 
-# Get the results
-res <- results(dds)
+# Extract the group specific genes
+resOrdered <- results[order(results$pvalue),]
+# Threshold for significance can be adjusted
+significantGenes <- rownames(resOrdered)[which(resOrdered$padj < 0.05)]
+countDataSubset <- RNA_counts[,c(1, which(colnames(RNA_counts) %in% significantGenes))]
 
-# Define group specific genes as those with p-value less than 0.05
-group_specific_genes <- rownames(res[which(res$pvalue < 0.05), ])
+# Conduct PCA
+sds <- DESeqDataSetFromMatrix(countData = countDataSubset[,-1], 
+                              colData = meta_data, 
+                              design = ~ group)
 
-# Subset countData to include only group specific genes
-group_specific_countData <- countData[paste(group_specific_genes, 1:length(group_specific_genes), sep="_"), ]
+vsd <- varianceStabilizingTransformation(sds, blind=FALSE)
+pcaData <- plotPCA(vsd, intgroup=c("group"), returnData=TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
 
-# Filter out genes that have constant counts across samples
-# Identify zero or near-zero variance predictors
-nzv <- nearZeroVar(group_specific_countData)
-# Retain only non near-zero variance genes
-filtered_countData <- group_specific_countData[,-nzv]
-
-# Run PCA
-pca_res <- prcomp(t(filtered_countData), scale. = TRUE)
-
-# Create a dataframe from PCA results for plotting
-pca_df <- as.data.frame(pca_res$x) %>% mutate(group = colData$group)
-
-# Plot PCA, color code by group
-ggplot(pca_df, aes(x=PC1, y=PC2, color=group)) +
+# Plot PCA with different color for each group
+ggplot(pcaData, aes(PC1, PC2, color=group)) +
   geom_point(size=3) +
-  labs(x = paste0("PC1: ", round(pca_res$sdev[1] / sum(pca_res$sdev) * 100, 2), "% variance"),
-       y = paste0("PC2: ", round(pca_res$sdev[2] / sum(pca_res$sdev) * 100, 2), "% variance"),
-       title = "PCA plot colored by group") +
-  theme_minimal()
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) +
+  coord_fixed()
 ```
-This code should fix the problem.
+
+This time, I've removed the contrast argument from the `results` function. Now, it should work for your case.

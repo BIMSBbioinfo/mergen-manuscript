@@ -5,21 +5,25 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
+Here is the code to read a tab separated file and determine the number of rows and columns it has.
+
 ```
-# Read file
-subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
+# Read tab separated file
+subjects <- read.delim("subjects.txt", header=TRUE)
+
+# Number of rows
+num_rows <- nrow(subjects)
 
 # Number of columns
-columns_number <- ncol(subjects)
-# Number of rows
-rows_number <- nrow(subjects)
+num_cols <- ncol(subjects)
 
-# Print results
-print(paste("Number of columns: ", columns_number))
-print(paste("Number of rows: ", rows_number))
+# Print the results
+print(paste("The number of rows is", num_rows))
+print(paste("The number of columns is", num_cols))
 ```
-The "read.table" function reads in a text file and converts it to a data frame. The "header = TRUE" argument tells R that the first line of the file contains column names, and the "sep = '\t'" argument specifies that the file is tab-delimited. The "ncol" and "nrow" functions return the number of columns and rows, respectively, in a data frame.
+
+This code first uses `read.delim()` function with the argument `header=TRUE` to read in the tab separated file and treat the first row as column names. Then, `nrow()` and `ncol()` functions are used to count the number of rows and columns respectively. Finally, the number of rows and columns are printed.

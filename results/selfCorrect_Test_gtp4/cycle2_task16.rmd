@@ -10,42 +10,42 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the inconvenience. Based on the information provided about the structure of your dataframes "exp" and "colData", it seems the merge should happen between the gene sample names in "exp" and the `diagnosis` column in "colData". 
-Also, it seems like the `diagnosis` column contains the sample names used as column names in your "exp" dataframe. Therefore, we should extract the sample id from column names of "exp" dataframe, and then use these along with 'diagnosis` column of "colData" dataframe for merging. 
+Apologies for the confusion earlier. Replace `'Your Path Here'` with the actual path where your 'Supplementary_Table_1_exp.xlsx' and 'SRP021193.colData.tsv' file is stored. 
 
-I've made appropriate amendments to the code:
-
+For example, If your file is located in the Documents folder, the path would be something like "C:/Users/YourName/Documents/Supplementary_Table_1_exp.xlsx"
+  
 ```
-# Load necessary libraries
+# Please replace 'Your Path Here' with the actual path to your file
+my_path_to_excel = "Your Path Here/Supplementary_Table_1_exp.xlsx" 
+my_path_to_tsv = "Your Path Here/SRP021193.colData.tsv"
+
 library(readxl)
-library(tidyverse)
-library(stringi)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(ggplot2)
 
-# Read the gene expression counts file
-exp <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Load the gene expression data
+gene_df <- readxl::read_excel(my_path_to_excel)
 
-# Read the annotation data file
-colData <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE, header = TRUE)
+# Load the annotation file
+annot_df <- readr::read_tsv(my_path_to_tsv)
 
-# Reshape the data from wide to long
-exp_long <- exp %>% gather("Sample", "Expression", -Genes)
+# Transpose the gene expression data
+gene_df_transposed <- gene_df %>% tidyr::pivot_longer(-Genes, names_to = "sample", values_to = "gene_expr")
 
-# Replace "Sample" column values to match colData$diagnosis
-exp_long$Sample <- gsub("CASE_", "CASE", exp_long$Sample)
-exp_long$Sample <- gsub("CTRL_", "CTRL", exp_long$Sample)
+# Join annotation and gene expression data
+merged_df <- dplyr::inner_join(gene_df_transposed, annot_df, by = c("sample" = "diagnosis"))  
 
-# add annotations to the expression data
-merged <- merge(exp_long, colData, by.x = "Sample", by.y = "diagnosis")
-
-# plot boxplots for gene expression values per sample and color code boxplots based on group variable
-ggplot(merged, aes(x = Sample, y = log(Expression + 1), fill = group)) + 
-  geom_boxplot(outlier.shape = NA) + 
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+# boxplot for gene expression values per sample and color code boxplots 
+ggplot(merged_df, aes(x = sample, y = gene_expr, color = group)) + 
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) 
 ```
 
-In this revised block of code, I added the step of modifying the "Sample" column in `exp_long` dataframe to match the format of sample ids in `colData`. Please replace "CASE_" and "CTRL_" with the appropriate string based on your data if they are different.
+Replace `'Your Path Here'` with the directory path to your files. The path needs to be a character string and the forward slashes in the path are important. It should not have any spaces unless there are spaces in the folder names. Also, if you're using a Windows machine and have difficulty finding the filepath, you can shift+right-click on the file and "copy as path".

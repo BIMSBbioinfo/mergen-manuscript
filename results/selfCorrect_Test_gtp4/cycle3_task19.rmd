@@ -10,52 +10,68 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-The error indicates that the data argument in `autoplot()` function is not correctly passing a data.frame. We should pass `colData(rld)` outside the `autoplot()` function and assign the result to a separate variable first. 
-
-Here is the fixed code:
+I apologize for the confusion. The correct function to use with a DESeqDataSet object is "plotPCA". Here is the corrected code:
 
 ```
-# Load necessary libraries
-library(readxl)
-library(readr)
+# Install required packages if not already installed
+if (!requireNamespace("DESeq2", quietly = TRUE)) {
+    BiocManager::install("DESeq2")
+}
+
+if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    
+}
+
+if (!requireNamespace("readxl", quietly = TRUE)) {
+    
+}
+
+if (!requireNamespace("readr", quietly = TRUE)) {
+    
+}
+
 library(DESeq2)
 library(ggplot2)
-library(ggfortify)
+library(readxl)
+library(readr)
 
-# Reading the data files
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read_tsv("SRP021193.colData.tsv")
+# Loading count data
+data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Make rownames unique
-count_table$Genes <- make.unique(as.character(count_table$Genes))
+# Adjusting sample names (removing the "X__" prefix)
+colnames(data) <- sub("X__", "", colnames(data))
 
-# Convert first column to rownames
-rownames(count_table) <- count_table$Genes
-count_table$Genes <- NULL
+rownames(data) <- data$Genes
+data$Genes <- NULL
 
-# Convert count table and annotation data to DESeqDataSet 
-dds <- DESeqDataSetFromMatrix(countData = count_table,
-                              colData = annotation_data,
-                              design = ~ group)
+# Loading metadata
+meta <- read_tsv("SRP021193.colData.tsv")
+rownames(meta) <- meta$X1
+meta$X1 <- NULL
 
-# Normalize the data
+# Creating DESeq object
+dds <- DESeqDataSetFromMatrix(countData = data, colData = meta, design = ~ group)
+
+# Normalizing data
 dds <- DESeq(dds)
-rld <- rlog(dds)
 
-# Covnert to dataframe
-df <- as.data.frame(colData(rld))
+# Running PCA 
+vsd <- vst(dds, blind=FALSE) 
+data_pca <- plotPCA(vsd, intgroup=c("group", "LibrarySelection"), returnData=TRUE)
 
-# PCA plots
-# PCA plot colored by "group"
-autoplot(prcomp(t(assay(rld))), data = df, colour = 'group')
+# PCA plot color coded by "group"
+ggplot(data_pca, aes(x = PC1, y = PC2, color = group)) + 
+  geom_point(size=3) + 
+  theme_bw()
 
-# PCA plot colored by "LibrarySelection"
-autoplot(prcomp(t(assay(rld))), data = df, colour = 'LibrarySelection')
+# PCA plot color coded by "LibrarySelection"
+ggplot(data_pca, aes(x = PC1, y = PC2, color = LibrarySelection)) + 
+  geom_point(size=3) + 
+  theme_bw()
 ```
-
-Replace 'group' and 'LibrarySelection' with your actual column names in the annotation data.
+The change was applying the variance stabilizing transformation function `vst()` on the `DESeq` object before using `plotPCA()` to extract PCA data, which can then be used to create ggplot objects.

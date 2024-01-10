@@ -9,20 +9,21 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-To find the number of genes and samples in the dataset, you can use the read.table() function in R to load the data then use the dim() function to get the dimensions. You can subtract 1 from the total number of columns to exclude the gene names column. Here is the R code to do this:
+The task can be achieved using the basic functions in R. The code first reads the file using the `read.table` function. Then, the `dim` function can be used to get the dimensions of the dataframe. The first value of the dimension is the number of genes and the second value minus one (since the first column is gene names) is the number of samples.
+
+This is how the R code for the task looks like:
 
 ```
-# Read data
-data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t", row.names=1, check.names=FALSE)
+# Read the data
+data <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
 
-# Get the dimensions
-dim_data <- dim(data)
+# Get the number of genes and samples
+num_genes <- dim(data)[1]
+num_samples <- dim(data)[2]-1
 
-# Print number of genes and samples
-num_genes <- dim_data[1]
-num_samples <- dim_data[2]
-
-print(paste("Number of genes: ", num_genes))
-print(paste("Number of samples: ", num_samples))
+# Print the number of genes and samples
+print(paste("Number of genes:", num_genes))
+print(paste("Number of samples:", num_samples))
 ```
-In the above code, `row.names=1` is used to treat the first column as row names (gene names). The `check.names=FALSE` argument is used to keep the column names (sample names) as they are in the file. The dimensions of the data frame are stored in the `dim_data` variable, from which the number of genes (rows) and samples (columns) are extracted.
+
+Please replace "leukemiaExp.txt" with your file path if the file is not in the current working directory.

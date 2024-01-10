@@ -10,37 +10,41 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the error. The error arises due to the existence of duplicated row names after transposing your gene data. Here is the corrected code without the step of modifying row names during transcription:
+I apologize for the mistake earlier. It seems that I misunderstood the structure of the data. The transcription of the gene table was unnecessary, as CASE_* and CTRL_* must be corresponding to sample IDs. Therefore, the correct solution would just involve a merge operation of the two tables directly.
+
+Please use the following code to merge data frames:
 
 ```
-# Load necessary packages
+# Import libraries
+
+
 library(readxl)
-library(tibble)
 library(dplyr)
 
-# Load the gene expression count data
-gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Load Supplementary_Table_1_exp.xlsx
+Supplementary_table <- read_excel('Supplementary_Table_1_exp.xlsx')
 
-# Convert data frame to tibble for cleaner handling
-gene_data <- as_tibble(gene_data)
+# Load annotation data SRP021193.colData.tsv
+ann_data <- read.delim('SRP021193.colData.tsv', sep='\t', header=T, stringsAsFactors=FALSE)
+colnames(ann_data)[1] <- "Sample_ID"
 
-# Gather all columns except Genes into key-value pairs
-gene_data_long <- gene_data %>% gather(sample_id, value, -Genes)
+# Change the long format to wide format
+Supplementary_table_long <- tidyr::pivot_longer(Supplementary_table, -Genes, names_to = "Sample_ID", values_to = "counts")
 
-# Load the annotation data
-annotation_data <- read_delim("SRP021193.colData.tsv", delim = "\t")
+# Merge annotation data and gene expression tables
+merged_data <- merge(ann_data, Supplementary_table_long, by="Sample_ID", all=TRUE)
 
-# Merging gene count data and annotation data
-merged_data <- merge(gene_data_long, annotation_data, by = "sample_id")
+# Count number of columns and rows in the merged data
+num_cols = ncol(merged_data)
+num_rows = nrow(merged_data)
 
-# Calculate the number of columns
-num_columns <- ncol(merged_data)
-num_columns
+print(paste0("The number of columns: ", num_cols))
+print(paste0("The number of rows: ", num_rows))
 ```
 
-This code will transpose your gene data into long format and then merge with annotation data on the shared "sample_id". Before running the code, make sure you have installed the necessary R packages and correctly set the paths to your actual working directory.
+Please note this code requires the "tidyr" package to convert the Supplementary_table from wide format to long format, so each row contains a single count for a gene in a specific sample. Then the merge function can be used to combine the annotation data and count data based on the Sample_ID.

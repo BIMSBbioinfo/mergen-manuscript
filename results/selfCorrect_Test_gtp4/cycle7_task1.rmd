@@ -5,22 +5,19 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
-Here is the R code to read the tab separated file and determine the number of rows and columns.
+To read a tab separated file, you can use the `read.delim()` function in R which is specifically designed to read tab delimited files. Secondly, the `dim()` function in R gives the dimension (number of rows and columns) of a matrix, data frame or array.
+
+Here is the R code to perform this task:
 
 ```
-# Read the tab separated file
-subjects <- read.delim("subjects.txt")
+# Reading the file
+data <- read.delim("subjects.txt")
 
-# Determine the number of rows and columns
-num_rows <- nrow(subjects)
-num_cols <- ncol(subjects)
-
-# Print number of rows and columns
-print(paste("Number of rows: ", num_rows))
-print(paste("Number of columns: ", num_cols))
+# Printing the number of rows and columns
+print(dim(data))
 ```
-In this code, `read.delim()` function is used to read tab separated files in R and `nrow()`, `ncol()` functions are used to get the number of rows and columns of the data. Then it prints out the number of rows and columns. You have to replace `"subjects.txt"` with the actual path of your file if it is not in the current directory.
+This code will output a two-element vector representing the number of rows and columns in the data set.

@@ -10,29 +10,34 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Sure, here's some R code that reads the data using "readxl" and "read.delim" function respectively and then counts the number of rows and columns.
+You can use the `readxl` and `readr` packages to read the `.xlsx` and `.tsv` files respectively in R. Once you have the dataframes loaded in R, you can use the `dim` function to determine the count of rows and columns. 
 
-Make sure the input files are in your working directory if you specify only the file names like what I did here. Alternatively, you can use the complete path to your file.
+Here is how you can do it:
 
 ```
+# install packages if they're not installed already
+if(!require(readxl)) 
+if(!require(readr)) 
+
+# Load the packages
 library(readxl)
+library(readr)
 
-# Read the RNA-seq count table
-count_table <- read_excel('Supplementary_Table_1_exp.xlsx')
+# Read the .xlsx file - you have to specify the path to the file if it's not in the current working directory
+RNA_seq_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Print the number of rows and columns
-cat('The RNA-seq count table is', nrow(count_table), 'x', ncol(count_table), '\n')
+# Read the .tsv file - you have to specify the path to the file if it's not in the current working directory
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-# Read the annotation data
-annotation <- read.delim('SRP021193.colData.tsv', header = TRUE, sep="\t")
-
-# Print the number of rows and columns
-cat('The annotation data is', nrow(annotation), 'x', ncol(annotation), '\n')
+# Print count number of rows and columns for each file
+print(paste("RNA_seq_data:", "Number of rows: ", nrow(RNA_seq_data), ", Number of columns: ", ncol(RNA_seq_data)))
+print(paste("annotation_data:", "Number of rows: ", nrow(annotation_data), ", Number of columns: ", ncol(annotation_data)))
 ```
 
-The above code makes use of `read_excel` function from `readxl` package and `read.delim` function from base R to read the Excel and TSV files respectively. It then uses `nrow` and `ncol` functions to count the number of rows and columns in each data set.
+Remember to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual paths to your files if they are not in your current working directory. The above code block will print the count number of rows and columns for each file.
+

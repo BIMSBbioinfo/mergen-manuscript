@@ -10,56 +10,47 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Yeah, you are right. The sample names in your count data do not match those in your annotation data. This is common as the sample names in count data are often a little different from those in the annotation file. Better to match the row names of the annotation file. Then we can set the row names using the sample names in your annotation file.
+I apologize for the error message. The plotPCA function requires a DESeqTransform object as input. The error message indicates that we are providing it with a DESeqDataSet instead.
 
-Please run the code below.
+Here is the corrected code:
 
 ```
-# Import the required libraries
-library("DESeq2")
-library("tidyverse")
-library("readxl")
+library(readxl)
+library(DESeq2)
+library(ggplot2)
 
-# Read the data
-countdata <- readxl::read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the gene expression data
+counts <- read_excel("Supplementary_Table_1_exp.xlsx")[,-1]
 
-# Read colData, set rownames to the sample diaganosis
-coldata <- read.delim("SRP021193.colData.tsv", header = TRUE, stringsAsFactors = FALSE, row.names = 1)
+# Make a DESeqDataSet
+dds <- DESeqDataSetFromMatrix(countData = as.matrix(counts), 
+                              colData = read.table("SRP021193.colData.tsv", header=TRUE, sep="\t"), 
+                              design = ~ LibrarySelection)
 
-# make sure that the columns in countdata corresponds to the rows in colData
-countdata <- countdata[,c(1,match(rownames(coldata), colnames(countdata)[-1])+1)]
-
-# Create a DESeq data set
-dds <- DESeqDataSetFromMatrix(countData = countdata[,-1], 
-                              colData = coldata, 
-                              design = ~ group)
-                              
-# Perform DESeq normalization
+# Run the DESeq analysis
 dds <- DESeq(dds)
 
-rld <- rlog(dds)
+# Apply the variance stabilizing transformation
+vsd <- vst(dds)
 
-# Create PCA plots
-pcaData <- plotPCA(rld, intgroup=c("group"), returnData=TRUE)
-percentVar <- round(100 * attr(pcaData, "percentVar"))
-p1 <- ggplot(pcaData, aes(x=PC1, y=PC2, color=group)) +
-  geom_point(size=3) +
-  theme_bw() +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance"))
-print(p1)
+# PCA
+pca_data = DESeq2::plotPCA(vsd, intgroup=c("group", "LibrarySelection"), returnData=TRUE)
 
-pcaData <- plotPCA(rld, intgroup=c("LibrarySelection"), returnData=TRUE)
-percentVar <- round(100 * attr(pcaData, "percentVar"))
-p2 <- ggplot(pcaData, aes(x=PC1, y=PC2, color=LibrarySelection)) +
+# Color by group
+ggplot(pca_data, aes(PC1, PC2, color=group)) +
   geom_point(size=3) +
-  theme_bw() +
-  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
-  ylab(paste0("PC2: ",percentVar[2],"% variance"))
-print(p2)
+  theme_minimal() +
+  ggtitle("PCA Plot (Colored by Group)")
+
+# Color by LibrarySelection
+ggplot(pca_data, aes(PC1, PC2, color=LibrarySelection)) +
+  geom_point(size=3) +
+  theme_minimal() +
+  ggtitle("PCA Plot (Colored by LibrarySelection)")
 ```
+The vst() function is used to stabilize the variances across the mean values before running the PCA (PlotPCA only works with transformed or rlog-transformed counts). After we apply that, we can perform the plotPCA.

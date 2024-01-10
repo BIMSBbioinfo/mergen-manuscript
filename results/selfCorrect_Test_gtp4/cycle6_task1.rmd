@@ -5,25 +5,19 @@ here are first few lines of the file(s).
 
 subjects.txt:
 ID	dbGaP ID	Age	sex	Race
-1	34	63	M	CAUC
+1	patient34	63	M	CAUC
 
 
 response:
-To read a tab-separated file in R, you can use the `read.delim` or `read.table` function, which is specifically designed for reading delimited files. To count the number of rows and columns, use the `nrow` and `ncol` functions, respectively. Here's the code:
-
 ```
-# Read tab-separated file
-data <- read.delim("subjects.txt")
+# Read the file
+subjects <- read.table("subjects.txt", header = TRUE, sep = "\t")
 
-# Count rows
-num_rows <- nrow(data)
+# Get the number of rows and columns
+num_rows <- nrow(subjects)
+num_cols <- ncol(subjects)
 
-# Count columns
-num_cols <- ncol(data)
-
-# Print number of rows and columns
+# Print the number of rows and columns
 print(paste("Number of rows: ", num_rows))
 print(paste("Number of columns: ", num_cols))
 ```
-
-This code will first read the tab-separated file "subjects.txt". Then it calculates the number of rows and columns in the file and finally prints the counts. Remember that you need to have the "subjects.txt" file in your working directory for this code to work. You can check your working directory with the `getwd()` function and you can set it to the desired path with the `setwd()` function.

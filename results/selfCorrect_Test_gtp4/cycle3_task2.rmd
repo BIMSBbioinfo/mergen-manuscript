@@ -9,18 +9,17 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+You can use the read.table function in R to read in the tab-separated data. Then, you can use the dim function to determine the number of genes (rows) and samples (columns). However, because first column is gene names and should not be counted as a sample, you will need to subtract 1 from the number of columns. Below is the R code that accomplishes these tasks.
+
 ```
-# Read the file into a data frame
+# Read the data
 data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t")
 
-# Number of genes
-num_genes <- nrow(data)
+# Get the number of genes and samples
+num_genes <- dim(data)[1]
+num_samples <- dim(data)[2] - 1
 
-# Number of samples
-num_samples <- ncol(data) - 1 # Subtract one to exclude the first column (gene names)
-
-# Print numbers
-print(paste("Number of genes: ", num_genes))
-print(paste("Number of samples: ", num_samples))
+num_genes
+num_samples
 ```
-This code first reads the file "leukemiaExp.txt" into a data frame assuming it is a tab separated file and the first line is the header (sample names). The number of genes is then computed as the number of rows in the data frame. The number of samples is calculated as one less than the number of columns, to exclude the column of gene names. Finally, it prints the number of genes and samples.
+The number of genes and samples will be displayed after running this code.

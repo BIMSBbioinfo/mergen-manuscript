@@ -9,29 +9,33 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-My sincerest apologies for the confusion. I appreciate your patience.
-
 ```
-# Read the data
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t", check.names = FALSE)
+# Load necessary packages
+library(dplyr)
+library(ggplot2)
 
-# Compute the standard deviation (variability) for each gene
-variability <- apply(data, 1, sd)
+# Load data
+leukemiaExp <- read.table("leukemiaExp.txt", header=T, sep="\t", check.names=F, row.names=1)
 
-# Order the genes based on their variability in descending order
-most_variable_genes <- order(variability, decreasing = TRUE)
+# Compute the standard deviation for each gene
+std_dev <- apply(leukemiaExp, 1, sd)
 
-# Retain the most variable top 1000 genes
-most_variable_1000_genes <- data[most_variable_genes[1:1000], ]
+# Filter the genes based on variability
+leukemiaExp_var <- leukemiaExp[order(std_dev, decreasing = T)[1:1000], ]
 
-# first and second most variable genes 
-gene1 <- rownames(most_variable_1000_genes)[1]
-gene2 <- rownames(most_variable_1000_genes)[2]
+# Get the the two most variable genes
+most_variable_genes <- leukemiaExp_var[1:2, ]
 
-# Create scatter plot of the two most variable genes
-plot(most_variable_1000_genes[gene1, ], most_variable_1000_genes[gene2, ],
-     main = "Scatterplot of the most variable genes",
-     xlab = paste("Expression value of", gene1),
-     ylab = paste("Expression value of", gene2))
+# Melt the data for plotting
+most_variable_genes_melt <- reshape2::melt(t(most_variable_genes))
+colnames(most_variable_genes_melt) <- c("Sample", "Gene", "Expression")
+
+# Create a scatterplot of the two most variable genes
+ggplot(most_variable_genes_melt, aes(x=Expression, y=Gene, color=Gene)) + 
+  geom_point() + 
+  ggtitle('Scatterplot of the Two Most Variable Genes') +
+  xlab('Expression') +
+  ylab('Gene') +
+  theme_minimal()
 ```
-This code first loads the data, then calculates the standard deviation of each gene expression (row in our data). It then sorts the gene expressions by standard deviation in descending order, selecting the top 1000. Finally, it generates a scatter plot comparing the gene expression values of the two most variable genes. The axes are labelled with the appropriate gene names and a main title is added to the plot.
+This code first calculates the standard deviation of gene expressions for each gene which serves as a measure of variability. Then, it filters and retains the top 1000 genes with the highest variability. The two genes with the most variability are then selected, melted into a long format for easier plotting, and a scatterplot is drawn showing their expression levels.

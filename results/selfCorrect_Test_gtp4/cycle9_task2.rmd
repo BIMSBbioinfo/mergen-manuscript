@@ -9,20 +9,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-To find the number of genes and samples in the dataset, we can read the file into R as a data frame, then use the dim() function, which gives the number of rows and columns. In this case, the rows correspond to genes and the columns correspond to samples. Because the first column represents gene names, we have to subtract 1 from the column count to compute the number of samples. Here is the R code to perform this task:
+The R code to read in the dataset and determine the number of genes and samples is shown below:
 
 ```
-# Reads the tab-separated text file into a data frame
-leukemiaExp <- read.table("leukemiaExp.txt", header=TRUE, sep="\t")
+# Read in the data
+leukemia_exp <- read.delim("leukemiaExp.txt", row.names = 1, header = TRUE)
 
-# Number of rows corresponds to the number of genes in the dataset
-num_genes <- dim(leukemiaExp)[1]
+# Count number of genes and samples
+num_genes <- nrow(leukemia_exp)
+num_samples <- ncol(leukemia_exp)
 
-# Number of columns corresponds to one more than the number of samples, because the first column is gene names
-num_samples <- dim(leukemiaExp)[2] - 1
-
-# Print results
+# Print out the number of genes and samples
 print(paste("Number of genes: ", num_genes))
 print(paste("Number of samples: ", num_samples))
 ```
-Where "leukemiaExp.txt" is the path to your file.
+Keep in mind that this assumes that the working directory of the R session contains the "leukemiaExp.txt" file. 
+
+The `row.names = 1` argument tells R that the first column of the data file contains the row names (in this case the gene names), and `header = TRUE` tells R that the first row of the data file contains the column names (in this case the sample names).
+
+The `nrow()` function in R returns the number of rows in a dataframe or matrix (in this case the number of genes), and the `ncol()` function returns the number of columns (in this case the number of samples).
+
+Finally, the results are printed out using the `paste()` function to concatenate the strings and the numeric results, and the `print()` function to display the results in the console.

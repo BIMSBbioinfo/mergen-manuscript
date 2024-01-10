@@ -10,44 +10,35 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Here's a sample R code to fulfill your requirements.
+Firstly, you should install and import necessary libraries to read .xlsx and .tsv files and create a boxplot.
 
-The readxl and ggplot2 libraries are required, install and load them with:
+Then, read the gene expression data and annotation data into data frames. Note that `read_excel` takes the first column as rownames by default hence no need to specify `row.names`. Next, you should merge these data frames based on column names that match sample IDs. After merging, you can plot a boxplot.
 
 ```
+# Install necessary libraries
 
 library(readxl)
 library(tidyverse)
+
+# Reading the gene expression and annotation data
+gene_exp <- read_excel("Supplementary_Table_1_exp.xlsx")
+annotation <- read_tsv("SRP021193.colData.tsv")
+
+# Merging the gene expression and annotation data
+merged <- merge(gene_exp, annotation, by = "row.names")
+colnames(merged)[1] <- "Sample"
+
+# Transforming data to long for plotting
+merged_long <- gather(merged, Sample, Expression, -group)
+
+# Creating a boxplot of the gene expression data, colored by group
+ggplot(merged_long, aes(x = Sample, y = Expression, fill = group)) +
+    geom_boxplot() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
-
-You can read the excel file and tsv file using these commands and merging them:
-
-```
-# Read data files
-gene_exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation_data <- read_tsv("SRP021193.colData.tsv")
-
-# Convert wide format gene_exp_data to long format
-long_gene_exp_data <- gene_exp_data %>% pivot_longer(cols = -Genes, names_to = "diagnosis", values_to = "expression")
-
-# Merge with annotation_data
-merged_data <- left_join(long_gene_exp_data, annotation_data, by = "diagnosis")
-```
-
-The boxplot can be created by using ggplot. Here the boxplot color is based on "group".
-
-```
-# Create boxplot
-ggplot(merged_data, aes(x = diagnosis, y = expression, fill = group)) +
-  geom_boxplot() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
-  labs(x = "Sample", y = "Expression", fill = "Group", title = "Gene Expression per Sample")
-```
-The pivot_longer function transforms the data from wide to long format which is more useful for ggplot. Then the data is merged using left_join operation. Finally, we use ggplot2 to make the box plots.
-
-Please remember to replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with your actual paths if they reside in a different directory.
+In the boxplot, each box represents expression values for a single sample, and different groups are distinguished by color. You may need to adjust the angle of x-axis labels for better reading. Moreover, "group", "Sample" and "Expression" are assumed column names and may need to be adjusted to match actual column names in your dataset. Adapt this code according to your dataset.

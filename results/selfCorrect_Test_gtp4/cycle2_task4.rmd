@@ -9,20 +9,18 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-You can read the file using read.table() and getting the dataframe dim() to check for number of rows(genes) and columns(samples). The first column (genes) and last column (gene length) do not need to be counted in number of samples. Below is the R code:
+In R, we will use the read.table function to read the file. Then, we use built-in functions to get the number of genes and samples in the list. Note that in this example we assume the file "SRP021193.raw_counts.tsv" is located in your current working directory. If the file is located elsewhere, you have to provide the path to the file.
 
 ```
 # Read the table
-data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+count_table <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Number of genes
-num_genes <- nrow(data)
+# Get the number of genes (number of rows - 1 because of the header row, and -1 more because there's an extra column for gene lengths)
+num_genes <- nrow(count_table)
 
-# Number of samples 
-# subtract 2 for gene names and gene length columns
-num_samples <- ncol(data) - 2
+# Get the number of samples (number of columns - 2, accounting for the gene names and width columns)
+num_samples <- ncol(count_table) - 2
 
-print(paste("Number of genes: ", num_genes))
-print(paste("Number of samples: ", num_samples))
+num_genes
+num_samples
 ```
-Note: Please make sure the path to the data file "SRP021193.raw_counts.tsv" is correct, or you can set the working directory to the location of the data file using setwd().

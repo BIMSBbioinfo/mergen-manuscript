@@ -9,24 +9,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-You can accomplish the task by first reading the file using `read.table`. Then check the number of columns (samples) in the data. If the count is more than 500, randomly sample 500 columns using `sample`. Finally, you create a boxplot using `boxplot`.
-
-Below is the R code for this task:
+Here is the R code:
 
 ```
-## read the data file
-data <- read.table("leukemiaExp.txt", header=T, row.names=1, sep="\t", check.names = FALSE)
+# Load necessary package
+library(tidyverse)
 
-## check number of columns
-if (ncol(data) > 500) {
-  ## subset data
-  data_subset <- data[, sample(1:ncol(data), 500)]
-} else {
-  data_subset <- data
+# Read the file
+df <- read.table("leukemiaExp.txt", sep = "\t", header = TRUE, row.names = 1)
+
+# If more than 500 samples, randomly sample 500
+if(ncol(df) > 500){
+  set.seed(123)  # for reproducibility
+  df <- df[, sample(ncol(df), 500)]
 }
 
-## create boxplot
-boxplot(data_subset, las=2, cex.axis=0.6)
+# Convert data into long format
+df_long <- pivot_longer(df, everything(), names_to = "sample", values_to = "expression")
+
+# Create boxplot
+ggplot(df_long, aes(x = sample, y = expression)) +
+  geom_boxplot() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8))
 ```
-Note that the option `las=2` in the boxplot function makes variable names perpendicular to the axis while `cex.axis=0.6` minimizes the axis text size for better visualization.
-Note: The existence of the file and its correct formatting are assumed. This code will not run if the file "leukemiaExp.txt" is not located in the current directory, or if this file has a different formatting than assumed.
+This code first loads the dataset and checks if the number of columns (samples) is more than 500. If it is, it randomly selects 500 samples. It then reshapes the data for plotting, and finally, creates a boxplot with sample names on the x-axis and gene expressions on the y-axis. The x-axis labels are rotated for better readability.

@@ -10,45 +10,49 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for that. It seems some of your gene names are duplicated. The issue is that rownames in R must be unique. Here, we will use the make.names function to assure that rownames are unique.
+I apologize for the error. It looks like there was a mismatch with the `plotPCA()` function since it's expecting a DESeqDataSet and we're providing the output of `PCAtools::pca()`. Let's make use of the `plot()` function from the PCAtools package for the PCA plot. Here is the corrected code:
 
 ```
-# Required Libraries
-library(readxl)    # Import .xlsx file
-library(DESeq2)    # Differential gene expression
-library(ggplot2)   # Plotting
+library(readxl)
+library(DESeq2)
+library(ggplot2)
+library(RColorBrewer)
+library(PCAtools)
 
-# Import matrices
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-rownames(count_data) <- make.names(count_data$Genes, unique = TRUE)
-count_data$Genes <- NULL
-annotation_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
+# Read in count data
+df <- read_excel("Supplementary_Table_1_exp.xlsx")
+rownames(df) <- df$Genes
+df$Genes <- NULL
 
-# Create DESeq object
-dds <- DESeqDataSetFromMatrix(countData = count_data, colData = annotation_data, design= ~ group)
+# Read in metadata
+md <- read.delim("SRP021193.colData.tsv", header=T, row.names=1)
 
-# Run DESeq function
+# Data preprocessing
+dds <- DESeqDataSetFromMatrix(countData = df, colData = md, design = ~ group)
+
+# Differential expression analysis
 dds <- DESeq(dds)
+res <- results(dds, contrast=c("group","CASE","CTRL"))
 
-# Retrieve the result
-res <- results(dds)
+# Select genes of interest
+siggenes <- subset(res, padj < 0.05 & abs(log2FoldChange) > 1)
+siggenesdf <- as.data.frame(colData(dds)[rownames(siggenes), ])
 
-# Extract significant DE genes
-sig_genes <- res[which(res$padj < 0.05), ]
+# Normalize counts
+ncu <- counts(dds, normalized=TRUE)
 
-# Subset original count data by these specific genes
-new_count_data <- count_data[rownames(count_data) %in% rownames(sig_genes), ]
+# PCA analysis
+pc <- PCAtools::pca(ncu, metadata = colData(dds), removeVar = 0.1)
 
-# Perform rlog transformation
-rld <- rlog(dds, blind = FALSE)
-
-# PCA
-plotPCA(rld, intgroup = "group")
+# plot
+PCAtools::plot(pc, metadata = colData(dds), colour = 'group',
+              title = "PCA plot of differentially expressed genes", 
+              shape = 'none')
 ```
 
-In this code, `make.names(count_data$Genes, unique = TRUE)` will make sure the gene names are unique by appending '.#'' to the end of duplicate names where '#' is an incremental number.
+This corrected script performs a PCA plot with the `PCAtools::plot()` function using the "group" variable for color coding.

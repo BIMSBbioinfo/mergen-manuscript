@@ -10,37 +10,29 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-To execute this task in R, you need three steps:
-
-1. Install the necessary packages - `readxl` for Excel files and `readr` for TSV files.
-2. Read in the input files.
-3. Get the dimensions of both tables. 
-
-The R code for this task is as follows:
+You can use the `readxl` and `readr` libraries in R to read .xlsx and .tsv files respectively. Here are the codes.
 
 ```
-# Load required packages
-
-
-
+# Load libraries
 library(readxl)
 library(readr)
 
-# Load the data
-table1 <- read_excel("Supplementary_Table_1_exp.xlsx")
-table2 <- read_tsv("SRP021193.colData.tsv")
+# Read count file
+count_table <- read_xlsx("Supplementary_Table_1_exp.xlsx")
 
-# Get the number of rows and columns
-dim_table1 <- dim(table1)
-dim_table2 <- dim(table2)
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-print(paste("The count table Supplementary_Table_1_exp.xlsx dimensions are: ", dim_table1[1], " rows  x  ",  dim_table1[2], " columns"))
-print(paste("The annotation table SRP021193.colData.tsv dimensions are: ", dim_table2[1], " rows  x  ",  dim_table2[2], " columns"))
+# Print number of rows and columns for each table
+print(paste("Number of rows in count table: ", nrow(count_table)))
+print(paste("Number of columns in count table: ", ncol(count_table)))
+
+print(paste("Number of rows in annotation data: ", nrow(annotation_data)))
+print(paste("Number of columns in annotation data: ", ncol(annotation_data)))
 ```
-
-This code will output the number of rows and columns for each table. Please ensure your working directory is set to the directory where the input files are located.
+The print statements will output the number of rows and columns for each table to the console. The `nrow()` function returns the number of rows and the `ncol()` function returns the number of columns of the input data frame.

@@ -9,20 +9,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-To do this, you can use the "read.table" function to load the data, "apply" function to calculate the standard deviation (as a measure of variability), and finally use "order" to sort the genes based on their variability and select the top 1000. Here is an example code:
+First, we need to read the file into R. We can use the function "read.table" for this purpose. We will modify the read.table to suit the format of the file which is a tab-separated. Rows are genes and columns are samples. Then, we can calculate the standard deviation of each gene across samples to quantify variability. Finally, we sort genes by variability to retain the top 1000 substantial genes.
 
 ```
-# Load the data
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep="\t")
+# Read the file
+gene_expr <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t", check.names = FALSE)
 
 # Calculate the standard deviation for each row (gene)
-var <- apply(data, 1, sd)
+var_gene <- apply(gene_expr, 1, sd)
 
-# Order genes based on their variability
-var_order <- order(var, decreasing=TRUE)
+# Sort in decreasing order and retain top 1000 genes
+top_genes <- sort(var_gene, decreasing = TRUE)[1:1000]
 
-# Select the top 1000 most variable genes
-data_top_var <- data[var_order[1:1000], ]
+# Get the names (rows) of the top 1000 genes
+top_gene_names <- names(top_genes)
+
+# Filter the data for these genes
+filtered_gene_expr <- gene_expr[top_gene_names,]
 ```
-
-In this code, "sd" is used as the measure of variability but you may use a different function depending on your specific needs or the characteristics of the data.
+This code calculates the standard deviation of each gene expression (gene row). After sorting genes by their standard deviation, we keep the top 1000 genes with the most substantial variance. We then filter the gene_expr data frame to these 1000 genes.

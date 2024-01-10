@@ -10,66 +10,61 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the confusion; it seems an important line is missing to define `design` before glmFit is called. Here is the corrected R code. The error is because the variable `design` was not defined before being used in the glmFit function.
+I'm sorry that you're encountering errors. This error means that the count table or the annotation data has duplicate row names. Here is a revised version of the R script which handles duplicate row names:
 
 ```
-# load required libraries
-library(edgeR) 
-library(gplots)
+# Load packages
+library(DESeq2)
 library(ggplot2)
 library(readxl)
-library(FactoMineR)
-library(factoextra)
-library(tidyverse)
+library(readr)
+library(dplyr)
 
-# read the count data and handle duplicates in gene names
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-duplicate <- duplicated(count_data$Genes)
-count_data$Genes[duplicate] <- 
-  paste(count_data$Genes[duplicate], "_dup_", 1:sum(duplicate), sep='')
-rownames(count_data) <- count_data$Genes
-count_data$Genes <- NULL
+# Load Count data
+count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+rownames(count_table) <- make.names(count_table$Genes, unique = TRUE)
+count_table$Genes <- NULL  # remove the first column which are gene names
 
-# read the annotation data
-anno_data <- read.delim("SRP021193.colData.tsv", row.names = 1)
+# Load sample annotation data
+sample_annotation <- read_tsv("SRP021193.colData.tsv")
+rownames(sample_annotation) <- make.names(sample_annotation$diagnosis, unique = TRUE)
 
-# convert the count data and annotation data into a DGEList object and normalize it
-dge <- DGEList(counts = count_data, group = anno_data$group)
-dge <- calcNormFactors(dge)
+# Create DESeq data object
+dds <- DESeqDataSetFromMatrix(countData = as.matrix(count_table),
+                              colData = sample_annotation,
+                              design = ~ group)
 
-# estimate the common, trended, and tag-wise dispersion
-dge <- estimateDisp(dge)
+# Perform differential expression analysis
+dds <- DESeq(dds)
+resCASE <- results(dds, contrast = c('group', 'CASE', 'CTRL'))
+resCTRL <- results(dds, contrast = c('group', 'CTRL', 'CASE'))
 
-# Define design
-design <- model.matrix(~anno_data$group)
+# Get significant genes for each group
+sigCASE <- subset(resCASE, padj < 0.05 & abs(log2FoldChange) > 2)
+sigCTRL <- subset(resCTRL, padj < 0.05 & abs(log2FoldChange) > 2)
 
-# applying generalized linear model (GLM) likelihood ratio test
-fit <- glmFit(dge,design)
-lrt <- glmLRT(fit)
+# Merge significant genes 
+specific_genes <- union(rownames(sigCASE), rownames(sigCTRL))
 
-# get the table
-gene <- topTags(lrt, n=nrow(dge))$table
+# Sub-setting genes for PCA analysis
+dds_specific <- dds[specific_genes, ]
 
-# select differentially expressed genes
-de.genes <- row.names(gene)[gene$FDR < 0.05]
+# Perform PCA
+pcaData <- plotPCA(dds_specific, intgroup = "group", returnData = TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
 
-# Perform Principal Component Analysis on selected genes
-pcr <- prcomp(t(dge$counts[de.genes,,drop=FALSE]))
-
-# create a data frame to be used for plotting PCA
-df <- as.data.frame(pcr$x)
-df$group <- factor(anno_data$group)
-
-# Plotting PCA and color-code it by group variable
-ggplot(df, aes(x = PC1, y = PC2, color = group)) +
-  geom_point(size = 2, alpha = 0.8) +
-  theme_classic() +
-  labs(color = "Group")
+# Plot PCA
+ggplot(pcaData, aes(PC1, PC2, color = group)) +
+  geom_point(size = 3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) + 
+  coord_fixed()
 ```
 
-In this script the `design` object is updated to correctly utilize the group labels from the annotation data. This design matrix is input to the `glmFit()` function utilized for the differential expression analysis.
+The `make.names()` function is used to ensure that row names are unique in both the count table and the sample annotation. Then the rest of the code proceeds as before. Please ensure the 'group' variable matches what is in your annotation data.
+

@@ -10,28 +10,20 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 response:
-First, you need to install and load the necessary packages to read the Excel file. You can use `readxl` and `tidyverse` packages.
+The number of genes and samples can be calculated using the `dim()` function in R which gives the number of rows and columns in a data frame. The function `readxl::read_excel()` can be used to read the excel file and convert it to a data frame.
 
-In this example we will use function `read_excel()` from `readxl` package to read the excel file. Then, we use function `dim()` to get the dimensions of the dataset (rows and columns). 
+Here is the R code:
 
-The number of genes is equivalent to the number of rows in the dataset minus 1 (because the first row is reserved for column names), and the number of samples is equivalent to the number of columns minus 1 (because the first column contains gene names).
-
-Here is the R code for this task:
 ```
-# importing required libraries
-
+# Load required library
 library(readxl)
-library(tidyverse)
 
-# read the excel file
-gene_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read the excel file
+data <- readxl::read_excel("Supplementary_Table_1_exp.xlsx")
 
-# get the number of rows and columns
-num_rows <- nrow(gene_data) - 1 # subtract 1 to exclude column names
-num_cols <- ncol(gene_data) - 1 # subtract 1 to exclude gene names
-
-# print the number of genes and samples
-print(paste("The number of genes is ", num_rows))
-print(paste("The number of samples is ", num_cols))
+# Print number of genes and samples
+cat("Number of genes: ", nrow(data), "\n")
+cat("Number of samples: ", ncol(data) - 1, "\n") # subtract 1 to not count the gene names column
 ```
-Please make sure the file "Supplementary_Table_1_exp.xlsx" is in your working directory. You can check and set your current working directory with `getwd()` and `setwd()` functions, respectively.
+
+This code reads the excel file, then uses the `nrow()` function to find the number of genes (rows) and `ncol()` function to find the number of samples (columns). The `cat()` function is used to print these values to the console. Note that we subtract 1 from the number of columns to not count the gene names column as a sample.

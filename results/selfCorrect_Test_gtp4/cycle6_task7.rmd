@@ -9,20 +9,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code that you can use:
-
 ```
-#read the data 
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
+# Load necessary library
+library(tidyverse)
 
-#check if number of columns is more than 500
-if(ncol(leukemiaExp) > 500) {
-  #randomly sample 500 columns
-  leukemiaExp <- leukemiaExp[, sample(ncol(leukemiaExp), 500)]
+# Read the data file
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1, check.names = FALSE)
+
+# If more than 500 columns, randomly sample 500 of them
+if (ncol(data) > 500) {
+  set.seed(123) # Set seed for reproducibility
+  data <- data[, sample(ncol(data), 500)]
 }
 
-#boxplot the columns
-boxplot(leukemiaExp, main="Gene expression for randomly sampled samples", 
-        xlab="Samples", ylab="Expression", las=2)
+# Reshape the dataframe from wide to long format for boxplot
+data_long <- gather(data, key = "sample", value = "expression")
+
+# Plot
+boxplot(expression ~ sample, data = data_long, las = 2, cex.axis = 0.5)
+
 ```
-This script first reads your data, checking if the number of columns (i.e. samples) is more than 500. If true, it randomly samples 500 columns and overwrites the original data. Then it creates a boxplot of the expression data for each sample. The `las=2` option makes the sample labels vertical.
+The above R script first reads the tab delimited file with gene names as rownames and sample names as column names into a data frame. If the number of columns (i.e., samples) is more than 500, it randomly selects 500 columns. The data frame is then reshaped from a wide format to a long format which is more suitable for creating boxplots, with each gene expression value corresponding to a specific gene and sample. A boxplot is then created with the sample names on the x-axis and the gene expression values on the y-axis. The labels on the x-axis are rotated and their font size is reduced for better visualization if there are many samples.

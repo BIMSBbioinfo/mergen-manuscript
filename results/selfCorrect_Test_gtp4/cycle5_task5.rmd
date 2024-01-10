@@ -9,21 +9,19 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-In this task, we will first load the data from the file "leukemiaExp.txt" into a variable named "data". Then, we calculate variance for each gene (row) with the apply function and order them. We then keep the top 1000 genes based on the calculated variance.
+Here is a solution for your task in R. For loading the data, I use the `read.table` function. I then compute the standard deviation of each row (gene) using the `apply` function with `MARGIN=1`, meaning the function is applied to each row. I then sort the standard deviation values in descending order and select the indices of the top 1000 variable genes. Lastly, I subset the original data frame to only include those genes.
 
 ```
-# Load the data
-data <- read.table("leukemiaExp.txt", header=TRUE, sep="\t", row.names=1)
+# Read the data
+exp_data <- read.table("leukemiaExp.txt", header = T, sep = "\t", row.names = 1)
 
-# Calculate variance for each gene
-gene_variances <- apply(data, 1, var)
+# Compute standard deviation for each gene (row) and sort in descending order
+gene_var <- sort(apply(exp_data, 1, sd), decreasing = TRUE)
 
-# Order genes based on variance
-ordered_genes <- order(gene_variances, decreasing = TRUE)
+# Select the top 1000 variable genes
+top_genes <- names(gene_var)[1:1000]
 
-# Keep the top 1000 genes with highest variances
-filtered_data <- data[ordered_genes[1:1000], ]
+# Subset the data
+filtered_data <- exp_data[top_genes,]
 ```
-
-This will leave you with a data frame named "filtered_data" that only includes the top 1000 genes based on variability.
-
+This final line of code will leave you with a dataframe `filtered_data` that only includes the 1000 genes with the highest variability across samples.

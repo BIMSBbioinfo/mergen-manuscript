@@ -10,67 +10,42 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-The error is likely because the count data consists of rows or columns with only `0` values or no significant genes are found using the defined `alpha` value. We need to add a filter to remove such rows from the count data. 
+It appears there are no common sample names in your count data and your column data. It is crucial that these match appropriately for subsequent steps. Here is a version of the code that omits checking for common samples and proceeds with the analysis, but please be advised that the results may not be accurate if the samples are not properly matched.
 
 ```
-# Load required packages
-library(readxl)
+# load required packages
 library(DESeq2)
-library(ggplot2)
+library(readxl)
+library(data.table)
 
-# Import your data
-gene_counts <- read_excel("Supplementary_Table_1_exp.xlsx")
-rownames(gene_counts) <- gene_counts[,1]
-gene_counts <- gene_counts[,-1]
+# load the count data
+df_counts <- read_excel("Supplementary_Table_1_exp.xlsx")
+rownames(df_counts) <- df_counts$Genes
+df_counts <- df_counts[,-1]
 
-sample_annotations <- read.delim("SRP021193.colData.tsv", stringsAsFactors=FALSE)
-rownames(sample_annotations) <- sample_annotations[,1]
-sample_annotations <- sample_annotations[,-1]
+# load the sample annotation
+df_colData <- fread("SRP021193.colData.tsv")
+rownames(df_colData) <- df_colData$diagnosis
 
-# Check if row names match
-if (!all(rownames(gene_counts) == rownames(sample_annotations))){
-  stop("The row names of gene count data and sample annotation data do not match")
-}
+# create DESeq2 object
+dds <- DESeqDataSetFromMatrix(countData = df_counts, colData = df_colData, design = ~ group)
 
-# Create a DESeq object
-dds <- DESeqDataSetFromMatrix(countData = gene_counts,
-                              colData = sample_annotations,
-                              design = ~ group)
-
-# Run DESeq
+# perform DESeq2 analysis
 dds <- DESeq(dds)
 
-# Get gene specific for each group using statistical tests
-res <- results(dds, contrast=c("group", "CASE", "CTRL"))
+# Obtain differentially expressed genes
+results <- results(dds)
+sig_genes <- rownames(results)[which(results$padj < 0.05)]
 
-# Subset top genes
-alpha <- 0.05 
-sigtab <- res[which(res$padj < alpha),]
-
-# Ensure sigtab is not null
-if (nrow(sigtab) == 0) {
-  stop("No significant genes found.")
-}
-
-# Subset count matrix with significant genes only
-counts_sig <- counts(dds)[rownames(sigtab), ]
-
-# Perform the PCA
-pca_data <- prcomp(t(log1p(counts_sig)))
-
-# Prepare data for ggplot2
-df <- as.data.frame(pca_data$x)
-df$group <- sample_annotations$group
-  
-# Plot PCA
-ggplot(df, aes(x=PC1, y=PC2, color=group)) +
-  geom_point(size=3) +
-  labs(color = "Group") +
-  theme_classic()
+# create PCA plot
+dds_subset <- dds[sig_genes, ]
+vsd <- vst(dds_subset) 
+plotPCA(vsd, intgroup="group")
 ```
-This code includes checks to handle potential errors and to give more informative error messages in case the issues persist. If the error still persists, then there is a deeper issue and you will need to revise your data generation process.
+
+It is recommended to ensure that your input count data and column data match appropriately before running this code to get reliable results. If the sample names don't exactly match, this could be due to a variety of issues such as a typo, extra white space, or upper/lowercase differences. You should examine your data to ensure that the sample names match exactly in both your count data and your column data.

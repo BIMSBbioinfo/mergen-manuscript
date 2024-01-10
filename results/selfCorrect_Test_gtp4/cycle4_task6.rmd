@@ -9,26 +9,28 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Sure! First, we need to read the data into R. Then we compute the number of samples, and if there are more than 500, we proceed to randomly sample the columns. Here is the code:
-
 ```
-# Read in data
-leukemia <- read.table("leukemiaExp.txt", sep="\t", header=T, row.names=1, check.names = FALSE)
+# Read the text file
+data <- read.table("leukemiaExp.txt", header = T, sep = "\t", row.names = 1)
 
-# Check number of samples
-num_samples <- ncol(leukemia)
-
-if (num_samples > 500) {
-  # Set seed for reproducibility
-  set.seed(123)
-
-  # Sample if more than 500
-  sample_idx <- sample(1:num_samples, 500)
-
-  # Create subset
-  leukemia_sub <- leukemia[,sample_idx]
+# Check the number of samples (columns)
+if (ncol(data) > 500) {
+  # If more than 500 samples, randomly sample 500 columns
+  set.seed(123)  # for reproducibility
+  sample_cols <- sample(2:ncol(data), 500) # generate 500 random column numbers
+  data_subset <- data[,sample_cols] # subset the data using these columns
+} else {
+  data_subset <- data # if less than or equal to 500 columns, use the original data as subset
 }
+```
+This R code block first reads in the "leukemiaExp.txt" file into a data frame in R. We specify the first column as row names, as they represent gene names. 
 
-``` 
+Next, the code checks if the number of columns (samples) in the data is more than 500 using the `ncol()` function. If there are more than 500 samples, we randomly select 500 samples (columns) from the data using the `sample()` function. 
 
-The code first reads the data from the "leukemiaExp.txt" file and saves it in `leukemia`. It then checks the number of samples by using `ncol` function since samples are stored as columns. If the number of samples is more than 500, it then generates a random sample of the columns by using the `sample` function. It takes a sample index without replacement from 1 to the number of samples we got (500). This sample index is then used to subset the original `leukemia` dataframe. The result is saved in `leukemia_sub`.
+To ensure reproducibility of the random sampling, we set a seed for the random number generator using `set.seed(123)`. 
+
+The randomly selected columns are then used to create a subset of the original data, which is stored in the `data_subset` object. 
+
+If the number of samples is less than or equal to 500, no subsetting is performed and the entire data is assigned to `data_subset`. 
+
+This way, `data_subset` will always contain the subset of data with no more than 500 samples.

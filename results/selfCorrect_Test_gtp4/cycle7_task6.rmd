@@ -9,28 +9,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is how you might do this in R:
-
-First, use the `read.table` function to load the data. This function automatically detects that the file is tab-separated. 
-
-Next, check if there are more than 500 samples/columns in the dataset. If there are, use the `sample` function to generate a list of 500 random indices. Subset the table using these indices.
-
 ```
-# load the data
-leukemia <- read.table("leukemiaExp.txt", header = T, row.names = 1, sep = "\t", check.names = FALSE)
+# Read the data; load dependencies.
+library(dplyr)
 
-# check if there are more than 500 columns
-if (ncol(leukemia) > 500) {
-  
-  # generate a random sample of 500 indices
-  random_indices <- sample(ncol(leukemia), 500)
-  
-  # subset the table
-  leukemia_subset <- leukemia[, random_indices]
-  
-} else {
-  leukemia_subset <- leukemia
+data <- read.table("leukemiaExp.txt", header=T, row.names=1, sep="\t", check.names = F)
+
+# Check if the columns (samples) are more than 500
+if(dim(data)[2] > 500) {
+  # Select random 500 samples across the rows(genes) for dataframe features
+  data <- data %>%
+    select(sample(1:ncol(data), 500))
 }
-```
 
-This code will load the data, and create a subset if there are more than 500 columns. The subset is saved as `leukemia_subset`, and contains a random selection of 500 samples if the original dataset was larger, or all the data if the original data is smaller than that.
+# Print the first few lines of the new data
+head(data)
+```
+This code will read in the data, check if the number of samples (columns) is greater than 500, and if so it will select a random subset of 500 samples. If not, it will simply print the first few lines of the original data.

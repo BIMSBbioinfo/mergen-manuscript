@@ -9,23 +9,35 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code which reads the data from the text file, calculates variability of genes (sd stands for standard deviation which measures variability), selects the top 1000 most variable genes, and then makes a scatterplot of the two most variable genes.
+I apologize for the confusion earlier. Please use the following corrected code:
 
 ```
-# Read the data from file
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep ="\t")
-data <- as.data.frame(t(data))
+# Load required libraries
+library(ggplot2)
+library(dplyr)
 
-# Calculate standard deviation for each gene
-gene_variability <- apply(data, 2, sd)
+# Read in the data
+leukemia_data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Order genes by variability
-ordered_genes <- order(gene_variability, decreasing = TRUE)
+# Calculate the variance for each gene
+gene_var <- apply(leukemia_data, 1, var)
 
-# Select Top 1000 variable genes
-most_variable_genes <- data[, ordered_genes[1:1000]]
+# Get the top 1000 genes with the most variance
+top_genes <- names(sort(gene_var, decreasing = TRUE))[1:1000]
 
-# Create scatter plot for the two most variable genes
-plot(most_variable_genes[,1], most_variable_genes[,2], xlab = "Most variable gene", ylab = "Second most variable gene", main = "Scatterplot of two most variable genes")
+# Filter the original data to only include these top 1000 genes
+filtered_data <- leukemia_data[top_genes, ]
+
+# Get the names of the two most variable genes
+most_variable_genes <- names(sort(gene_var, decreasing = TRUE))[1:2]
+
+# Create a new dataframe with the most variable genes
+most_variable_data <- data.frame(Gene1 = filtered_data[most_variable_genes[1],], 
+                                 Gene2 = filtered_data[most_variable_genes[2],])
+
+# Create a scatter plot of these two most variable genes
+ggplot(most_variable_data, aes(x = Gene1, y = Gene2)) + geom_point() +
+  labs(x = most_variable_genes[1], 
+       y = most_variable_genes[2], 
+       title = "Scatterplot of the Two Most Variable Genes")
 ```
-Please replace "leukemiaExp.txt" with the actual path of your gene expression data file if it's not located in the current working directory.

@@ -9,24 +9,24 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code for the given task. The "read.delim" function is used to read the tab-separated data. Then, a check is performed to determine if the number of columns is more than 500; if it is, random sampling is performed to select 500 columns. Finally, boxplots are created for the resulting data with each column (sample) represented as its own boxplot. Please ensure to use the correct path for your file while reading it.
+Here is the R code to accomplish the task:
 
 ```
-# Reading the gene expression data
-leukemiaExp <- read.delim("leukemiaExp.txt", header = TRUE, row.names = 1)
+# Read data
+leukemiaExp <- read.table("leukemiaExp.txt", header=T, sep="\t", row.names=1, check.names=FALSE)
 
-# Check if there are more than 500 samples
-if(ncol(leukemiaExp) > 500){
-  
-  # Randomly sample 500 columns (samples). Setting seed for reproducibility 
-  set.seed(123)
-  selected_samples <- sample(colnames(leukemiaExp), size = 500)
-  
-  # Create a subset
-  leukemiaExp <- leukemiaExp[, selected_samples]
+# check if there are more than 500 samples
+if(ncol(leukemiaExp) > 500) {
+    # Subset the data to randomly select 500 samples
+    samples <- sample(colnames(leukemiaExp), 500, replace=FALSE) # get 500 random samples
+    leukemiaExp <- leukemiaExp[, colnames(leukemiaExp) %in% samples]
 }
 
-# Creating a boxplot
-boxplot(leukemiaExp, las = 2, main = "Boxplot of samples", xlab = "Sample", ylab = "Expression")
+# Create a boxplot
+boxplot(leukemiaExp, las = 2)
 ```
-This script will generate boxplots for the selected samples from the leukemia expression data. You can adjust the aesthetics (labels, title, etc.) of the plot according to your needs.
+In the above code, `read.table` is used to load the data from the file. The `sep = "\t"` specifies that the file is tab separated. The `row.names=1` argument specifies that the first column of the file provides the row names. The `check.names=FALSE` argument means to not convert column names to valid R names.
+
+Then, the number of columns in the dataset is checked. If it's more than 500, a random sample of 500 samples (columns) is selected using the `sample` function, and this subset of the data is assigned back to `leukemiaExp`.
+
+Finally, a boxplot of the expression data is created for each sample. The `las=2` argument is used to rotate the x-axis labels 90 degrees.

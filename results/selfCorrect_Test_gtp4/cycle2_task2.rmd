@@ -9,24 +9,22 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code to count the number of genes and samples from the gene expression data:
+Here is the R code that you need to use:
 
 ```
-# Read the data
-data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", check.names = FALSE)
+# Load the required library
+library(data.table)
 
-# Get the dimensions of the data
-data_dim <- dim(data)
+# Read the data into R
+leukemiaExp <- fread("leukemiaExp.txt", header = TRUE)
 
-# Number of genes
-num_genes <- data_dim[1]
+# Get the number of genes (rows) and samples (columns)
+num_genes <- nrow(leukemiaExp)
+num_samples <- ncol(leukemiaExp) - 1  # Subtract 1 to exclude the gene names column
 
-# Number of samples
-num_samples <- data_dim[2] - 1  # Subtract 1 because the first column is gene names
-
-# Print the numbers
+# Print the number of genes and samples
 print(paste("Number of genes: ", num_genes))
 print(paste("Number of samples: ", num_samples))
 ```
 
-This code reads the tab-separated file and stores it in a data frame. It then uses the `dim` function to get a vector where the first value is the number of rows (genes) and the second value is the number of columns (samples plus one for the gene names). It prints the number of genes and the number of samples (subtracting one to exclude the column of gene names).
+This script reads the file `leukemiaExp.txt` into an R dataframe using the `fread` function from the `data.table` package. After reading the data, it uses `nrow` and `ncol` to find the number of rows and columns in the data, respectively. Finally, it prints the number of genes and samples in the data. Note that we subtract 1 from the number of columns to exclude the column of gene names when counting the number of samples.

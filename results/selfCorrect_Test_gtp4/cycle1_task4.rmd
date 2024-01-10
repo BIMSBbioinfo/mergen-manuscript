@@ -9,24 +9,23 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-To know the total number of genes and samples in the dataset, you can use the read.table function to read the data and then use the dim function to know the dimensions of the data. Here, rows represent genes and columns represent samples.
+To answer your question, we can read the tsv file into a dataframe in R using the function `read.table()`. To get the number of samples we can use the `ncol()` function, subtracting 2 for the gene names and gene length columns. To get the number of genes, we can use the `nrow()` function.
 
-You should subtract two from the total number of columns because the dataset includes the width column and the gene names row, which aren't samples.
+The R code for this would look like:
 
 ```
-# Read the data from the file
-data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+# Read the tsv file
+data <- read.table("SRP021193.raw_counts.tsv", header = T, sep = "\t")
 
-# Find the number of genes
-num_genes <- nrow(data)
+# Get the number of samples
+samples <- ncol(data) - 2
 
-# Find the number of samples
-num_samples <- ncol(data) - 2
+# Get the number of genes
+genes <- nrow(data)
 
-# Print the number of genes
-print(num_genes)
-
-# Print the number of samples
-print(num_samples)
+# Print the number of samples and genes
+print(paste("Number of samples: ", samples))
+print(paste("Number of genes: ", genes))
 ```
-This script reads the data file, fetches the number of rows and columns, and then prints the number of genes and samples. The "-2" is necessary to account for the column of gene names and the column for gene length, which are not actual sample data.
+
+Please replace `"SRP021193.raw_counts.tsv"` with the actual path to your file if it's not in the working directory. 

@@ -10,37 +10,30 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-The error message is stating that the path to your file 'Supplementary_Table_1_exp.xlsx' or 'SRP021193.colData.tsv' does not exist. This usually happens when you provide an incorrect path to your file(s). You should replace the placeholder 'path' I have used with the correct path on your computer where your excel file 'Supplementary_Table_1_exp.xlsx' or 'SRP021193.colData.tsv' is located.
-
-However, I can't provide the correct path since I don't know your directory structure. For instance, if your file was on your desktop, the path might look something like this: 'C:/Users/YOURUSERNAME/Desktop/Supplementary_Table_1_exp.xlsx'.
-
-You'll need to replace 'path' in the code I provided with the actual path to your .xlsx and .tsv files.
-
-Assuming the files are in your working directory, you can use the following code:
+Here is the R code which reads the excel and tsv file. After reading the files, it prints the number of rows and columns in each data frame.
 
 ```
-# load necessary libraries
+# Load required libraries
 library(readxl)
 library(readr)
 
-# read data
-RNAseq <- read_excel("Supplementary_Table_1_exp.xlsx")
-annotation <- read_tsv("SRP021193.colData.tsv")
+# Read count data table
+count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# count number of rows and columns for each
-RNAseq_rows <- nrow(RNAseq)
-RNAseq_cols <- ncol(RNAseq)
+# Read annotation data
+annotation_data <- read_tsv("SRP021193.colData.tsv")
 
-annotation_rows <- nrow(annotation)
-annotation_cols <- ncol(annotation)
+# Print number of rows and columns for count data
+cat("Number of Rows in count data: ", nrow(count_data), "\n")
+cat("Number of Columns in count data: ", ncol(count_data), "\n")
 
-# print the counts
-print(paste("Count table: ", RNAseq_rows, " rows, ", RNAseq_cols, " columns."))
-print(paste("Annotation data: ", annotation_rows, " rows, ", annotation_cols, " columns."))
+# Print number of rows and columns for annotation data
+cat("Number of Rows in annotation data: ", nrow(annotation_data), "\n")
+cat("Number of Columns in annotation data: ", ncol(annotation_data), "\n")
 ```
-Please make sure that your working directory in R is set to the directory where your files are located using the `setwd()` function, like so: `setwd("your/directory/path")` before running the code.
+Note: This code will execute only if you have the required packages installed and these files in your current R working directory. Be careful with file path if it is different. Please replace the file path according to your system if needed.

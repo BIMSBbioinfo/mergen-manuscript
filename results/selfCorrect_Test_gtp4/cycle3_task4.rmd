@@ -9,25 +9,21 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-You can use the read.table() function to read the file. Then, columns correspond to samples and first and last columns correspond to gene names and gene length. The number of genes and samples in the dataset can be calculated using the dim() function, which returns the number of rows and columns.
-
-Here is the R code for it.
+You can use the following R code to count the number of genes and samples in the dataset.
 
 ```
-# load the file
-data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
+# read the dataset into a data frame
+df <- read.table("SRP021193.raw_counts.tsv", header=TRUE, sep="\t")
 
-# get the number of rows and columns
-num_rows <- dim(data)[1]
-num_cols <- dim(data)[2]
+# count the number of genes
+gene_count <- nrow(df)
 
-# the number of genes is equal to the number of rows
-num_genes <- num_rows 
+# count the number of samples
+# subtract by 2 because the first and last columns are not samples
+sample_count <- ncol(df) - 2
 
-# the number of samples is equal to the number of columns - 2 (subtract gene names and gene length)
-num_samples <- num_cols - 2
-
-print(paste("Number of genes: ", num_genes))
-print(paste("Number of samples: ", num_samples))
+print(paste("Number of genes:", gene_count))
+print(paste("Number of samples:", sample_count))
 ```
-This code first loads the .tsv file, then calculates the numbers of genes and samples, and finally, prints these numbers. Note that the path to the file used by read.table function must be changed to the actual location of your file.
+
+In this code, `read.table()` is used to read the file and create a data frame. `nrow()` and `ncol()` are then used to count the number of rows (genes) and columns (samples) in the data frame, respectively. Note that we subtract by 2 when counting samples to account for the first and last columns not being samples.

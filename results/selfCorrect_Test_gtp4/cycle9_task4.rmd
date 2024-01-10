@@ -9,18 +9,19 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-The following R code reads in the ".tsv" file, then determines the number of genes and samples by analyzing the dimensions of the resulting data frame.
+You can use the `read.table` function to read the TSV file into R and then use the `dim` function to find out the number of genes (rows) and samples (columns). 
 
 ```
-# Read in the data
-count_table <- read.delim("SRP021193.raw_counts.tsv", header=T)
+# Read the TSV file into R
+data <- read.table("SRP021193.raw_counts.tsv", header = TRUE, sep = "\t")
 
-# Find out how many genes and samples there are
-num_genes <- nrow(count_table) # Number of rows (minus header) is number of genes
-num_samples <- ncol(count_table)-2 # Number of columns (minus gene names and gene length columns) is number of samples
+# Find the number of genes and samples
+num_genes <- dim(data)[1]
+
+# The number of samples is the number of columns minus 2 (one for the gene names and one for the gene length)
+num_samples <- dim(data)[2] - 2
 
 num_genes
 num_samples
 ```
-
-The 'read.delim' function is used to read in tab-delimited files. The 'nrow' function returns the number of rows in the data frame, and the 'ncol' function returns the number of columns. Since the first column is the gene names and the last column is gene length, these are subtracted to find the number of samples.
+This will give you the number of genes and samples in the dataset. The `dim` function gives the dimensions of a data frame in R (first the number of rows and then the number of columns).

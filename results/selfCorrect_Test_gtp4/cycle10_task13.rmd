@@ -10,38 +10,47 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-My sincere apologies for the confusion. The error occurs when attempting to reshape the experiment table, because the column names after reshaping the DataFrame contain both character and numeric type entries. 
-
-The experiment and annotation data need to be merged by sample ID. It appears that the sample ID in the experiment data is the column name excluding the "Genes" column. Let's modify the code accordingly:
+First, you'll need to install and load the necessary libraries. 
 
 ```
-# Required Libraries
+
 library(readxl)
-library(dplyr)
-
-# Read the Excel file
-exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-
-# Make the data tidy
-exp_data <- gather(exp_data, LibrarySelection, Count, -Genes)
-
-# Read the tsv file
-annot_data <- read.delim("SRP021193.colData.tsv", header = TRUE)
-
-# Merge operation
-merged_data <- merge(annot_data, exp_data, by = "LibrarySelection")
-
-# Calculate number of columns
-num_columns <- ncol(merged_data)
-
-num_columns
+library(tidyverse)
 ```
 
-Here, we've used the `gather` function from the `tidyverse` package to reshape the data in `exp_data` so each row corresponds to a single gene-sample ID-expression count observation. This should avoid the error you received in the previous code. This modified the structure of `exp_data` dataframe where the first column ("Genes") contains gene names, the second column ("LibrarySelection") contains the sample IDs, and the third column ("Count") contains the expression count. 
+Lets load and merge datasets.
 
-This reshaped data is then merged with the annotation data using the sample ID as the key. The number of columns in the merged data is then calculated.
+```
+# read the excel file
+expr <- read_excel("Supplementary_Table_1_exp.xlsx")
+
+# read the tsv file
+anno <- read.delim("SRP021193.colData.tsv")
+
+# set the row names of expr to the 'Genes' column
+rownames(expr) <- expr$Genes
+
+# remove the 'Genes' column
+expr <- expr[-1]
+
+# transpose the expr dataframe so that genes are columns and samples are rows
+expr_t <- as.data.frame(t(expr))
+
+# merge the annotation data with the expression data
+df <- bind_cols(anno, expr_t)
+```
+
+Calculate number of columns.
+
+```
+# count the number of columns
+no_of_cols <- ncol(df)
+no_of_cols
+```
+
+The variable `no_of_cols` will now hold the number of columns in the merged dataset.

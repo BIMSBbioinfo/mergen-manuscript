@@ -9,34 +9,40 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is the R code which can achieve this task:
+Here is how you can do it:
 
-First, we load the data and save the row names. Then we normalize each gene expression (row) to aimed to make each row has the mean is 0 and sd is 1. After that we calculate sd of each row to see the variability, sort the sds, and select top 1000 of them. Next, we clustered by k-means (you need to specify the number of clusters by yourself). Finally we extract cluster specific genes for each cluster.
+First, read the text file as a data frame in R. Normalize this data. Then calculate standard deviation for each gene using "apply" function across rows i.e., for each row, calculate the standard deviation. 
+
+Then, order these standard deviations in descending order and select the top 1000 most variable genes.
+
+Finally, use hclust to cluster the samples based on the selected genes, and for each cluster extract the specific genes.
+
+R code for above steps:
 
 ```
-# Load the required libraries
-library(dplyr)
+# loading necessary libraries
+library(cluster)
 
-# Load the data
-data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1)
+# read the gene expression file; assuming that first column is gene names
+exp_data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Normalize each gene expression to make them have mean 0 and sd 1
-data_norm <- t(apply(data, 1, scale))
+# normalize the gene expression data 
+norm_exp_data <- scale(exp_data, center = TRUE)
 
-# Compute the standard deviations of each gene
-gene_variability <- apply(data_norm, 1, sd)
+# calculate standard deviation for each gene and select 1000 most variable genes
+stddev_values <- apply(norm_exp_data, 1, sd)
+top_genes <- names(sort(stddev_values, decreasing = TRUE)[1:1000])
 
-# Sort the variability and select top 1000 genes
-data_high_variable <- data[order(gene_variability, decreasing = TRUE)[1:1000],]
+# select the top 1000 most variable genes from data
+filtered_exp_data <- norm_exp_data[top_genes, ]
 
-# K-means cluster, e.g., into 2 clusters
-# You need to specify the number of clusters based on your knowledge of the data
-km <- kmeans(t(data_high_variable), centers = 2)
+# cluster the samples
+dist_matrix <- dist(t(filtered_exp_data))
+hc <- hclust(dist_matrix)
+clusters <- cutree(hc, k = 3) # number of clusters is determined by you here.
 
-# Extracting cluster specific genes 
-cluster1_genes <- row.names(data_high_variable)[km$cluster==1]
-cluster2_genes <- row.names(data_high_variable)[km$cluster==2]
+# extract cluster-specific genes for each cluster
+list_of_cluster_specific_genes <- lapply(split(exp_data, clusters), rownames)
 ```
-Please replace the number `2` in `centers = 2` to the number of clusters you think fits the data best.
 
-Pay attention that it's crucial to transpose the data when applying `kmeans` because rows should be observations (in this case samples) and columns should be coordinates (in this case gene expression), thus we use `t` to transpose the data.
+This code will create a list of genes specific to each cluster. Please modify the number of clusters in the `cutree` function as per your requirement.

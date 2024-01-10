@@ -10,19 +10,20 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 response:
 ```
-# read the file 
-exp_data <- read.table("leukemiaExp.txt", sep = "\t", header = T, row.names = 1)
+# Load necessary packages
+library(dplyr)
 
-# check if there are more than 500 samples
-if (ncol(exp_data) > 500) {
-  # randomly sample 500 columns
-  set.seed(123) # for reproducibility 
-  subset_data <- exp_data[, sample(ncol(exp_data), 500)]
-} else {
-  subset_data <- exp_data
+# Load data
+data <- read.delim("leukemiaExp.txt", stringsAsFactors = FALSE, header = TRUE, row.names = 1)
+
+# Check the number of samples
+num_samples <- ncol(data)
+
+# If there are more than 500 columns (samples), randomly select 500:
+if (num_samples > 500){
+  data <- data %>% select(sample(ncol(data), 500))
 }
 
-# Create a boxplot of the columns
-boxplot(subset_data, las=2, cex.axis=0.5) # 'las=2' and  'cex.axis=0.5' for better visibility of axis labels
+# Create boxplot
+boxplot(data)
 ```
-In this code, the R function `read.table` is used to load the data. We then check the number of columns in the dataframe. If there are more than 500 samples (columns), we randomly sample 500 of them. Otherwise, we use the original dataframe. The function `boxplot` is then used to generate a boxplot of the columns. Note that in this code 'las=2' is setting the axis labels to be perpendicular to the axis and 'cex.axis=0.5' is reducing the size of the axis labels for better visibility when there are a lot of columns.

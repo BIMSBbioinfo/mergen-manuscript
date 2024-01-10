@@ -10,67 +10,68 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-My apologies. The error suggests that the column names of the count data matrix don't match with the row names of the column data. Let's make sure to adjust the column names to match the sample names in the column data.
+To perform this task, we will need to use several R packages: "tidyverse" for data cleaning and manipulation, "readxl" for reading the excel files, "DESeq2" for normalizing RNA-seq counts and "ggfortify" for PCA plots.
 
-Also, it seems I made an mistake on the column dropping from data frame. `count_data <- count_data[-1]` should have been `count_data <- count_data[,-1]` 
-
-Here's the corrected code:
+First, install required packages using the install.packages() function if you have not done so yet. 
 
 ```
-# Libraries needed
-if (!requireNamespace("BiocManager", quietly = TRUE))
-    
-BiocManager::install("DESeq2")
-library(DESeq2)
 
+
+
+
+```
+
+Then, proceed to load the libraries.
+
+```
+library(tidyverse)
 library(readxl)
-library(ggplot2)
-library(FactoMineR)
+library(DESeq2)
+library(ggfortify)
+```
+ 
+Let's read the two input files.
 
-# Load data
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
-col_data <- read.table("SRP021193.colData.tsv", sep = "\t", header = TRUE, stringsAsFactors = FALSE)
+```
+counts <- read_excel("Supplementary_Table_1_exp.xlsx")
+colData <- read.delim("SRP021193.colData.tsv")
+```
 
-# Rename duplicate genes by appending a numeric suffix
-duplicated_genes <- which(duplicated(count_data$Genes))
-count_data$Genes[duplicated_genes] <- paste(count_data$Genes[duplicated_genes], "_dupe", seq_along(duplicated_genes), sep = "")
+Define the row names of counts data so that you can use DESeqDataSetFromMatrix. 
 
-# Prepare the data for DESeq2
-rownames(count_data) <- count_data$Genes
-count_data <- count_data[,-1]
-# Rename column of count_data to match col_data
-colnames(count_data) <- gsub("_", ".", gsub("CTRL", "control", gsub("CASE", "case", colnames(count_data))), fixed = TRUE)
-dds <- DESeqDataSetFromMatrix(countData = count_data,
-                               colData =  col_data,
-                               design = ~ group)
+```
+rownames(counts) <- counts$Genes
+counts$Genes <- NULL
+```
 
-# Normalize the data
-dds <- DESeq(dds)
+Then before normalizing the count data, the two tables will have to be combined into a DESeq object.
+
+```
+dds <- DESeqDataSetFromMatrix(countData = counts, colData = colData, design = ~ 1)
+```
+
+Normalize the count data.
+
+```
+dds <- estimateSizeFactors(dds)
 normalized_counts <- counts(dds, normalized = TRUE)
+```
 
-# Perform PCA
-pca_res <- prcomp(t(normalized_counts))
+At this point, you can create PCA plots, one for "group" and the other for "LibrarySelection".
 
-# Plot PCA with group annotations
-ggplot(pca_res$x, aes(x = PC1, y = PC2, color = col_data$group)) +
-  geom_point() +
-  xlab(paste("PC1: ", round(pca_res$sdev[1], 2), "% variance")) +
-  ylab(paste("PC2: ", round(pca_res$sdev[2], 2), "% variance")) +
-  ggtitle("PCA plot color coded by group") +
-  theme_classic()
+Group PCA plot.
+```
+autoplot(prcomp(t(normalized_counts)), data = colData, colour = 'group') 
+```
 
-# Plot PCA with LibrarySelection annotations
-ggplot(pca_res$x, aes(x = PC1, y = PC2, color = col_data$LibrarySelection)) +
-  geom_point() +
-  xlab(paste("PC1: ", round(pca_res$sdev[1], 2), "% variance")) +
-  ylab(paste("PC2: ", round(pca_res$sdev[2], 2), "% variance")) +
-  ggtitle("PCA plot color coded by LibrarySelection") +
-  theme_classic()
-```  
+LibrarySelection PCA plot.
+```
+autoplot(prcomp(t(normalized_counts)), data = colData, colour = 'LibrarySelection')
+```
 
-Please replace the file name with your local file path.
+To note, this pipeline assumes that "group" and "LibrarySelection" are factors in colData which need coloring on the PCA plots. All file paths are also assumed to be from the working directory (you may need to provide the correct file paths).

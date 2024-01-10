@@ -9,34 +9,26 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-I apologize for the mistake in the previous code. The problem appears when you generate the scatter plot, because `aes()` is looking for vectors not single values to plot. You should create a dataframe that includes two most variable genes across all the samples. Here's the corrected code:
+Apologies for the confusion. It seems there's been a small error in pointing out the `xlab` and `ylab` arguments in the plot function. Let's use this corrected code:
 
 ```
-# Load required libraries
-library(dplyr)
-library(ggplot2)
+# read the data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Read the data
-leukemiaExp <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1)
+# calculate standard deviation for each gene and select top 1000 
+sd_data <- apply(data, 1, sd)
+top_genes <- order(sd_data, decreasing = TRUE)[1:1000]
 
-# Calculate variability (standard deviation) for each gene (row) 
-variability <- apply(leukemiaExp, 1, sd)
+# subset data to keep only top 1000 variable genes
+filtered_data <- data[top_genes, ]
 
-# Rank genes by their variability
-ranked_genes <- order(variability, decreasing = TRUE)
+# two most variable genes
+two_most_variable <- filtered_data[1:2, ]
 
-# Select the most variable 1000 genes
-selected_genes <- ranked_genes[1:1000]
-
-# Subset the data by selected genes
-leukemiaExp_filtered <- leukemiaExp[selected_genes, ]
-
-# Create a scatterplot
-ggplot(leukemiaExp_filtered, aes(x = leukemiaExp_filtered[1, ], y = leukemiaExp_filtered[2, ])) +
-  geom_point() +
-  xlab(rownames(leukemiaExp_filtered)[1]) +
-  ylab(rownames(leukemiaExp_filtered)[2]) +
-  ggtitle("Scatterplot of the two most variable genes")
+# create scatter plot
+plot(t(two_most_variable), 
+     main = "Scatter plot of two most variable genes",
+     xlab = rownames(two_most_variable)[1], 
+     ylab = rownames(two_most_variable)[2])
 ```
-
-This code will allow you to see the relationship between the two most variable genes based on your gene expression dataset.
+Here, we transpose `two_most_variable` dataframe so that genes are represented as columns. Afterwards, we can plot with x and y labels being the names of the two most variable genes.

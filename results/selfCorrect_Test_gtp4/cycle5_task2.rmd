@@ -9,23 +9,18 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-You can read the file into a dataframe using `read.table()` function in R. This table is a matrix-like structure where rows represent genes and columns represent samples. Hence, you can use `nrow()` and `ncol()` functions to get the number of genes and samples respectively. 
-
-Note that the data has row.names (gene names) in the first column, therefore, while reading the file you need to set row.names to 1.
-
-Here is the R code to perform the task:
+Here is your solution. You can use the read.table function of R to read the text file. The number of rows and columns of the dataframe will provide the number of samples and genes respectively.
 
 ```
-# Read the file into a data frame
-leukemia_df <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names=1)
+# Read data
+leukemiaExp <- read.table("leukemiaExp.txt", header=T, sep="\t", row.names = 1)
 
-# Get the number of genes
-num_genes <- nrow(leukemia_df)
+# Number of genes
+num_genes <- nrow(leukemiaExp)
 print(paste("Number of genes: ", num_genes))
 
-# Get the number of samples
-num_samples <- ncol(leukemia_df)
+# Number of samples
+num_samples <- ncol(leukemiaExp)
 print(paste("Number of samples: ", num_samples))
 ```
-
-This code assumes that "leukemiaExp.txt" is in the current working directory. If it is not, you need to provide the full path of the file in `read.table()`. Also, this code contains no error handling, so if the file isn't found or can't be read, the functions will throw errors.
+In the above code, `read.table` is used to read the txt file. The arguments inside the function denote that the first row is the header (`header=T`), the values are separated by a tab character (`sep="\t"`), and the first column contains the row names (`row.names = 1`). The `nrow` and `ncol` functions are then used to find the number of rows and columns respectively in the dataframe. These values are then printed.

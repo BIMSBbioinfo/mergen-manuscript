@@ -9,25 +9,27 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
+I apologize for the confusion. When creating a scatter plot using `plot()`, you should directly provide the string for `xlab` and `ylab` parameters within the function. Here is the corrected code:
+
 ```
-# Import the data
-leukExp <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t", check.names = FALSE)
+# Read the data
+data <- read.table("leukemiaExp.txt", header = TRUE, row.names = 1, sep = "\t")
 
-# Calculate the standard deviation for each gene
-geneVars <- apply(leukExp, 1, var)
+# Compute variances for each gene (row)
+variances <- apply(data, 1, var)
 
-# Get the gene names of the top 1000 most variable genes
-mostVarGenes <- head(sort(geneVars, decreasing = TRUE), 1000)
+# Sort variances in decreasing order and get the names of the top 1000
+top_1000_genes <- names(sort(variances, decreasing = TRUE)[1:1000])
 
-# Filter the original dataset to include only the top 1000 most variable genes
-mostVarGeneData <- leukExp[rownames(leukExp) %in% names(mostVarGenes), ]
+# Subset the original data to include only the top 1000 most variable genes
+data_top_1000 <- data[top_1000_genes, ]
 
-# To get the names of the two most variable genes
-mostVar2Genes <- head(sort(geneVars, decreasing = TRUE), 2)
-
-# Extract the data for the two most variable genes
-mostVar2GeneData <- leukExp[rownames(leukExp) %in% names(mostVar2Genes), ]
+# Get the two most variable genes
+top_2_genes <- head(top_1000_genes, 2)
 
 # Create a scatterplot of the two most variable genes
-plot(t(mostVar2GeneData), xlab = names(mostVar2Genes)[1], ylab = names(mostVar2Genes)[2])
+plot(data_top_1000[top_2_genes[1], ], data_top_1000[top_2_genes[2], ],
+     xlab = paste("Expression of", top_2_genes[1]), 
+     ylab = paste("Expression of", top_2_genes[2]), 
+     main = "Scatterplot of the two most variable genes")
 ```

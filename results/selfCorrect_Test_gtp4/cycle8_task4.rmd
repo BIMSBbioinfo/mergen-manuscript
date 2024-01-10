@@ -9,25 +9,23 @@ TSPAN6	9832	25521	23529	0	32	0	10558	20573	6507	0	0	0	12883
 
 
 response:
-Here is the R code to determine the number of genes and the number of samples in the dataset:
+To find out how many genes and samples your RNA-seq dataset contains, you can use the following R code:
 
 ```
-# Load required package
+# Load the required library
 library(readr)
 
-# Read the data
+# Read in the data, assuming it's in the current working directory
 data <- read_tsv("SRP021193.raw_counts.tsv")
 
-# Find the number of genes
-num_genes <- nrow(data) 
+# Number of genes can be found by counting the number of rows. Each row corresponds to a gene
+num_genes <- nrow(data)
 
-# Find the number of samples
-# We subtract 2 because there are two columns (first and last) that do not represent samples
+# Number of samples can be found by counting the number of columns aside from gene names and gene length. In this case, the gene length is the last column and gene names is the first column.
 num_samples <- ncol(data) - 2
 
-num_genes
-num_samples
-
+print(paste("Number of genes: ", num_genes))
+print(paste("Number of samples: ", num_samples))
 ```
 
-This code first reads the data from the tsv file into a tibble (data frame). Then, it calculates the number of rows to find the number of genes and the number of columns (subtracting 2 for the gene names and length columns) to find the number of samples. At last, it prints the number of genes and samples.
+This code uses the `read_tsv` function from the "readr" package to read in your data. It then uses the `nrow` and `ncol` functions to count the number of rows (genes) and columns (samples). Note that we subtract 2 from the column count to exclude the columns for gene names and gene length.

@@ -10,42 +10,29 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-Here is an R code that reads the Excel and TSV files, merges them together, and calculates the number of columns in the merged data frame.
+You can use `read.xlsx()` function from `openxlsx` package to read the excel file and then use `read.table()` function to read the tsv file in R. Then, you can merge these two tables using `merge()` function using the samples (column names from the counts data and the first column in the annotation data) as the common key.
 
 ```
-# install and load necessary packages
-if (!require("readxl")) 
-if (!require("dplyr")) 
-library(readxl)
-library(dplyr)
+# Load necessary libraries
+library(openxlsx)
 
-# read the excel file
-exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read data
+counts <- read.xlsx("Supplementary_Table_1_exp.xlsx")
+annotation <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# read the TSV file
-annotation_data <- read.delim("SRP021193.colData.tsv")
+# Merge counts data and annotation based on sample id
+merged.data <- merge(counts, annotation, by.x = "Genes", by.y = "diagnosis", all = TRUE)
 
-# convert the row names of exp_data to a column 'genes'
-exp_data <- tibble::rownames_to_column(exp_data, "genes")
-
-# transpose exp_data so that samples become rows and genes become columns
-exp_data <- as.data.frame(t(exp_data))
-colnames(exp_data) <- exp_data[1,]
-exp_data <- exp_data[-1, ]
-
-# add a new column 'sample' which is the row names of exp_data
-exp_data$sample <- rownames(exp_data)
-
-# merge the two data frames based on the 'sample' and 'diagnosis' columns
-merged_data <- merge(exp_data, annotation_data, by.x = "sample", by.y = "diagnosis")
-
-# calculate and print the number of columns in the merged data frame
-num_columns <- ncol(merged_data)
-print(paste("The number of columns in the merged data frame is", num_columns))
+# Calculate number of columns
+num.columns <- ncol(merged.data)
+num.columns
 ```
-Please replace "Supplementary_Table_1_exp.xlsx" and "SRP021193.colData.tsv" with the actual paths of your files if they are not in the working directory. The 'readxl' package is used to read the excel file and the 'dplyr' package is used for data manipulation. The 'tibble::rownames_to_column()' function is used to convert the row names to a column. The 'as.data.frame(t())' function is used to transpose the data frame. The 'merge()' function is used to merge the two data frames. The 'ncol()' function is used to calculate the number of columns in a data frame. 'print()' and 'paste()' are used to print the number of columns in a sentence.
+
+Please adapt the file paths if the files are not in the working directory.
+
+Please adapt the names used in `by.x` and `by.y` in the `merge()` function to match the actual names of the key columns (those you want to join on) in your datasets.

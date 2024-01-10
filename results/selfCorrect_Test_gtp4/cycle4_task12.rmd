@@ -10,30 +10,31 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-You can use the `read.xlsx()` function from the `readxl` package to load the xlsx file, and `read.table()` function to load the tsv file. And then count the number of rows and columns for each dataframe using `dim()` function. Here is the R code:
+You can use the `read_excel` function from the `readxl` package to read the data from the excel file and `read.table` function to read the data from the tsv file. Then you can check its dimensions using the `dim` function in R as follows. Here is the R code for it.
 
 ```
-# Loading the required libraries
-
+# Load library
 library(readxl)
 
-# Reading the Excel file
-count_table <- read_excel("Supplementary_Table_1_exp.xlsx")
+# Read data from excel file
+exp_data <- read_excel("Supplementary_Table_1_exp.xlsx")
 
-# Counting number of rows and columns 
-nrow_count_table <- nrow(count_table)
-ncol_count_table <- ncol(count_table)
+# Print the number of rows and columns of the data 
+print(paste0("Number of rows in exp_data: ", nrow(exp_data)))
+print(paste0("Number of columns in exp_data: ", ncol(exp_data)))
 
-# Reading the TSV annotation file
-annotation_table <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
 
-# Counting number of rows and columns 
-nrow_annotation_table <- nrow(annotation_table)
-ncol_annotation_table <- ncol(annotation_table)
+# Read data from tsv file
+tsv_data <- read.table("SRP021193.colData.tsv", header = TRUE, sep = "\t")
+
+# Print the number of rows and columns of the data 
+print(paste0("Number of rows in tsv_data: ", nrow(tsv_data)))
+print(paste0("Number of columns in tsv_data: ", ncol(tsv_data)))
 ```
-Please replace the file paths with your own file paths.
+
+This code first loads the necessary library, then it reads the data from the excel file and the tsv file. It then prints the number of rows and columns of each data.  Notice how `read.table` specifies a "\t" separator as it is a tsv file (tab separated values).

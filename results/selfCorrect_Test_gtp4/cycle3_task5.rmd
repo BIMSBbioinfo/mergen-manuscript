@@ -9,31 +9,19 @@ ENSG00000000003	3.3867427382997	3.68702856316563	3.36051729082204	3.459387953074
 
 
 response:
-Here is a sample R code snippet that should complete the task. The code reads the data from the text file, calculates the standard deviation for each gene across all samples and then selects the top 1000 most variable genes based on their standard deviation.
-
-We assume that the first column in the file is the gene names as you mentioned. We transpose the data so that genes become columns.
-
 ```
-# Read the data from the file
-data <- read.table("leukemiaExp.txt", sep="\t", header=TRUE, row.names = 1)
+# load the data
+data <- read.table("leukemiaExp.txt", header = TRUE, sep = "\t", row.names = 1)
 
-# Transpose the data
-data <- t(data)
+# calculate a measure for variance (here we take the standard deviation as a measure for variability)
+data <- data.frame(StdDev=apply(data, 1, sd), data)
 
-# Calculate the standard deviation for each gene
-gene_std_dev <- apply(data, 2, sd)
+# order the genes by their variability
+data <- data[order(-data$StdDev), ]
 
-# Sort the genes by their standard deviation in descending order
-sorted_genes <- sort(gene_std_dev, decreasing = TRUE)
+# select the top 1000 most variable genes
+selected_genes <- data[1:1000, -1]
 
-# Select the top 1000 most variable genes
-top_genes <- head(names(sorted_genes), 1000)
-
-# Filter the original data to include only the top 1000 most variable genes
-filtered_data <- data[,top_genes]
-
-# print the filtered result
-print(filtered_data)
+# replace the row names with gene names
+row.names(selected_genes) <- row.names(data)[1:1000]
 ```
-
-Please replace the "leukemiaExp.txt" with your actual file path if it's not in the current working directory. The script might take some time to run due to high computational demand depending on the number of genes and samples that you have.

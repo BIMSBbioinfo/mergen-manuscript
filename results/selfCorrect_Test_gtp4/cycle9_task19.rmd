@@ -10,69 +10,54 @@ TNMD	3281	 7167	 3435	0	 0	0	  202	  403	 203	0	0	21
 
 
 SRP021193.colData.tsv:
-diagnosis	group	LibrarySelection
+	diagnosis	group	LibrarySelection
 CASE_1	non-ischemic cardiomyopathy	CASE	cDNA
 
 
 response:
-I apologize for the issues and any confusion caused. The error "subscript out of bounds" typically suggests trying to access an index that does not exist in the data structure. In this case, it might be due to incorrect column name in `rownames(count_data) <- count_data[, "Genes"]`.
-
-Let's correct it by accessing the 'Genes' column by name using double brackets `[[ ]]`.
+I apologize for the confusion. In R, `read_excel` does not have an argument for `row.names`, which is likely why you are receiving an error. To set the rownames, you can do it separately after reading the table. Below is the corrected code:
 
 ```
-# Load the required packages
-library(readxl)
-library(tibble)
-library(DESeq2)
-library(ggplot2)
+#Loading required libraries 
+library("DESeq2")
+library("readxl")
+library("ggplot2")
 
-# Read the Excel file
-count_data <- read_excel("Supplementary_Table_1_exp.xlsx")
+#Reading the data
+countData <- read_excel("Supplementary_Table_1_exp.xlsx")
+rownames(countData) <- countData$Genes
+countData$Genes <- NULL
 
-# Convert data to data frame and move 'Genes' column to rownames
-count_data <- as.data.frame(count_data)
-rownames(count_data) <- count_data[["Genes"]]
-count_data[["Genes"]] <- NULL
+colData <- read.delim("SRP021193.colData.tsv", row.names = 1)
 
-# Convert data frame to matrix
-count_matrix <- as.matrix(count_data)
+#Making a DESeqDataSet form the count data and col data
+dds <- DESeqDataSetFromMatrix(countData = countData, colData = colData, design = ~ group)
 
-# Make sure annotations and count data have the same samples
-annotations <- read.delim("SRP021193.colData.tsv", stringsAsFactors = FALSE)
-annotations <- annotations[colnames(count_matrix),]
-
-# Make DESeq2 dataset from matrix
-dds <- DESeqDataSetFromMatrix(countData = count_matrix,
-                              colData = annotations,
-                              design = ~ group)
-
-# Run DESeq for normalization
+#Running the DESeq normalization
 dds <- DESeq(dds)
 
-# Extract the normalized counts
-norm_counts <- counts(dds, normalized = TRUE)
+#Getting the rlog transformed normalized counts
+rld <- rlog(dds, blind = TRUE)
 
-# Perform PCA on the transpose of the normalized counts
-pca <- prcomp(t(norm_counts))
+#Creating PCA data
+pcaData <- plotPCA(rld, intgroup = c("group", "LibrarySelection"), returnData = TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
 
-# Define group and library selection details from colData of DESeq result
-groups <- colData(dds)$group
-library_selection <- colData(dds)$LibrarySelection
+#PCA plot for group
+ggplot(pcaData, aes(PC1, PC2, color = group)) +
+  geom_point(size = 3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  coord_fixed() +
+  ggtitle("PCA Plot (Color coded by Group)") 
 
-# Create PCA plots
-pca_plot_group <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2, color = groups)) +
-  geom_point() +
-  theme_classic() +
-  labs(color = "Group")
-
-pca_plot_library_selection <- ggplot(as.data.frame(pca$x), aes(x = PC1, y = PC2, color = library_selection)) +
-  geom_point() +
-  theme_classic() +
-  labs(color = "Library Selection")
-
-# Display the plots
-print(pca_plot_group)
-print(pca_plot_library_selection)
+#PCA plot for LibrarySelection
+ggplot(pcaData, aes(PC1, PC2, color = LibrarySelection)) +
+  geom_point(size = 3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  coord_fixed() +
+  ggtitle("PCA Plot (Color coded by LibrarySelection)") 
 ```
 
-This revised script has corrected subscript out of bounds error, made sure that annotations and count data matrices have matching sample names, obtained group and library selections for color-coding the PCA plots.
+This code reads the count data excluding the first column as a gene column. Then sets this column to be the row names for the `countData` dataframe. Rest of the script is same as earlier.
