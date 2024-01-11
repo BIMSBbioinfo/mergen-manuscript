@@ -3,7 +3,7 @@ direcs <- c("simpleTest_gtp3_5","selfCorrect_Test_gtp3_5",
             "fileCont_Test_gtp3_5","CoT_Test_gtp3_5","actAs_Test_gtp3_5", 'selfCorrect_Test_gtp4')
 
 for (i in direcs){
-  assign(paste0(i,"_res"),read.table(paste0(i,"/results1_10.txt"),header=TRUE))
+  assign(paste0(i,"_res"),read.table(paste0(i,"/results.txt"),header=TRUE))
 }
 
 matr_plot <- matrix(ncol=5)
