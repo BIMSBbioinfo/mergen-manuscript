@@ -132,9 +132,7 @@ for(j in 1:cycles){
     # generate response
     response <- mergen::sendPrompt(myAgent, pcpairs[[i]]$prompt,context=context,return.type="text",
                            max_tokens = 1200)
-    
-    # sometimes error 200 is returned, if that's the case it should retry getting
-    # the response until success.
+
     
     #clear response of weird characters, otherwise this will return as error
     response<-clean_code_blocks(response)
