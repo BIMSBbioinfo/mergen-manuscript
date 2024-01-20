@@ -1,19 +1,3 @@
-# this script converts clear text GPT fine-tuning prompts to JSON files
-# needed for GPT
-
-
-# open questions
-#- how do i save the results with the code not only the result [done]
-#   save the result as html and the prompt+response as rmd [done]
-#- how do i keep track of succesful and unsuccesful executions [done]
-#    have a dataframe to keep track of each cycle and task
-#- how do i capture library commands and install missing libraries before execution
-#   do this  before execution via regular expressions [done]
-# HOW to deal with errors when GPT doesn't respond? [ ]
-
-# general variables
-# variables: output folder, context for the prompt, should error feedback be used
-
 
 ## libs
 library(mergen)
@@ -161,9 +145,7 @@ for(j in 10:cycles){
      response <- sendPrompt(myAgent, my.prompt,context=context,return.type="text",
                            max_tokens = 1000)
 
-      # sometimes error 200 is returned, if that's the case it should retry getting
-      # the response until success, check the chat app by the chatapp boy
-
+     
       #clear response of weird characters, otherwise this will return as error
      repsonse<-clean_code_blocks(repsonse)
 
